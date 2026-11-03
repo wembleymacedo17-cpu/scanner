@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baixa de Kits - Escanear QR Code</title>
+    <!-- CSS apontando para a pasta views/css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css') }}">
+    <!-- Biblioteca CDN para Leitura de QR Code -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2>Entrega de Kits Escolares</h2>
+            <p>Aproxime o QR Code da câmera para validar a entrega</p>
+        </header>
+
+        <!-- Área do Vídeo / Câmera -->
+        <div id="reader-container">
+            <div id="reader"></div>
+        </div>
+
+        <!-- Card de Resultado após leitura -->
+        <div id="result-card" class="card hidden">
+            <h3 id="badge-tipo">---</h3>
+            <div class="card-info">
+                <p><strong>Colaborador ID:</strong> <span id="info-colaborador"></span></p>
+                <p id="row-nome"><strong>Nome:</strong> <span id="info-nome"></span></p>
+                <p><strong>Total de Kits:</strong> <span id="info-qtd"></span></p>
+                <p><strong>Resumo dos Kits:</strong> <span id="info-resumo"></span></p>
+                <p><strong>Status Atual:</strong> <span id="info-status" class="status-badge"></span></p>
+            </div>
+
+            <div class="card-actions">
+                <button id="btn-confirmar" class="btn btn-success">Confirmar Entrega</button>
+                <button id="btn-novaleitura" class="btn btn-secondary">Escanear Outro</button>
+            </div>
+        </div>
+
+        <!-- Alertas do Sistema -->
+        <div id="alert-box" class="alert hidden"></div>
+    </div>
+
+    <!-- Script de Lógica do Scanner Embutido -->
+    <script>
+        let html5QrCode = null;
+        let codigoAtualScan = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            iniciarScanner();
+
+            document.getElementById("btn-confirmar").addEventListener("click", darBaixaKit);
+            document.getElementById("btn-novaleitura").addEventListener("click", () => {
+                exibirCard(false);
+                esconderAlerta();
+                iniciarScanner();
+            });
+        });
+
+        function iniciarScanner() {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess
+            ).catch(err => {
+                mostrarAlerta("Erro ao acessar a câmera: " + err, "danger");
+            });
+        }
+
+        function onScanSuccess(decodedText) {
+            codigoAtualScan = decodedText;
+            html5QrCode.stop().then(() => {
+                consultarKit(decodedText);
+            }).catch(err => console.error(err));
+        }
+
+        async function consultarKit(codigo) {
+            try {
+                const response = await fetch(`/api/buscar/${codigo}`);
+                const result = await response.json();
+
+                if (response.ok && result.sucesso) {
+                    preencherCard(result.dados);
+                    exibirCard(true);
+                } else {
+                    mostrarAlerta(result.mensagem || "QR Code não encontrado.", "danger");
+                }
+            } catch (err) {
+                mostrarAlerta("Erro na comunicação com o servidor.", "danger");
+            }
+        }
+
+        function preencherCard(dados) {
+            document.getElementById("badge-tipo").innerText = `Público: ${dados.tipo_publico}`;
+            document.getElementById("info-colaborador").innerText = dados.id_colaborador;
+            
+            if (dados.nome_colaborador) {
+                document.getElementById("row-nome").style.display = "block";
+                document.getElementById("info-nome").innerText = dados.nome_colaborador;
+            } else {
+                document.getElementById("row-nome").style.display = "none";
+            }
+
+            document.getElementById("info-qtd").innerText = dados.qtd_kits;
+            document.getElementById("info-resumo").innerText = dados.resumo_kits;
+            
+            const statusEl = document.getElementById("info-status");
+            statusEl.innerText = dados.status;
+            statusEl.className = `status-badge status-${dados.status}`;
+
+            const btnConfirmar = document.getElementById("btn-confirmar");
+            if (dados.status === "ENTREGUE") {
+                btnConfirmar.disabled = true;
+                btnConfirmar.style.opacity = "0.5";
+                mostrarAlerta("Atenção: Este kit já teve baixa realizada!", "danger");
+            } else {
+                btnConfirmar.disabled = false;
+                btnConfirmar.style.opacity = "1";
+                esconderAlerta();
+            }
+        }
+
+        async function darBaixaKit() {
+            if (!codigoAtualScan) return;
+
+            try {
+                const response = await fetch('/api/dar-baixa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo_retirada: codigoAtualScan })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.sucesso) {
+                    mostrarAlerta(result.mensagem, "success");
+                    document.getElementById("info-status").innerText = "ENTREGUE";
+                    document.getElementById("info-status").className = "status-badge status-ENTREGUE";
+                    document.getElementById("btn-confirmar").disabled = true;
+                    document.getElementById("btn-confirmar").style.opacity = "0.5";
+                } else {
+                    mostrarAlerta(result.mensagem || "Erro ao efetuar baixa.", "danger");
+                }
+            } catch (err) {
+                mostrarAlerta("Erro ao conectar com o servidor.", "danger");
+            }
+        }
+
+        function exibirCard(mostrar) {
+            const card = document.getElementById("result-card");
+            if (mostrar) card.classList.remove("hidden");
+            else card.classList.add("hidden");
+        }
+
+        function mostrarAlerta(msg, tipo) {
+            const box = document.getElementById("alert-box");
+            box.innerText = msg;
+            box.className = `alert alert-${tipo}`;
+            box.classList.remove("hidden");
+        }
+
+        function esconderAlerta() {
+            document.getElementById("alert-box").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>

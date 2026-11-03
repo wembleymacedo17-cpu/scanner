@@ -1,0 +1,4 @@
+pandas
+openpyxl
+alembic 
+psycopg2-binary
