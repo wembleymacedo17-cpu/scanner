@@ -10,7 +10,6 @@ env_path = os.path.join(raiz_projeto, '.env')
 if os.path.exists(env_path):
     load_dotenv(env_path)
 else:
-    # Se não encontrar o arquivo físico, tenta carregar as variáveis do ambiente do SO (Render/Cloud)
     load_dotenv()
 
 def create_app():
@@ -38,8 +37,13 @@ def create_app():
 
     db.init_app(app)
 
+    # Rota raiz do HTML
     @app.route('/')
     def index():
         return render_template('cartao_retirada.html')
+
+    # REGISTRO DAS ROTAS DA API (Faltava esta parte)
+    from app.views.api_routes import api_bp
+    app.register_blueprint(api_bp)
 
     return app
