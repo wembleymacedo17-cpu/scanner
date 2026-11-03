@@ -3,7 +3,15 @@ from flask import Flask, render_template
 from dotenv import load_dotenv
 from app.models import db
 
-load_dotenv(os.path.join(os.path.dirname(__file__), '../env/.env'))
+# 1. Carrega o .env localizado na RAIZ do projeto (Baixas_Qrcode/.env)
+raiz_projeto = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+env_path = os.path.join(raiz_projeto, '.env')
+
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    # Se não encontrar o arquivo físico, tenta carregar as variáveis do ambiente do SO (Render/Cloud)
+    load_dotenv()
 
 def create_app():
     base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -12,17 +20,28 @@ def create_app():
 
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    # 2. Busca a URL do banco
+    database_url = os.getenv('DATABASE_URL')
+    
+    if not database_url:
+        raise ValueError(
+            f"A variável 'DATABASE_URL' não foi encontrada! "
+            f"Verifique se o arquivo .env existe em: {env_path}"
+        )
+
+    # Garante compatibilidade do prefixo da URL com o SQLAlchemy
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
 
-    # 1. Rota principal para carregar o HTML da câmera
     @app.route('/')
     def index():
         return render_template('scanner.html')
 
-    # 2. Registra as APIs de busca e baixa
     from app.views.api_routes import api_bp
     app.register_blueprint(api_bp)
 

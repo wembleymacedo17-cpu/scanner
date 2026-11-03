@@ -8,3 +8,4 @@ if __name__ == '__main__':
     # port=5000 define a porta de execução
     # debug=True reinicia o servidor automaticamente ao alterar ficheiros em desenvolvimento
     app.run(host='0.0.0.0', port=5000, debug=True)
+    

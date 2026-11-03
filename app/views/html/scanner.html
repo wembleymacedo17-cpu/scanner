@@ -73,9 +73,16 @@
         }
 
         function onScanSuccess(decodedText) {
-            codigoAtualScan = decodedText;
+            // Limpa o prefixo RETIRADA_KIT: se existir
+            let codigoLimpo = decodedText.trim();
+            if (codigoLimpo.includes("RETIRADA_KIT:")) {
+                codigoLimpo = codigoLimpo.replace("RETIRADA_KIT:", "").trim();
+            }
+
+            codigoAtualScan = codigoLimpo;
+
             html5QrCode.stop().then(() => {
-                consultarKit(decodedText);
+                consultarKit(codigoLimpo);
             }).catch(err => console.error(err));
         }
 
@@ -96,7 +103,7 @@
         }
 
         function preencherCard(dados) {
-            document.getElementById("badge-tipo").innerText = `Público: ${dados.tipo_publico}`;
+            document.getElementById("badge-tipo").innerText = `Público: ${dados.tipo_publico || 'Não informado'}`;
             document.getElementById("info-colaborador").innerText = dados.id_colaborador;
             
             if (dados.nome_colaborador) {
