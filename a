@@ -1,0 +1,31 @@
+[33mcommit febe28b39ac2e29c5cdcbf8938184779c5a1f28d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: wembley M.S <wembleymacedo17@gmail.com>
+Date:   Tue Nov 3 15:37:13 2026 -0300
+
+    feat: initial commit sem env
+
+A	.gitignore
+A	alembic.ini
+A	app/__init__.py
+A	app/__pycache__/__init__.cpython-314.pyc
+A	app/controllers/__init__.py
+A	app/models/__init__.py
+A	app/models/__pycache__/__init__.cpython-314.pyc
+A	app/models/__pycache__/models.cpython-314.pyc
+A	app/models/models.py
+A	app/views/__pycache__/api_routes.cpython-314.pyc
+A	app/views/api_routes.py
+A	app/views/css/scanner.css
+A	app/views/html/scanner.html
+A	env/.env
+A	migrations/README
+A	migrations/__pycache__/env.cpython-314.pyc
+A	migrations/env.py
+A	migrations/script.py.mako
+A	migrations/versions/__pycache__/ed1227126a9b_cria_tabelas_de_retiradas_dependentes_e_.cpython-314.pyc
+A	migrations/versions/ed1227126a9b_cria_tabelas_de_retiradas_dependentes_e_.py
+A	requirements.txt
+A	retiradas_jovens.csv
+A	retiradas_padronizada_corrigida.xlsx
+A	run.py
+A	scripts/seed_data.py
