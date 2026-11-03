@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartão de Retirada - Kits Escolares</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header da Página -->
+        <header class="app-header">
+            <h2>📦 Cartão de Retirada de Kit</h2>
+            <p>Escanear QR Code para gerenciar entregas e estoque</p>
+        </header>
+
+        <!-- Área da Câmera -->
+        <div id="reader-container" class="scanner-wrapper">
+            <div id="reader"></div>
+        </div>
+
+        <!-- Alerta Global -->
+        <div id="alert-box" class="alert-banner hidden"></div>
+
+        <!-- CARTÃO DE RETIRADA (Visível após escanear) -->
+        <div id="cartao-retirada" class="card-container hidden">
+            <!-- Cabeçalho do Cartão -->
+            <div class="card-header">
+                <span id="badge-publico" class="publico-tag">---</span>
+                <span id="badge-status-geral" class="status-tag">PENDENTE</span>
+            </div>
+
+            <!-- Dados do Colaborador -->
+            <div class="colaborador-box">
+                <div class="info-group">
+                    <span class="label">NOME DO COLABORADOR</span>
+                    <strong id="colab-nome" class="value-highlight">---</strong>
+                </div>
+                <div class="info-row">
+                    <div class="info-group">
+                        <span class="label">CRACHÁ / ID</span>
+                        <span id="colab-id" class="value">---</span>
+                    </div>
+                    <div class="info-group">
+                        <span class="label">TOTAL DE KITS</span>
+                        <span id="colab-total-kits" class="value badge-count">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Lista de Kits / Dependentes (Gerado Dinamicamente) -->
+            <div class="kits-section">
+                <h3>Kits a Entregar</h3>
+                <div id="lista-kits-container" class="kits-grid">
+                    <!-- Os cards individuais de cada dependente entram aqui via JS -->
+                </div>
+            </div>
+
+            <!-- Rodapé com Botão de Escanear Outro -->
+            <div class="card-footer">
+                <button id="btn-novo-scan" class="btn btn-secondary">
+                    📷 Escanear Outro QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica JS do Cartão e Baixa Parcial -->
+    <script>
+        let html5QrCode = null;
+        let codigoAtualScan = null;
+        let dadosRetiradaAtual = null;
+
+        // Lista de modelos disponíveis no estoque para seleção editável
+        const MODELOS_ESTOQUE = [
+            "Abelha", "Unicornio", "Borboleta", "Dino", "Tigre",
+            "EFI-1", "EFI-2", "EFI-3", "EFI-4", "EFI-5", "EFI-6", "EFI-7", "EFI-8", "EFI-9", "EFI-10",
+            "EFII-1", "EFII-2", "EFII-3", "EFII-4", "EFII-5", "EFII-6", "EFII-7", "EFII-8", "EFII-9", "EFII-10", "EFII-11", "EFII-12", "EFII-13",
+            "EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12"
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            iniciarScanner();
+            document.getElementById("btn-novo-scan").addEventListener("click", () => {
+                document.getElementById("cartao-retirada").classList.add("hidden");
+                esconderAlerta();
+                iniciarScanner();
+            });
+        });
+
+        function iniciarScanner() {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess
+            ).catch(err => {
+                mostrarAlerta("Erro ao acessar câmera: " + err, "danger");
+            });
+        }
+
+        function onScanSuccess(decodedText) {
+            let codigoLimpo = decodedText.trim();
+            if (codigoLimpo.includes("RETIRADA_KIT:")) {
+                codigoLimpo = codigoLimpo.replace("RETIRADA_KIT:", "").trim();
+            }
+            codigoAtualScan = codigoLimpo;
+
+            html5QrCode.stop().then(() => {
+                consultarRetirada(codigoLimpo);
+            }).catch(err => console.error(err));
+        }
+
+        async function consultarRetirada(codigo) {
+            try {
+                const response = await fetch(`/api/buscar/${codigo}`);
+                const result = await response.json();
+
+                if (response.ok && result.sucesso) {
+                    dadosRetiradaAtual = result.dados;
+                    renderizarCartao(result.dados);
+                } else {
+                    mostrarAlerta(result.mensagem || "QR Code não encontrado.", "danger");
+                }
+            } catch (err) {
+                mostrarAlerta("Erro de conexão com o servidor.", "danger");
+            }
+        }
+
+        function renderizarCartao(dados) {
+            // Preenche dados do Colaborador
+            document.getElementById("badge-publico").innerText = `Público: ${dados.tipo_publico || 'Dependente'}`;
+            document.getElementById("colab-nome").innerText = dados.nome_colaborador || "NÃO INFORMADO";
+            document.getElementById("colab-id").innerText = dados.id_colaborador;
+            document.getElementById("colab-total-kits").innerText = dados.qtd_kits;
+
+            atualizarBadgeStatusGeral(dados.status);
+
+            // Desmembra a string resumo_kits (separada por |) em itens individuais
+            const container = document.getElementById("lista-kits-container");
+            container.innerHTML = "";
+
+            const listaItens = parseResumoKits(dados.resumo_kits, dados.detalhes_entregas, dados.status);
+
+            listaItens.forEach((item, index) => {
+                const cardKit = document.createElement("div");
+                cardKit.className = `kit-item-card ${item.entregue ? 'kit-entregue' : ''}`;
+                
+                cardKit.innerHTML = `
+                    <div class="kit-item-header">
+                        <span class="kit-dependente-nome">👤 ${item.nome_dependente}</span>
+                        <span class="kit-status-badge ${item.entregue ? 'badge-entregue' : 'badge-pendente'}">
+                            ${item.entregue ? 'ENTREGUE' : 'PENDENTE'}
+                        </span>
+                    </div>
+
+                    <div class="kit-item-body">
+                        <label class="field-label">Modelo do Kit (Estoque):</label>
+                        <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''}>
+                            ${gerarOptionsModelos(item.modelo_selecionado)}
+                        </select>
+                    </div>
+
+                    <div class="kit-item-action">
+                        <button id="btn-entregar-${index}" class="btn ${item.entregue ? 'btn-disabled' : 'btn-entregar'}"
+                                ${item.entregue ? 'disabled' : ''} 
+                                onclick="entregarKitIndividual(${index})">
+                            ${item.entregue ? '✓ Kit Entregue' : '📦 Confirmar Entrega Deste Kit'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(cardKit);
+            });
+
+            document.getElementById("cartao-retirada").classList.remove("hidden");
+        }
+
+        function parseResumoKits(resumoStr, detalhesEntregas, statusGeral) {
+            if (!resumoStr) return [];
+            
+            const partes = resumoStr.split('|').map(p => p.trim());
+            const entregas = detalhesEntregas || {};
+
+            return partes.map((parte, i) => {
+                // Tenta extrair: NOME DEPENDENTE - ETAPA - MODELO
+                const pedacos = parte.split('-').map(s => s.trim());
+                let nome = pedacos[0] || "Dependente";
+                let modelo = pedacos[pedacos.length - 1] || "Padrão";
+
+                const chaveItem = `kit_${i}`;
+                const statusItem = entregas[chaveItem] || {};
+                const jaEntregue = statusGeral === 'ENTREGUE' || statusItem.entregue === true;
+
+                return {
+                    id_item: chaveItem,
+                    nome_dependente: nome,
+                    modelo_selecionado: statusItem.modelo || modelo,
+                    entregue: jaEntregue
+                };
+            });
+        }
+
+        function gerarOptionsModelos(modeloAtual) {
+            let html = "";
+            let encontrado = false;
+            
+            MODELOS_ESTOQUE.forEach(mod => {
+                const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
+                if (selected) encontrado = true;
+                html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}</option>`;
+            });
+
+            if (!encontrado && modeloAtual) {
+                html = `<option value="${modeloAtual}" selected>${modeloAtual}</option>` + html;
+            }
+            return html;
+        }
+
+        async function entregarKitIndividual(indexItem) {
+            const selectModelo = document.getElementById(`select-modelo-${indexItem}`);
+            const modeloEscolhido = selectModelo ? selectModelo.value : "Padrão";
+
+            try {
+                const response = await fetch('/api/dar-baixa-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        codigo_retirada: codigoAtualScan,
+                        index_kit: indexItem,
+                        modelo_baixa: modeloEscolhido
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.sucesso) {
+                    mostrarAlerta(result.mensagem, "success");
+                    // Recarrega o cartão atualizado
+                    dadosRetiradaAtual = result.dados;
+                    renderizarCartao(result.dados);
+                } else {
+                    mostrarAlerta(result.mensagem || "Erro ao efetuar baixa do kit.", "danger");
+                }
+            } catch (err) {
+                mostrarAlerta("Erro de conexão ao dar baixa.", "danger");
+            }
+        }
+
+        function atualizarBadgeStatusGeral(status) {
+            const el = document.getElementById("badge-status-geral");
+            el.innerText = status;
+            el.className = `status-tag status-${status.replace(' ', '-')}`;
+        }
+
+        function mostrarAlerta(msg, tipo) {
+            const box = document.getElementById("alert-box");
+            box.innerText = msg;
+            box.className = `alert-banner alert-${tipo}`;
+            box.classList.remove("hidden");
+        }
+
+        function esconderAlerta() {
+            document.getElementById("alert-box").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>

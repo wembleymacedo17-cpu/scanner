@@ -40,9 +40,6 @@ def create_app():
 
     @app.route('/')
     def index():
-        return render_template('scanner.html')
-
-    from app.views.api_routes import api_bp
-    app.register_blueprint(api_bp)
+        return render_template('cartao_retirada.html')
 
     return app

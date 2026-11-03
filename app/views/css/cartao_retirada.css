@@ -1,0 +1,62 @@
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+body { background-color: #eef2f5; color: #2d3748; padding: 12px; }
+
+.main-container { max-width: 550px; margin: 0 auto; }
+.app-header { text-align: center; margin-bottom: 15px; }
+.app-header h2 { color: #1a365d; font-size: 1.3rem; }
+.app-header p { color: #718096; font-size: 0.85rem; margin-top: 3px; }
+
+.scanner-wrapper { background: #fff; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+#reader { width: 100%; border-radius: 6px; overflow: hidden; }
+
+/* CARTÃO DE RETIRADA */
+.card-container { background: #ffffff; border-radius: 12px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+.card-container.hidden { display: none; }
+
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.publico-tag { background: #ebf8ff; color: #2b6cb0; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.8rem; }
+
+/* BADGES DE STATUS GERAL */
+.status-tag { padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; }
+.status-PENDENTE { background: #feebc8; color: #c05621; }
+.status-ENTREGA-PARCIAL { background: #fefcbf; color: #b7791f; border: 1px solid #d69e2e; }
+.status-ENTREGUE { background: #c6f6d5; color: #22543d; }
+
+.colaborador-box { background: #f7fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #3182ce; margin-bottom: 12px; }
+.info-group { margin-bottom: 6px; }
+.info-group .label { font-size: 0.7rem; color: #718096; font-weight: 700; letter-spacing: 0.5px; display: block; }
+.value-highlight { font-size: 1.05rem; color: #2d3748; }
+.info-row { display: flex; justify-content: space-between; margin-top: 8px; }
+.badge-count { background: #3182ce; color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 0.85rem; }
+
+.divider { border: 0; height: 1px; background: #e2e8f0; margin: 15px 0; }
+
+/* KITS INDIVIDUAIS */
+.kits-section h3 { font-size: 0.95rem; color: #4a5568; margin-bottom: 10px; }
+.kits-grid { display: flex; flex-direction: column; gap: 12px; }
+
+.kit-item-card { background: #fff; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px; transition: all 0.2s; }
+.kit-item-card.kit-entregue { background: #f0fff4; border-color: #9ae6b4; }
+
+.kit-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.kit-dependente-nome { font-weight: 600; font-size: 0.9rem; color: #2d3748; }
+
+.kit-status-badge { font-size: 0.75rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+.badge-pendente { background: #edf2f7; color: #4a5568; }
+.badge-entregue { background: #38a169; color: #fff; }
+
+.kit-item-body { margin-bottom: 10px; }
+.field-label { font-size: 0.75rem; color: #718096; display: block; margin-bottom: 4px; }
+.select-modelo { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e0; background: #fff; font-size: 0.85rem; color: #2d3748; font-weight: 500; }
+
+.kit-item-action { text-align: right; }
+.btn { padding: 9px 14px; border: none; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.2s; width: 100%; }
+.btn-entregar { background: #38a169; color: #fff; }
+.btn-entregar:hover { background: #2f855a; }
+.btn-disabled { background: #a0aec0; color: #fff; cursor: not-allowed; }
+.btn-secondary { background: #4a5568; color: #fff; margin-top: 15px; }
+
+.alert-banner { padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; text-align: center; margin-bottom: 12px; }
+.alert-banner.hidden { display: none; }
+.alert-danger { background: #fed7d7; color: #9b2c2c; }
+.alert-success { background: #c6f6d5; color: #22543d; }
