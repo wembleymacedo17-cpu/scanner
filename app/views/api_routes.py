@@ -244,14 +244,37 @@ def dar_baixa_item():
     }), 200
 
 
+from datetime import datetime, timedelta
+
 @api_bp.route('/historico-baixas', methods=['GET'])
 def listar_historico():
-    historicos = HistoricoBaixa.query.order_by(HistoricoBaixa.data_baixa.desc()).limit(100).all()
+    id_user = session.get('usuario_id')
+    perfil_user = session.get('usuario_perfil')
+
+    if not id_user:
+        return jsonify({'sucesso': False, 'mensagem': 'Usuário não autenticado.'}), 401
+
+    # Operadores veem apenas as próprias baixas. Admins também podem ver tudo ou o próprio histórico.
+    if perfil_user == 'ADMIN':
+        query = HistoricoBaixa.query
+    else:
+        query = HistoricoBaixa.query.filter_by(id_usuario=id_user)
+
+    historicos = query.order_by(HistoricoBaixa.data_baixa.desc()).limit(100).all()
+
+    lista_formatada = []
+    for h in historicos:
+        dados = h.to_dict()
+        # Ajusta fuso horário (-3 horas em relação ao UTC)
+        if h.data_baixa:
+            data_brasilia = h.data_baixa - timedelta(hours=3)
+            dados['data_baixa'] = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
+        lista_formatada.append(dados)
+
     return jsonify({
         'sucesso': True,
-        'historico': [h.to_dict() for h in historicos]
+        'historico': lista_formatada
     }), 200
-
 
 @api_bp.route('/usuarios', methods=['GET'])
 def listar_usuarios():
