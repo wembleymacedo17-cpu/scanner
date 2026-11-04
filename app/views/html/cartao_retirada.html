@@ -87,11 +87,20 @@
         let html5QrCode = null;
         let codigoAtualScan = null;
 
-        const MODELOS_ESTOQUE = [
-            "Abelha", "Unicornio", "Borboleta", "Dino", "Tigre",
-            "EFI-1", "EFI-2", "EFI-3", "EFI-4", "EFI-5", "EFI-6", "EFI-7", "EFI-8", "EFI-9", "EFI-10",
-            "EFII-1", "EFII-2", "EFII-3", "EFII-4", "EFII-5", "EFII-6", "EFII-7", "EFII-8", "EFII-9", "EFII-10", "EFII-11", "EFII-12", "EFII-13",
-            "EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12"
+        // Categorização Oficial das Mochilas/Kits por Etapa de Ensino
+        const CATEGORIAS_KITS = {
+            "INFANTIL": ["Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro"],
+            "EFI": ["EFI-1", "EFI-2", "EFI-3", "EFI-4", "EFI-5", "EFI-6", "EFI-7", "EFI-8", "EFI-9", "EFI-10", "EFI-11"],
+            "EFII": ["EFII-1", "EFII-2", "EFII-3", "EFII-4", "EFII-5", "EFII-6", "EFII-7", "EFII-8", "EFII-9", "EFII-10", "EFII-11", "EFII-12", "EFII-13","EFII-14", "EFII-15", "EFII-16"],
+            "EM": ["EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12","EM-13"]
+        };
+
+        // Fallback contendo todas as opções
+        const TODOS_OS_KITS = [
+            ...CATEGORIAS_KITS["INFANTIL"],
+            ...CATEGORIAS_KITS["EFI"],
+            ...CATEGORIAS_KITS["EFII"],
+            ...CATEGORIAS_KITS["EM"]
         ];
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -200,9 +209,9 @@
                     </div>
 
                     <div class="kit-item-body">
-                        <label class="field-label">Modelo do Kit (Estoque):</label>
+                        <label class="field-label">Modelo do Kit (Estoque - Categoria: <strong>${item.categoria_detectada}</strong>):</label>
                         <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''}>
-                            ${gerarOptionsModelos(item.modelo_selecionado)}
+                            ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada)}
                         </select>
                     </div>
 
@@ -220,29 +229,82 @@
             document.getElementById("cartao-retirada").classList.remove("hidden");
         }
 
-        // Identifica e extrai o modelo exato contido no resumo_kits (ex: "JULIA STEFANIE - Ensino Médio - EM-11")
+        // Analisa a string resumo_kits. Suporta separador por pipe ('|') e desmembramento por vírgula em cadastros órfãos.
         function parseResumoKits(resumoStr, detalhesEntregas, statusGeral) {
             if (!resumoStr) return [];
             
-            const partes = resumoStr.split('|').map(p => p.trim());
+            const partesIniciais = resumoStr.split('|').map(p => p.trim());
             const entregas = detalhesEntregas || {};
+            const listaItensFinais = [];
 
-            return partes.map((parte, i) => {
-                const pedacos = parte.split('-').map(s => s.trim());
-                let nome = pedacos[0] || "Dependente";
+            partesIniciais.forEach(parte => {
+                let textoUpper = parte.toUpperCase();
 
-                // Tenta encontrar qual modelo da lista de estoques está presente na string
-                let modeloDetectado = null;
-                for (let mod of MODELOS_ESTOQUE) {
-                    const regex = new RegExp(`\\b${mod}\\b`, 'i');
-                    if (regex.test(parte)) {
-                        modeloDetectado = mod;
-                        break;
+                // Trata casos de Kits Automáticos (Órfãos)
+                if (textoUpper.includes("ÓRFÃOS") || textoUpper.includes("ORFAOS") || textoUpper.includes("AUTOMÁTICOS") || textoUpper.includes("AUTOMATICOS")) {
+                    let conteudoNomes = parte;
+                    if (parte.includes(":")) {
+                        conteudoNomes = parte.split(":")[1].trim();
+                    } else {
+                        conteudoNomes = parte.replace(/Kits Automáticos \(Órfãos\)/gi, "").replace(/Kits Automáticos/gi, "").replace(/^[:\s-]+/, "").trim();
                     }
-                }
 
-                if (!modeloDetectado) {
-                    modeloDetectado = pedacos[pedacos.length - 1] || "Padrão";
+                    // Se existirem múltiplos nomes separados por vírgula na mesma linha
+                    const nomesSeparados = conteudoNomes.split(',').map(n => n.trim()).filter(n => n.length > 0);
+
+                    nomesSeparados.forEach(nomeFilho => {
+                        listaItensFinais.push({
+                            raw: parte,
+                            nome: nomeFilho,
+                            eOrfao: true,
+                            categoria: "ÓRFÃO (LIVRE)"
+                        });
+                    });
+                } else {
+                    const pedacos = parte.split('-').map(s => s.trim());
+                    let nome = pedacos[0] || "Dependente";
+
+                    let categoriaDetectada = "TODAS";
+                    if (textoUpper.includes("INFANTIL") || textoUpper.includes("CRECHE") || textoUpper.includes("ETAPA")) {
+                        categoriaDetectada = "INFANTIL";
+                    } else if (textoUpper.includes("FUNDAMENTAL 1") || textoUpper.includes("FUNDAMENTAL I") || textoUpper.includes("EFI-")) {
+                        if (textoUpper.includes("FUNDAMENTAL 2") || textoUpper.includes("FUNDAMENTAL II") || textoUpper.includes("EFII-")) {
+                            categoriaDetectada = "EFII";
+                        } else {
+                            categoriaDetectada = "EFI";
+                        }
+                    } else if (textoUpper.includes("FUNDAMENTAL 2") || textoUpper.includes("FUNDAMENTAL II") || textoUpper.includes("EFII-")) {
+                        categoriaDetectada = "EFII";
+                    } else if (textoUpper.includes("MÉDIO") || textoUpper.includes("MEDIO") || textoUpper.includes("EM-")) {
+                        categoriaDetectada = "EM";
+                    }
+
+                    listaItensFinais.push({
+                        raw: parte,
+                        nome: nome,
+                        eOrfao: false,
+                        categoria: categoriaDetectada
+                    });
+                }
+            });
+
+            return listaItensFinais.map((itemObj, i) => {
+                let modeloDetectado = null;
+
+                if (!itemObj.eOrfao) {
+                    for (let mod of TODOS_OS_KITS) {
+                        const regex = new RegExp(`\\b${mod}\\b`, 'i');
+                        if (regex.test(itemObj.raw)) {
+                            modeloDetectado = mod;
+                            break;
+                        }
+                    }
+                    if (!modeloDetectado) {
+                        modeloDetectado = itemObj.raw.split('-').pop().trim() || "---";
+                    }
+                } else {
+                    // Para órfãos, seleciona "---" por padrão para exigir escolha manual do entregador
+                    modeloDetectado = "---";
                 }
 
                 const chaveItem = `kit_${i}`;
@@ -251,34 +313,52 @@
 
                 return {
                     id_item: chaveItem,
-                    nome_dependente: nome,
+                    nome_dependente: itemObj.nome,
                     modelo_selecionado: statusItem.modelo || modeloDetectado,
+                    categoria_detectada: itemObj.categoria,
                     entregue: jaEntregue
                 };
             });
         }
 
-        function gerarOptionsModelos(modeloAtual) {
+        // Gera as opções do <select> incluindo "---" no topo como opção neutra obrigatoriamente
+        function gerarOptionsModelos(modeloAtual, categoria) {
             let html = "";
-            let encontrado = false;
+            let listaFiltrada = (categoria === "ÓRFÃO (LIVRE)" || categoria === "TODAS") ? TODOS_OS_KITS : (CATEGORIAS_KITS[categoria] || TODOS_OS_KITS);
             
-            MODELOS_ESTOQUE.forEach(mod => {
+            // Garante que "---" esteja disponível
+            if (!listaFiltrada.includes("---")) {
+                listaFiltrada = ["---", ...listaFiltrada];
+            }
+
+            let encontrado = false;
+
+            listaFiltrada.forEach(mod => {
                 const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
                 if (selected) encontrado = true;
                 html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}</option>`;
             });
 
             if (!encontrado && modeloAtual) {
-                html = `<option value="${modeloAtual}" selected>${modeloAtual}</option>` + html;
+                html = `<option value="${modeloAtual}" selected>${modeloAtual} (Atual)</option>` + html;
             }
+
             return html;
         }
 
         async function entregarKitIndividual(indexItem) {
             const selectModelo = document.getElementById(`select-modelo-${indexItem}`);
-            const modeloEscolhido = selectModelo ? selectModelo.value : "Padrão";
+            const modeloEscolhido = selectModelo ? selectModelo.value.trim() : "---";
+
+            // VÁLVULA DE SEGURANÇA: Impede a baixa se o modelo estiver como "---"
+            if (modeloEscolhido === "---" || !modeloEscolhido) {
+                mostrarAlerta("Atenção: Selecione um modelo de kit válido antes de confirmar a entrega!", "danger");
+                selectModelo.focus();
+                return;
+            }
 
             try {
+                esconderAlerta();
                 const response = await fetch('/api/dar-baixa-item', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
