@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, session
 from datetime import datetime
 from sqlalchemy import or_, cast, String
 from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa
+from datetime import datetime, timedelta
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -244,7 +245,7 @@ def dar_baixa_item():
     }), 200
 
 
-from datetime import datetime, timedelta
+
 
 @api_bp.route('/historico-baixas', methods=['GET'])
 def listar_historico():
