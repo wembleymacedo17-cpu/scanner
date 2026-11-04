@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- Header Principal da Aplicação -->
+        <!-- Header Principal -->
         <header class="app-header">
             <div class="header-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -32,11 +32,11 @@
                 <input type="text" id="input-busca-manual" placeholder="Buscar por Nome, Crachá ou CPF..." autocomplete="off" />
                 <button type="button" id="btn-buscar-manual" class="btn-search">Consultar</button>
             </div>
-            <!-- Lista Flutuante de Sugestões -->
+            <!-- Lista Flutuante de Sugestões (Limpa) -->
             <ul id="autocomplete-results" class="autocomplete-list hidden"></ul>
         </div>
 
-        <!-- Área da Câmera -->
+        <!-- Área da Câmera (Fechada quando houver consulta) -->
         <div id="reader-container" class="scanner-wrapper">
             <div id="reader"></div>
         </div>
@@ -70,7 +70,6 @@
                 </div>
             </div>
 
-            <!-- Seção de Kits -->
             <div class="kits-section">
                 <div class="section-header">
                     <h3>Dependente(s) e Mochilas</h3>
@@ -94,6 +93,7 @@
         let html5QrCode = null;
         let codigoAtualScan = null;
         let debounceTimer = null;
+        let autoResetTimer = null;
 
         const CATEGORIAS_KITS = {
             "INFANTIL": ["Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro"],
@@ -113,12 +113,9 @@
             iniciarScanner();
 
             const inputBusca = document.getElementById("input-busca-manual");
-            const listaSugestoes = document.getElementById("autocomplete-results");
 
             document.getElementById("btn-novo-scan").addEventListener("click", () => {
-                document.getElementById("cartao-retirada").classList.add("hidden");
-                esconderAlerta();
-                iniciarScanner();
+                resetarConsulta();
             });
 
             document.getElementById("btn-buscar-manual").addEventListener("click", () => realizarBuscaManual());
@@ -130,7 +127,6 @@
                 }
             });
 
-            // Lógica de Autocomplete ao Digitar (com Debounce de 300ms)
             inputBusca.addEventListener("input", (e) => {
                 clearTimeout(debounceTimer);
                 const termo = e.target.value.trim();
@@ -156,7 +152,6 @@
                 }, 300);
             });
 
-            // Esconde autocomplete se clicar fora
             document.addEventListener("click", (e) => {
                 if (!e.target.closest(".search-box-container")) {
                     esconderSugestoes();
@@ -171,15 +166,28 @@
             sugestoes.forEach(item => {
                 const li = document.createElement("li");
                 li.className = "autocomplete-item";
+
+                const dependentesStr = item.dependentes && item.dependentes.length > 0
+                    ? item.dependentes.join(", ")
+                    : "Nenhum dependente listado";
+
                 li.innerHTML = `
-                    <div class="ac-main">${item.nome_colaborador}</div>
-                    <div class="ac-sub">Crachá: <strong>${item.id_colaborador}</strong> | Kits: ${item.resumo_kits}</div>
+                    <div class="ac-colaborador">${item.nome_colaborador}</div>
+                    <div class="ac-dependentes"><strong>Dependente(s):</strong> ${dependentesStr}</div>
                 `;
+
+                // Efeito Hover pré-seleção
+                li.addEventListener("mouseover", () => {
+                    document.querySelectorAll(".autocomplete-item").forEach(el => el.classList.remove("selected"));
+                    li.classList.add("selected");
+                });
+
                 li.addEventListener("click", () => {
-                    document.getElementById("input-busca-manual").value = item.codigo_retirada;
+                    document.getElementById("input-busca-manual").value = item.nome_colaborador;
                     esconderSugestoes();
                     consultarRetirada(item.codigo_retirada);
                 });
+
                 listContainer.appendChild(li);
             });
 
@@ -193,6 +201,7 @@
         }
 
         function iniciarScanner() {
+            document.getElementById("reader-container").classList.remove("hidden");
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
             }
@@ -201,8 +210,19 @@
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 onScanSuccess
             ).catch(err => {
-                mostrarAlerta("Erro ao acessar câmera: " + err, "danger");
+                console.warn("Câmera não iniciada: " + err);
             });
+        }
+
+        // Parar e esconder o leitor de QR Code para economizar recursos e não poluir a tela
+        function pararScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById("reader-container").classList.add("hidden");
+                }).catch(err => console.error(err));
+            } else {
+                document.getElementById("reader-container").classList.add("hidden");
+            }
         }
 
         function onScanSuccess(decodedText) {
@@ -210,14 +230,8 @@
             if (codigoLimpo.includes("RETIRADA_KIT:")) {
                 codigoLimpo = codigoLimpo.replace("RETIRADA_KIT:", "").trim();
             }
-
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    consultarRetirada(codigoLimpo);
-                }).catch(err => console.error(err));
-            } else {
-                consultarRetirada(codigoLimpo);
-            }
+            pararScanner();
+            consultarRetirada(codigoLimpo);
         }
 
         function realizarBuscaManual(termoParam) {
@@ -226,19 +240,15 @@
                 mostrarAlerta("Digite um Nome, Crachá ou CPF para consultar.", "danger");
                 return;
             }
-
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    consultarRetirada(termo);
-                }).catch(() => consultarRetirada(termo));
-            } else {
-                consultarRetirada(termo);
-            }
+            pararScanner();
+            consultarRetirada(termo);
         }
 
         async function consultarRetirada(termo) {
             try {
                 esconderAlerta();
+                if (autoResetTimer) clearTimeout(autoResetTimer);
+
                 const response = await fetch(`/api/buscar/${encodeURIComponent(termo)}`);
                 const result = await response.json();
 
@@ -445,12 +455,28 @@
                     mostrarAlerta(result.mensagem, "success");
                     codigoAtualScan = result.dados.codigo_retirada;
                     renderizarCartao(result.dados);
+
+                    // Se todos os kits foram entregues, reseta a tela automaticamente após 3 segundos
+                    if (result.dados.status === 'ENTREGUE') {
+                        mostrarAlerta("Todos os kits foram baixados! Reiniciando consulta em 3 segundos...", "success");
+                        autoResetTimer = setTimeout(() => {
+                            resetarConsulta();
+                        }, 3000);
+                    }
                 } else {
                     mostrarAlerta(result.mensagem || "Erro ao efetuar baixa do kit.", "danger");
                 }
             } catch (err) {
                 mostrarAlerta("Erro de conexão ao dar baixa.", "danger");
             }
+        }
+
+        function resetarConsulta() {
+            if (autoResetTimer) clearTimeout(autoResetTimer);
+            document.getElementById("cartao-retirada").classList.add("hidden");
+            document.getElementById("input-busca-manual").value = "";
+            esconderAlerta();
+            iniciarScanner();
         }
 
         function atualizarBadgeStatusGeral(status) {

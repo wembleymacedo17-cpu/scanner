@@ -5,19 +5,41 @@ from app.models import db, RetiradaDependente, RetiradaJovemAprendiz
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+def extrair_nomes_dependentes(resumo_str):
+    """Auxiliar para extrair apenas os nomes dos dependentes para o autocomplete."""
+    if not resumo_str:
+        return []
+    
+    partes = resumo_str.split('|')
+    nomes = []
+    
+    for parte in partes:
+        parte_strip = parte.strip()
+        texto_upper = parte_strip.toUpperCase() if hasattr(parte_strip, 'toUpperCase') else parte_strip.upper()
+        
+        if "ÓRFÃOS" in texto_upper or "ORFAOS" in texto_upper or "AUTOMÁTICOS" in texto_upper or "AUTOMATICOS" in texto_upper:
+            if ":" in parte_strip:
+                sub = parte_strip.split(":")[1].strip()
+            else:
+                sub = parte_strip.replace("Kits Automáticos (Órfãos)", "").replace("Kits Automáticos", "").strip()
+            sub_nomes = [n.strip() for n in sub.split(',') if n.strip()]
+            nomes.extend(sub_nomes)
+        else:
+            pedacos = parte_strip.split('-')
+            if pedacos and pedacos[0].strip():
+                nomes.append(pedacos[0].strip())
+                
+    return nomes
+
+
 @api_bp.route('/autocompletar', methods=['GET'])
 def autocompletar_nome():
-    """
-    Endpoint leve para sugestões dinâmicas enquanto o usuário digita.
-    Limita a 8 resultados para maximizar a performance.
-    """
     query = request.args.get('q', '').strip()
     if not query or len(query) < 2:
         return jsonify({'sucesso': True, 'sugestoes': []}), 200
 
     termo_like = f"%{query}%"
 
-    # Busca em Dependentes por Nome do Colaborador ou Nomes no Resumo de Kits
     deps = RetiradaDependente.query.filter(
         or_(
             RetiradaDependente.nome_colaborador.ilike(termo_like),
@@ -31,11 +53,10 @@ def autocompletar_nome():
             'codigo_retirada': d.codigo_retirada,
             'id_colaborador': d.id_colaborador,
             'nome_colaborador': d.nome_colaborador or "NÃO INFORMADO",
-            'resumo_kits': d.resumo_kits,
+            'dependentes': extrair_nomes_dependentes(d.resumo_kits),
             'tipo_publico': 'Dependente'
         })
 
-    # Busca em Jovens Aprendizes caso a lista ainda não tenha atingido 8
     if len(sugestoes) < 8:
         jovens = RetiradaJovemAprendiz.query.filter(
             RetiradaJovemAprendiz.resumo_kits.ilike(termo_like)
@@ -46,7 +67,7 @@ def autocompletar_nome():
                 'codigo_retirada': j.codigo_retirada,
                 'id_colaborador': j.id_colaborador,
                 'nome_colaborador': f"Jovem Aprendiz (ID {j.id_colaborador})",
-                'resumo_kits': j.resumo_kits,
+                'dependentes': extrair_nomes_dependentes(j.resumo_kits),
                 'tipo_publico': 'Jovem Aprendiz'
             })
 
@@ -61,22 +82,17 @@ def buscar_retirada(termo_busca):
     
     apenas_numeros = "".join(filter(str.isdigit, termo))
     
-    reg_dep = None
-    reg_jovem = None
-
-    # 1. Busca por Código UUID
     reg_dep = RetiradaDependente.query.filter_by(codigo_retirada=termo).first()
+    reg_jovem = None
     if not reg_dep:
         reg_jovem = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=termo).first()
 
-    # 2. Busca por Crachá / ID numérico
     if not reg_dep and not reg_jovem and apenas_numeros.isdigit():
         id_num = int(apenas_numeros)
         reg_dep = RetiradaDependente.query.filter_by(id_colaborador=id_num).first()
         if not reg_dep:
             reg_jovem = RetiradaJovemAprendiz.query.filter_by(id_colaborador=id_num).first()
 
-    # 3. Busca por Nome (Colaborador ou Dependente)
     if not reg_dep and not reg_jovem:
         termo_like = f"%{termo}%"
         reg_dep = RetiradaDependente.query.filter(

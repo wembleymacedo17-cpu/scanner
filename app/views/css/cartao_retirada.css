@@ -46,8 +46,12 @@ body {
     font-size: 0.82rem; 
 }
 
-/* CAMPO DE BUSCA */
-.search-box-container { margin-bottom: 16px; }
+/* CAMPO DE BUSCA COM AUTOCOMPLETE DROPDOWN */
+.search-box-container { 
+    position: relative; 
+    margin-bottom: 16px; 
+}
+
 .search-input-wrapper { 
     display: flex; 
     align-items: center; 
@@ -57,7 +61,9 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
     border: 1px solid #e2e8f0; 
 }
+
 .search-icon { color: #94a3b8; margin-left: 8px; margin-right: 6px; }
+
 .search-input-wrapper input { 
     flex: 1; 
     border: none; 
@@ -66,6 +72,7 @@ body {
     font-size: 0.9rem; 
     color: #0f172a; 
 }
+
 .btn-search { 
     background: #0284c7; 
     color: #fff; 
@@ -77,7 +84,57 @@ body {
     cursor: pointer; 
     transition: background 0.2s; 
 }
+
 .btn-search:hover { background: #0369a1; }
+
+/* LISTA DE SUGESTÕES (AUTOCOMPLETE LIMPO COM HOVER PRE-SELECIONADO) */
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    margin-top: 6px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    max-height: 280px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 6px 0;
+}
+
+.autocomplete-list.hidden { display: none; }
+
+.autocomplete-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.autocomplete-item:last-child { border-bottom: none; }
+
+/* Efeito ao passar o mouse ou focar no item */
+.autocomplete-item:hover,
+.autocomplete-item.selected { 
+    background-color: #e0f2fe;
+    border-left: 4px solid #0284c7;
+    padding-left: 12px;
+}
+
+.ac-colaborador { 
+    font-weight: 700; 
+    font-size: 0.92rem; 
+    color: #0f172a; 
+}
+
+.ac-dependentes { 
+    font-size: 0.78rem; 
+    color: #64748b; 
+    margin-top: 3px; 
+}
 
 .scanner-wrapper { 
     background: #ffffff; 
@@ -87,6 +144,9 @@ body {
     margin-bottom: 16px; 
     border: 1px solid #e2e8f0;
 }
+
+.scanner-wrapper.hidden { display: none; }
+
 #reader { width: 100%; border-radius: 8px; overflow: hidden; }
 
 /* CARTÃO DE RETIRADA */
@@ -97,6 +157,7 @@ body {
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); 
     border: 1px solid #e2e8f0; 
 }
+
 .card-container.hidden { display: none; }
 
 /* BLOCO DO COLABORADOR */
