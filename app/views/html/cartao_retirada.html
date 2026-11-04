@@ -9,25 +9,27 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- Header da Página -->
+        <!-- Header Principal da Aplicação -->
         <header class="app-header">
-            <h2>
+            <div class="header-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9.57l8.622-5.03a.75.75 0 0 0 .378-.652V7.93ZM2.25 7.93v9.168c0 .265.14.51.378.652l8.622 5.03v-9.57l-9-5.25Z"/>
                 </svg>
-                Cartão de Retirada de Kit
-            </h2>
-            <p>Escanear QR Code ou buscar por Crachá/CPF para registrar entregas</p>
+            </div>
+            <div>
+                <h2>Retirada de Kits Escolares</h2>
+                <p>Escanear QR Code ou buscar por Crachá / CPF</p>
+            </div>
         </header>
 
-        <!-- BUSCA MANUAL POR CRACHÁ OU CPF -->
+        <!-- BUSCA MANUAL -->
         <div class="search-box-container">
             <div class="search-input-wrapper">
                 <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="input-busca-manual" placeholder="Buscar por Crachá / ID ou CPF..." />
+                <input type="text" id="input-busca-manual" placeholder="Insira o Crachá / ID ou CPF..." />
                 <button type="button" id="btn-buscar-manual" class="btn-search">Consultar</button>
             </div>
         </div>
@@ -42,38 +44,42 @@
 
         <!-- CARTÃO DE RETIRADA -->
         <div id="cartao-retirada" class="card-container hidden">
-            <div class="card-header">
-                <span id="badge-publico" class="publico-tag">---</span>
-                <span id="badge-status-geral" class="status-tag">PENDENTE</span>
+            <!-- Cabeçalho do Cartão -->
+            <div class="colaborador-card">
+                <div class="colab-top-bar">
+                    <span id="badge-publico" class="publico-tag">---</span>
+                    <span id="badge-status-geral" class="status-tag">PENDENTE</span>
+                </div>
+
+                <div class="colab-main-info">
+                    <span class="label">COLABORADOR</span>
+                    <strong id="colab-nome" class="colab-nome">---</strong>
+                </div>
+
+                <div class="colab-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">CRACHÁ / ID</span>
+                        <span id="colab-id" class="metric-value">---</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-label">TOTAL DE KITS</span>
+                        <span id="colab-total-kits" class="metric-badge">0</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="colaborador-box">
-                <div class="info-group">
-                    <span class="label">NOME DO COLABORADOR</span>
-                    <strong id="colab-nome" class="value-highlight">---</strong>
-                </div>
-                <div class="info-row">
-                    <div class="info-group">
-                        <span class="label">CRACHÁ / ID</span>
-                        <span id="colab-id" class="value">---</span>
-                    </div>
-                    <div class="info-group">
-                        <span class="label">TOTAL DE KITS</span>
-                        <span id="colab-total-kits" class="value badge-count">0</span>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="divider">
-
+            <!-- Seção de Kits -->
             <div class="kits-section">
-                <h3>Kits a Entregar</h3>
+                <div class="section-header">
+                    <h3>Dependente(s) e Mochilas</h3>
+                </div>
                 <div id="lista-kits-container" class="kits-grid"></div>
             </div>
 
             <div class="card-footer">
                 <button id="btn-novo-scan" class="btn btn-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                         <circle cx="12" cy="13" r="4"></circle>
                     </svg>
@@ -87,7 +93,6 @@
         let html5QrCode = null;
         let codigoAtualScan = null;
 
-        // Categorização Oficial das Mochilas/Kits por Etapa de Ensino
         const CATEGORIAS_KITS = {
             "INFANTIL": ["Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro"],
             "EFI": ["EFI-1", "EFI-2", "EFI-3", "EFI-4", "EFI-5", "EFI-6", "EFI-7", "EFI-8", "EFI-9", "EFI-10", "EFI-11"],
@@ -95,7 +100,6 @@
             "EM": ["EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12","EM-13"]
         };
 
-        // Fallback contendo todas as opções
         const TODOS_OS_KITS = [
             ...CATEGORIAS_KITS["INFANTIL"],
             ...CATEGORIAS_KITS["EFI"],
@@ -180,7 +184,7 @@
         }
 
         function renderizarCartao(dados) {
-            document.getElementById("badge-publico").innerText = `Público: ${dados.tipo_publico || 'Dependente'}`;
+            document.getElementById("badge-publico").innerText = `${dados.tipo_publico || 'Dependente'}`;
             document.getElementById("colab-nome").innerText = dados.nome_colaborador || "NÃO INFORMADO";
             document.getElementById("colab-id").innerText = dados.id_colaborador;
             document.getElementById("colab-total-kits").innerText = dados.qtd_kits;
@@ -194,32 +198,34 @@
 
             listaItens.forEach((item, index) => {
                 const cardKit = document.createElement("div");
-                cardKit.className = `kit-item-card ${item.entregue ? 'kit-entregue' : ''}`;
+                cardKit.className = `kit-item-card ${item.entregue ? 'kit-entregue' : 'kit-pendente'}`;
                 
-                const iconUserSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-                const iconCheckSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-                const iconBoxSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
+                const iconUserSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                const iconCheckSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                const iconBoxSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
 
                 cardKit.innerHTML = `
                     <div class="kit-item-header">
-                        <span class="kit-dependente-nome">${iconUserSVG} ${item.nome_dependente}</span>
-                        <span class="kit-status-badge ${item.entregue ? 'badge-entregue' : 'badge-pendente'}">
-                            ${item.entregue ? 'ENTREGUE' : 'PENDENTE'}
-                        </span>
+                        <div class="kit-dependente-info">
+                            <span class="dep-icon">${iconUserSVG}</span>
+                            <span class="kit-dependente-nome">${item.nome_dependente}</span>
+                        </div>
+                        <span class="cat-pill">${item.categoria_detectada}</span>
                     </div>
 
                     <div class="kit-item-body">
-                        <label class="field-label">Modelo do Kit (Estoque - Categoria: <strong>${item.categoria_detectada}</strong>):</label>
-                        <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''}>
-                            ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada)}
-                        </select>
+                        <div class="select-container">
+                            <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''}>
+                                ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada)}
+                            </select>
+                        </div>
                     </div>
 
                     <div class="kit-item-action">
                         <button id="btn-entregar-${index}" class="btn ${item.entregue ? 'btn-disabled' : 'btn-entregar'}"
                                 ${item.entregue ? 'disabled' : ''} 
                                 onclick="entregarKitIndividual(${index})">
-                            ${item.entregue ? iconCheckSVG + ' Kit Entregue' : iconBoxSVG + ' Confirmar Entrega Deste Kit'}
+                            ${item.entregue ? iconCheckSVG + ' Kit Entregue' : iconBoxSVG + ' Confirmar Baixa Deste Kit'}
                         </button>
                     </div>
                 `;
@@ -229,7 +235,6 @@
             document.getElementById("cartao-retirada").classList.remove("hidden");
         }
 
-        // Analisa a string resumo_kits. Suporta separador por pipe ('|') e desmembramento por vírgula em cadastros órfãos.
         function parseResumoKits(resumoStr, detalhesEntregas, statusGeral) {
             if (!resumoStr) return [];
             
@@ -240,7 +245,6 @@
             partesIniciais.forEach(parte => {
                 let textoUpper = parte.toUpperCase();
 
-                // Trata casos de Kits Automáticos (Órfãos)
                 if (textoUpper.includes("ÓRFÃOS") || textoUpper.includes("ORFAOS") || textoUpper.includes("AUTOMÁTICOS") || textoUpper.includes("AUTOMATICOS")) {
                     let conteudoNomes = parte;
                     if (parte.includes(":")) {
@@ -249,7 +253,6 @@
                         conteudoNomes = parte.replace(/Kits Automáticos \(Órfãos\)/gi, "").replace(/Kits Automáticos/gi, "").replace(/^[:\s-]+/, "").trim();
                     }
 
-                    // Se existirem múltiplos nomes separados por vírgula na mesma linha
                     const nomesSeparados = conteudoNomes.split(',').map(n => n.trim()).filter(n => n.length > 0);
 
                     nomesSeparados.forEach(nomeFilho => {
@@ -257,7 +260,7 @@
                             raw: parte,
                             nome: nomeFilho,
                             eOrfao: true,
-                            categoria: "ÓRFÃO (LIVRE)"
+                            categoria: "LIVRE"
                         });
                     });
                 } else {
@@ -303,7 +306,6 @@
                         modeloDetectado = itemObj.raw.split('-').pop().trim() || "---";
                     }
                 } else {
-                    // Para órfãos, seleciona "---" por padrão para exigir escolha manual do entregador
                     modeloDetectado = "---";
                 }
 
@@ -321,12 +323,10 @@
             });
         }
 
-        // Gera as opções do <select> incluindo "---" no topo como opção neutra obrigatoriamente
         function gerarOptionsModelos(modeloAtual, categoria) {
             let html = "";
-            let listaFiltrada = (categoria === "ÓRFÃO (LIVRE)" || categoria === "TODAS") ? TODOS_OS_KITS : (CATEGORIAS_KITS[categoria] || TODOS_OS_KITS);
+            let listaFiltrada = (categoria === "LIVRE" || categoria === "TODAS") ? TODOS_OS_KITS : (CATEGORIAS_KITS[categoria] || TODOS_OS_KITS);
             
-            // Garante que "---" esteja disponível
             if (!listaFiltrada.includes("---")) {
                 listaFiltrada = ["---", ...listaFiltrada];
             }
@@ -334,13 +334,14 @@
             let encontrado = false;
 
             listaFiltrada.forEach(mod => {
+                const labelMod = mod === "---" ? " Selecionar Modelo da Mochila..." : mod;
                 const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
                 if (selected) encontrado = true;
-                html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}</option>`;
+                html += `<option value="${mod}" ${selected ? 'selected' : ''}>${labelMod}</option>`;
             });
 
             if (!encontrado && modeloAtual) {
-                html = `<option value="${modeloAtual}" selected>${modeloAtual} (Atual)</option>` + html;
+                html = `<option value="${modeloAtual}" selected>${modeloAtual}</option>` + html;
             }
 
             return html;
@@ -350,7 +351,6 @@
             const selectModelo = document.getElementById(`select-modelo-${indexItem}`);
             const modeloEscolhido = selectModelo ? selectModelo.value.trim() : "---";
 
-            // VÁLVULA DE SEGURANÇA: Impede a baixa se o modelo estiver como "---"
             if (modeloEscolhido === "---" || !modeloEscolhido) {
                 mostrarAlerta("Atenção: Selecione um modelo de kit válido antes de confirmar a entrega!", "danger");
                 selectModelo.focus();
