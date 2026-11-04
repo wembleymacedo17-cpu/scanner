@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Baixas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
+    <style>
+        .table-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+        }
+        .badge-op {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h2>📜 Histórico de Entregas</h2>
+        <p style="color: #64748b; font-size: 0.85rem;">Registro de baixas efetuadas pelos operadores</p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data / Hora</th>
+                        <th>Operador</th>
+                        <th>Beneficiário</th>
+                        <th>Público</th>
+                        <th>Modelo Kit</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-historico">
+                    <tr><td colspan="5">Carregando histórico...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const res = await fetch('/api/historico-baixas');
+                const data = await res.json();
+                const tbody = document.getElementById("tabela-historico");
+
+                if (data.sucesso && data.historico.length > 0) {
+                    tbody.innerHTML = "";
+                    data.historico.forEach(item => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${item.data_baixa}</td>
+                            <td><span class="badge-op">${item.nome_operador}</span></td>
+                            <td><strong>${item.nome_beneficiario}</strong> (ID ${item.id_colaborador})</td>
+                            <td>${item.tipo_publico}</td>
+                            <td>${item.modelo_baixa}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = "<tr><td colspan='5'>Nenhum registro de baixa encontrado.</td></tr>";
+                }
+            } catch (err) {
+                console.error("Erro ao buscar histórico:", err);
+            }
+        });
+    </script>
+</body>
+</html>

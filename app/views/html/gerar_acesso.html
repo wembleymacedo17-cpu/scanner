@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Acesso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
+    <style>
+        .form-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-top: 16px;
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 4px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 0.88rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h2>👤 Gerar Acesso de Usuário</h2>
+        <p style="color: #64748b; font-size: 0.85rem;">Cadastre operadores e gestores de acesso ao sistema</p>
+
+        <div class="form-card">
+            <form id="form-novo-usuario">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="nome" required placeholder="Ex: João da Silva" />
+                </div>
+                <div class="form-group">
+                    <label>E-mail corporativo</label>
+                    <input type="email" id="email" required placeholder="joao@funfarme.com.br" />
+                </div>
+                <div class="form-group">
+                    <label>Senha Inicial</label>
+                    <input type="password" id="senha" required placeholder="••••••••" />
+                </div>
+                <div class="form-group">
+                    <label>Perfil de Acesso</label>
+                    <select id="perfil">
+                        <option value="OPERADOR">Operador (Apenas Baixas/Consulta/Histórico)</option>
+                        <option value="ADMIN">Administrador / Gestor (Acesso Total)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-entregar" style="margin-top: 10px;">Cadastrar Usuário</button>
+            </form>
+            <div id="alert-res" class="alert-banner hidden" style="margin-top: 14px;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("form-novo-usuario").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const alertBox = document.getElementById("alert-res");
+
+            const payload = {
+                nome: document.getElementById("nome").value,
+                email: document.getElementById("email").value,
+                senha: document.getElementById("senha").value,
+                perfil: document.getElementById("perfil").value
+            };
+
+            try {
+                const res = await fetch("/api/criar-usuario", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                alertBox.innerText = data.mensagem;
+                alertBox.className = `alert-banner ${data.sucesso ? 'alert-success' : 'alert-danger'}`;
+                alertBox.classList.remove("hidden");
+
+                if (data.sucesso) {
+                    document.getElementById("form-novo-usuario").reset();
+                }
+            } catch (err) {
+                alertBox.innerText = "Erro ao cadastrar usuário.";
+                alertBox.className = "alert-banner alert-danger";
+                alertBox.classList.remove("hidden");
+            }
+        });
+    </script>
+</body>
+</html>

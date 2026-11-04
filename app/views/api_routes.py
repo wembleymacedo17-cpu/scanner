@@ -1,11 +1,13 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from datetime import datetime
 from sqlalchemy import or_, cast, String
-from app.models import db, RetiradaDependente, RetiradaJovemAprendiz
+from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+
 def extrair_nomes_dependentes(resumo_str):
+    """Auxiliar para extrair apenas os nomes dos dependentes para o autocomplete."""
     if not resumo_str:
         return []
     
@@ -29,6 +31,56 @@ def extrair_nomes_dependentes(resumo_str):
                 nomes.append(pedacos[0].strip())
                 
     return nomes
+
+
+@api_bp.route('/login', methods=['POST'])
+def login_api():
+    data = request.json or {}
+    email = data.get('email', '').strip()
+    senha = data.get('senha', '').strip()
+
+    if not email or not senha:
+        return jsonify({'sucesso': False, 'mensagem': 'Preencha todos os campos.'}), 400
+
+    user = Usuario.query.filter_by(email=email, ativo=True).first()
+    if not user or not user.checar_senha(senha):
+        return jsonify({'sucesso': False, 'mensagem': 'E-mail ou senha incorretos.'}), 401
+
+    session['usuario_id'] = user.id_usuario
+    session['usuario_nome'] = user.nome
+    session['usuario_email'] = user.email
+    session['usuario_perfil'] = user.perfil
+
+    return jsonify({
+        'sucesso': True,
+        'mensagem': 'Login efetuado com sucesso!',
+        'usuario': user.to_dict()
+    }), 200
+
+
+@api_bp.route('/criar-usuario', methods=['POST'])
+def criar_usuario():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas gestores podem cadastrar usuários.'}), 403
+
+    data = request.json or {}
+    nome = data.get('nome', '').strip()
+    email = data.get('email', '').strip().lower()
+    senha = data.get('senha', '').strip()
+    perfil = data.get('perfil', 'OPERADOR').upper()
+
+    if not nome or not email or not senha:
+        return jsonify({'sucesso': False, 'mensagem': 'Todos os campos são obrigatórios.'}), 400
+
+    if Usuario.query.filter_by(email=email).first():
+        return jsonify({'sucesso': False, 'mensagem': 'Já existe um usuário cadastrado com este e-mail.'}), 400
+
+    novo_user = Usuario(nome=nome, email=email, perfil=perfil)
+    novo_user.set_senha(senha)
+    db.session.add(novo_user)
+    db.session.commit()
+
+    return jsonify({'sucesso': True, 'mensagem': 'Usuário cadastrado com sucesso!'}), 201
 
 
 @api_bp.route('/autocompletar', methods=['GET'])
@@ -58,7 +110,7 @@ def autocompletar_nome():
             'tipo_publico': 'Dependente'
         })
 
-    # 2. Busca nos Jovens Aprendizes (pesquisa direta em resumo_kits e id_colaborador)
+    # 2. Busca nos Jovens Aprendizes
     limite_restante = 8 - len(sugestoes)
     if limite_restante > 0:
         jovens = RetiradaJovemAprendiz.query.filter(
@@ -69,11 +121,12 @@ def autocompletar_nome():
         ).limit(limite_restante).all()
 
         for j in jovens:
+            nome_jovem = j.extrair_nome_jovem()
             sugestoes.append({
                 'codigo_retirada': j.codigo_retirada,
                 'id_colaborador': j.id_colaborador,
-                'nome_colaborador': j.extrair_nome_jovem(),
-                'dependentes': [j.extrair_nome_jovem()],
+                'nome_colaborador': nome_jovem,
+                'dependentes': [nome_jovem],
                 'tipo_publico': 'Jovem Aprendiz'
             })
 
@@ -133,7 +186,7 @@ def dar_baixa_item():
         codigo_str = codigo_str.replace('RETIRADA_KIT:', '').strip()
 
     if not codigo_str or index_kit is None:
-        return jsonify({'sucesso': False, 'mensagem': 'Dados incompletos para efetuar a baixa.'}), 400
+        return jsonify({'sucesso': False, 'mensagem': 'Dados incompletos para baixa.'}), 400
 
     reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
     tipo_pub = 'Dependente'
@@ -165,12 +218,36 @@ def dar_baixa_item():
 
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
-    db.session.commit()
 
-    dados_atualizados = reg.to_dict()
+    # REGISTRO NO HISTÓRICO VINCULADO AO OPERADOR LOGADO
+    nome_op = session.get('usuario_nome', 'Operador Desconhecido')
+    id_user = session.get('usuario_id')
+    nome_beneficiario = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
+
+    log_baixa = HistoricoBaixa(
+        id_usuario=id_user,
+        nome_operador=nome_op,
+        codigo_retirada=reg.codigo_retirada,
+        id_colaborador=reg.id_colaborador,
+        nome_beneficiario=nome_beneficiario,
+        tipo_publico=tipo_pub,
+        index_kit=index_kit,
+        modelo_baixa=modelo_baixa
+    )
+    db.session.add(log_baixa)
+    db.session.commit()
 
     return jsonify({
         'sucesso': True,
         'mensagem': f'Kit {index_kit + 1} baixado com sucesso! (Modelo: {modelo_baixa})',
-        'dados': dados_atualizados
+        'dados': reg.to_dict()
+    }), 200
+
+
+@api_bp.route('/historico-baixas', methods=['GET'])
+def listar_historico():
+    historicos = HistoricoBaixa.query.order_by(HistoricoBaixa.data_baixa.desc()).limit(100).all()
+    return jsonify({
+        'sucesso': True,
+        'historico': [h.to_dict() for h in historicos]
     }), 200

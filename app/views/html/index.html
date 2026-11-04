@@ -8,14 +8,13 @@
 </head>
 <body>
 
-    <!-- Área de Exibição com Iframe e Scroll Independente -->
     <main class="app-viewport">
         <iframe id="main-frame" src="/entregar-kit?modo=manual" frameborder="0"></iframe>
     </main>
 
-    <!-- MENU FLUTUANTE DE NAVEGAÇÃO -->
+    <!-- MENU FLUTUANTE COM CONTROLE DE ACESSO -->
     <nav class="menu">
-        <!-- 1. BUSCAR (Primeira Opção - Digitação/Autocomplete) -->
+        <!-- 1. BUSCAR -->
         <a href="javascript:void(0)" class="menu-link active" onclick="carregarTela('/entregar-kit?modo=manual', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -24,7 +23,7 @@
             <span>BUSCAR</span>
         </a>
 
-        <!-- 2. Ler QR Code (Segunda Opção - Câmera Direta) -->
+        <!-- 2. Ler QR Code -->
         <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/entregar-kit?modo=camera', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path fill-rule="evenodd" d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm10-2h2v2h-2v-2zm0 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0-2h2v2h-2v-2zm-2 0h2v2h-2v-2z" clip-rule="evenodd"/>
@@ -32,7 +31,17 @@
             <span>Ler QR Code</span>
         </a>
 
-        <!-- 3. Dashboard -->
+        <!-- 3. Histórico (Visível para Operadores e Admins) -->
+        <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/historico', this)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Histórico</span>
+        </a>
+
+        {% if perfil == 'ADMIN' %}
+        <!-- 4. Dashboard (Restrito a Admins) -->
         <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/dashboard', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.375 2.25c.966 0 1.75.784 1.75 1.75v16c0 .966-.784 1.75-1.75 1.75h-1.75a1.75 1.75 0 0 1-1.75-1.75v-16c0-.966.784-1.75 1.75-1.75h1.75ZM12.875 8.25c.966 0 1.75.784 1.75 1.75v10c0 .966-.784 1.75-1.75 1.75h-1.75a1.75 1.75 0 0 1-1.75-1.75v-10c0-.966.784-1.75 1.75-1.75h1.75ZM7.375 13.75c.966 0 1.75.784 1.75 1.75v4.5c0 .966-.784 1.75-1.75 1.75h-1.75a1.75 1.75 0 0 1-1.75-1.75v-4.5c0-.966.784-1.75 1.75-1.75h1.75Z"/>
@@ -40,13 +49,25 @@
             <span>Dashboard</span>
         </a>
 
-        <!-- 4. Estoque -->
+        <!-- 5. Estoque (Restrito a Admins) -->
         <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/estoque', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9.57l8.622-5.03a.75.75 0 0 0 .378-.652V7.93ZM2.25 7.93v9.168c0 .265.14.51.378.652l8.622 5.03v-9.57l-9-5.25Z"/>
             </svg>
             <span>Estoque</span>
         </a>
+
+        <!-- 6. Gerar Acesso (Restrito a Admins) -->
+        <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/gerar-acesso', this)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="17" y1="11" x2="23" y2="11"></line>
+            </svg>
+            <span>Gerar Acesso</span>
+        </a>
+        {% endif %}
     </nav>
 
     <script>

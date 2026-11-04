@@ -1,11 +1,70 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
 
+class Usuario(db.Model):
+    """Tabela de Usuários do sistema com níveis de acesso."""
+    __tablename__ = 'usuarios'
+
+    id_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nome = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    senha_hash = db.Column(db.String(255), nullable=False)
+    perfil = db.Column(db.String(20), nullable=False, default='OPERADOR')  # 'ADMIN' ou 'OPERADOR'
+    ativo = db.Column(db.Boolean, default=True, nullable=False)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+
+    def checar_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha)
+
+    def to_dict(self):
+        return {
+            'id_usuario': self.id_usuario,
+            'nome': self.nome,
+            'email': self.email,
+            'perfil': self.perfil,
+            'ativo': self.ativo,
+            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
+        }
+
+
+class HistoricoBaixa(db.Model):
+    """Tabela para registro e auditoria de cada baixa realizada."""
+    __tablename__ = 'historico_baixas'
+
+    id_historico = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_usuario = db.Column(db.Integer, db.ForeignKey('usuarios.id_usuario'), nullable=True, index=True)
+    nome_operador = db.Column(db.String(255), nullable=True)
+    codigo_retirada = db.Column(db.String(36), nullable=False, index=True)
+    id_colaborador = db.Column(db.Integer, nullable=False)
+    nome_beneficiario = db.Column(db.String(255), nullable=True)
+    tipo_publico = db.Column(db.String(50), nullable=False)
+    index_kit = db.Column(db.Integer, nullable=False)
+    modelo_baixa = db.Column(db.String(100), nullable=False)
+    data_baixa = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    def to_dict(self):
+        return {
+            'id_historico': self.id_historico,
+            'id_usuario': self.id_usuario,
+            'nome_operador': self.nome_operador or "Sistema / Anônimo",
+            'codigo_retirada': self.codigo_retirada,
+            'id_colaborador': self.id_colaborador,
+            'nome_beneficiario': self.nome_beneficiario,
+            'tipo_publico': self.tipo_publico,
+            'index_kit': self.index_kit,
+            'modelo_baixa': self.modelo_baixa,
+            'data_baixa': self.data_baixa.strftime("%d/%m/%Y %H:%M:%S")
+        }
+
+
 class BaseRetirada(db.Model):
-    """Classe abstrata base contendo os campos em comum para retiradas."""
     __abstract__ = True
 
     id_retirada = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -22,7 +81,6 @@ class BaseRetirada(db.Model):
 
 
 class RetiradaDependente(BaseRetirada):
-    """Mapeamento da tabela de retiradas de Kits de Dependentes (Excel)."""
     __tablename__ = 'retiradas_dependentes'
 
     nome_colaborador = db.Column(db.String(255), nullable=True)
@@ -52,18 +110,13 @@ class RetiradaDependente(BaseRetirada):
 
 
 class RetiradaJovemAprendiz(BaseRetirada):
-    """Mapeamento da tabela de retiradas para Jovens Aprendizes (CSV)."""
     __tablename__ = 'retiradas_jovens_aprendizes'
 
     def extrair_nome_jovem(self):
-        """Extrai o nome do Jovem Aprendiz do texto do resumo de kits."""
         if not self.resumo_kits:
             return f"Jovem Aprendiz (ID {self.id_colaborador})"
-        
-        # Pega a primeira parte antes do traço '-'
         primeira_parte = self.resumo_kits.split('|')[0].strip()
         nome_extraido = primeira_parte.split('-')[0].strip()
-        
         return nome_extraido if nome_extraido else f"Jovem Aprendiz (ID {self.id_colaborador})"
 
     def to_dict(self):
