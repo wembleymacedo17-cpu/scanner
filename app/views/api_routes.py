@@ -1,12 +1,11 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime
-from sqlalchemy import or_
+from sqlalchemy import or_, cast, String
 from app.models import db, RetiradaDependente, RetiradaJovemAprendiz
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 def extrair_nomes_dependentes(resumo_str):
-    """Auxiliar para extrair apenas os nomes dos dependentes para o autocomplete."""
     if not resumo_str:
         return []
     
@@ -15,7 +14,7 @@ def extrair_nomes_dependentes(resumo_str):
     
     for parte in partes:
         parte_strip = parte.strip()
-        texto_upper = parte_strip.toUpperCase() if hasattr(parte_strip, 'toUpperCase') else parte_strip.upper()
+        texto_upper = parte_strip.upper()
         
         if "ÓRFÃOS" in texto_upper or "ORFAOS" in texto_upper or "AUTOMÁTICOS" in texto_upper or "AUTOMATICOS" in texto_upper:
             if ":" in parte_strip:
@@ -39,15 +38,17 @@ def autocompletar_nome():
         return jsonify({'sucesso': True, 'sugestoes': []}), 200
 
     termo_like = f"%{query}%"
+    sugestoes = []
 
+    # 1. Busca nos Dependentes (por nome, resumo ou crachá)
     deps = RetiradaDependente.query.filter(
         or_(
             RetiradaDependente.nome_colaborador.ilike(termo_like),
-            RetiradaDependente.resumo_kits.ilike(termo_like)
+            RetiradaDependente.resumo_kits.ilike(termo_like),
+            cast(RetiradaDependente.id_colaborador, String).ilike(termo_like)
         )
     ).limit(8).all()
 
-    sugestoes = []
     for d in deps:
         sugestoes.append({
             'codigo_retirada': d.codigo_retirada,
@@ -57,17 +58,22 @@ def autocompletar_nome():
             'tipo_publico': 'Dependente'
         })
 
-    if len(sugestoes) < 8:
+    # 2. Busca nos Jovens Aprendizes (pesquisa direta em resumo_kits e id_colaborador)
+    limite_restante = 8 - len(sugestoes)
+    if limite_restante > 0:
         jovens = RetiradaJovemAprendiz.query.filter(
-            RetiradaJovemAprendiz.resumo_kits.ilike(termo_like)
-        ).limit(8 - len(sugestoes)).all()
+            or_(
+                RetiradaJovemAprendiz.resumo_kits.ilike(termo_like),
+                cast(RetiradaJovemAprendiz.id_colaborador, String).ilike(termo_like)
+            )
+        ).limit(limite_restante).all()
 
         for j in jovens:
             sugestoes.append({
                 'codigo_retirada': j.codigo_retirada,
                 'id_colaborador': j.id_colaborador,
-                'nome_colaborador': f"Jovem Aprendiz (ID {j.id_colaborador})",
-                'dependentes': extrair_nomes_dependentes(j.resumo_kits),
+                'nome_colaborador': j.extrair_nome_jovem(),
+                'dependentes': [j.extrair_nome_jovem()],
                 'tipo_publico': 'Jovem Aprendiz'
             })
 
@@ -108,14 +114,10 @@ def buscar_retirada(termo_busca):
             ).first()
 
     if reg_dep:
-        dados = reg_dep.to_dict()
-        dados['tipo_publico'] = 'Dependente'
-        return jsonify({'sucesso': True, 'dados': dados}), 200
+        return jsonify({'sucesso': True, 'dados': reg_dep.to_dict()}), 200
 
     if reg_jovem:
-        dados = reg_jovem.to_dict()
-        dados['tipo_publico'] = 'Jovem Aprendiz'
-        return jsonify({'sucesso': True, 'dados': dados}), 200
+        return jsonify({'sucesso': True, 'dados': reg_jovem.to_dict()}), 200
 
     return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este termo.'}), 404
 
@@ -166,7 +168,6 @@ def dar_baixa_item():
     db.session.commit()
 
     dados_atualizados = reg.to_dict()
-    dados_atualizados['tipo_publico'] = tipo_pub
 
     return jsonify({
         'sucesso': True,

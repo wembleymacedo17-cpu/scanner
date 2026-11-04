@@ -18,8 +18,6 @@ class BaseRetirada(db.Model):
     status = db.Column(db.String(50), nullable=False, default='PENDENTE', index=True)
     data_geracao = db.Column(db.String(50), nullable=True)
     data_entrega = db.Column(db.DateTime, nullable=True)
-    
-    # --- COLUNA ADICIONADA ---
     detalhes_entregas = db.Column(db.JSON, nullable=True)
 
 
@@ -37,7 +35,7 @@ class RetiradaDependente(BaseRetirada):
             'id_retirada': self.id_retirada,
             'codigo_retirada': self.codigo_retirada,
             'id_colaborador': self.id_colaborador,
-            'nome_colaborador': self.nome_colaborador,
+            'nome_colaborador': self.nome_colaborador or "NÃO INFORMADO",
             'log_modificacao_cracha': self.log_modificacao_cracha,
             'email': self.email,
             'telefone': self.telefone,
@@ -49,7 +47,7 @@ class RetiradaDependente(BaseRetirada):
             'necessita_recontato': self.necessita_recontato,
             'motivo_recontato': self.motivo_recontato,
             'detalhes_entregas': self.detalhes_entregas or {},
-            'tipo_publico': 'DEPENDENTE'
+            'tipo_publico': 'Dependente'
         }
 
 
@@ -57,11 +55,23 @@ class RetiradaJovemAprendiz(BaseRetirada):
     """Mapeamento da tabela de retiradas para Jovens Aprendizes (CSV)."""
     __tablename__ = 'retiradas_jovens_aprendizes'
 
+    def extrair_nome_jovem(self):
+        """Extrai o nome do Jovem Aprendiz do texto do resumo de kits."""
+        if not self.resumo_kits:
+            return f"Jovem Aprendiz (ID {self.id_colaborador})"
+        
+        # Pega a primeira parte antes do traço '-'
+        primeira_parte = self.resumo_kits.split('|')[0].strip()
+        nome_extraido = primeira_parte.split('-')[0].strip()
+        
+        return nome_extraido if nome_extraido else f"Jovem Aprendiz (ID {self.id_colaborador})"
+
     def to_dict(self):
         return {
             'id_retirada': self.id_retirada,
             'codigo_retirada': self.codigo_retirada,
             'id_colaborador': self.id_colaborador,
+            'nome_colaborador': self.extrair_nome_jovem(),
             'email': self.email,
             'telefone': self.telefone,
             'qtd_kits': self.qtd_kits,
@@ -70,12 +80,11 @@ class RetiradaJovemAprendiz(BaseRetirada):
             'data_geracao': self.data_geracao,
             'data_entrega': self.data_entrega.isoformat() if self.data_entrega else None,
             'detalhes_entregas': self.detalhes_entregas or {},
-            'tipo_publico': 'JOVEM_APRENDIZ'
+            'tipo_publico': 'Jovem Aprendiz'
         }
 
 
 class EstoqueKit(db.Model):
-    """Mapeamento e controlo do estoque físico dos kits escolares."""
     __tablename__ = 'estoque_kits'
 
     id_estoque = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -99,7 +108,6 @@ class EstoqueKit(db.Model):
 
 
 class MovimentacaoEstoque(db.Model):
-    """Registo para auditoria e histórico de entradas e saídas de estoque."""
     __tablename__ = 'movimentacoes_estoque'
 
     id_movimentacao = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -122,4 +130,3 @@ class MovimentacaoEstoque(db.Model):
             'observacao': self.observacao,
             'data_movimentacao': self.data_movimentacao.isoformat() if self.data_movimentacao else None
         }
-    
