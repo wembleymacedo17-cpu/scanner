@@ -5,102 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Retirada de Kits Escolares</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .login-card {
-            background: #1e293b;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 32px 24px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-        .login-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .login-header h2 {
-            font-size: 1.3rem;
-            color: #38bdf8;
-            margin-bottom: 6px;
-        }
-        .login-header p {
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: #cbd5e1;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            background: #0f172a;
-            color: #ffffff;
-            font-size: 0.9rem;
-            outline: none;
-        }
-        .form-group input:focus {
-            border-color: #0284c7;
-        }
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background: #0284c7;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 8px;
-        }
-        .btn-login:hover {
-            background: #0369a1;
-        }
-        .alert {
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            text-align: center;
-            margin-top: 14px;
-            display: none;
-        }
-        .alert-danger {
-            background: #450a0a;
-            color: #fca5a5;
-            border: 1px solid #7f1d1d;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .login-card { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
+        .login-header { text-align: center; margin-bottom: 24px; }
+        .login-icon-box { background: #0284c7; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; }
+        .login-header h2 { font-size: 1.3rem; color: #ffffff; margin-bottom: 4px; }
+        .login-header p { font-size: 0.85rem; color: #94a3b8; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 600; }
+        .form-group input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #ffffff; font-size: 0.9rem; outline: none; }
+        .form-group input:focus { border-color: #0284c7; }
+        .btn-login { width: 100%; padding: 12px; background: #0284c7; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+        .btn-login:hover { background: #0369a1; }
+        .alert { padding: 10px; border-radius: 6px; font-size: 0.82rem; text-align: center; margin-top: 14px; display: none; }
+        .alert-danger { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
     </style>
 </head>
 <body>
     <div class="login-card">
         <div class="login-header">
-            <h2>Entrega de Kits Escolares</h2>
-            <p>Informe suas credenciais para continuar</p>
+            <div class="login-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h2>Retirada de Kits</h2>
+            <p>Informe suas credenciais para acessar</p>
         </div>
 
         <form id="form-login">

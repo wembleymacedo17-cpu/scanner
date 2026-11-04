@@ -251,3 +251,63 @@ def listar_historico():
         'sucesso': True,
         'historico': [h.to_dict() for h in historicos]
     }), 200
+
+
+@api_bp.route('/usuarios', methods=['GET'])
+def listar_usuarios():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    users = Usuario.query.order_by(Usuario.data_criacao.desc()).all()
+    return jsonify({
+        'sucesso': True,
+        'usuarios': [u.to_dict() for u in users]
+    }), 200
+
+
+@api_bp.route('/usuarios/<int:id_usuario>', methods=['PUT'])
+def atualizar_usuario(id_usuario):
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    user = Usuario.query.get(id_usuario)
+    if not user:
+        return jsonify({'sucesso': False, 'mensagem': 'Usuário não encontrado.'}), 404
+
+    # TRAVA DE SEGURANÇA: Usuário Master Root não pode ser alterado
+    if user.email.lower() == 'admin@funfarme.com.br':
+        return jsonify({'sucesso': False, 'mensagem': 'O usuário Administrador Master não pode ser alterado.'}), 400
+
+    data = request.json or {}
+    if 'nome' in data and data['nome'].strip():
+        user.nome = data['nome'].strip()
+    if 'email' in data and data['email'].strip():
+        user.email = data['email'].strip().lower()
+    if 'perfil' in data and data['perfil'].strip():
+        user.perfil = data['perfil'].strip().upper()
+    if 'senha' in data and data['senha'].strip():
+        user.set_senha(data['senha'].strip())
+
+    db.session.commit()
+    return jsonify({'sucesso': True, 'mensagem': 'Usuário atualizado com sucesso!'}), 200
+
+
+@api_bp.route('/usuarios/<int:id_usuario>', methods=['DELETE'])
+def excluir_usuario(id_usuario):
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    user = Usuario.query.get(id_usuario)
+    if not user:
+        return jsonify({'sucesso': False, 'mensagem': 'Usuário não encontrado.'}), 404
+
+    # TRAVA DE SEGURANÇA: Usuário Master Root não pode ser excluído
+    if user.email.lower() == 'admin@funfarme.com.br':
+        return jsonify({'sucesso': False, 'mensagem': 'O usuário Administrador Master não pode ser excluído.'}), 400
+
+    if session.get('usuario_id') == id_usuario:
+        return jsonify({'sucesso': False, 'mensagem': 'Você não pode excluir sua própria conta.'}), 400
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'sucesso': True, 'mensagem': 'Usuário excluído com sucesso!'}), 200

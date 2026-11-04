@@ -13,35 +13,31 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             overflow-x: auto;
             margin-top: 16px;
+            border: 1px solid #e2e8f0;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        th {
-            background: #f8fafc;
-            color: #475569;
-            font-weight: 700;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; color: #475569; font-weight: 700; }
         .badge-op {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
+            background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;
         }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <h2>📜 Histórico de Entregas</h2>
-        <p style="color: #64748b; font-size: 0.85rem;">Registro de baixas efetuadas pelos operadores</p>
+        <!-- Header sem emoji -->
+        <header class="app-header">
+            <div class="header-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div>
+                <h2>Histórico de Entregas</h2>
+                <p>Registro de baixas efetuadas pelos operadores</p>
+            </div>
+        </header>
 
         <div class="table-container">
             <table>
