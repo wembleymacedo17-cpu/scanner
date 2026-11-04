@@ -18,20 +18,22 @@
             </div>
             <div>
                 <h2>Retirada de Kits Escolares</h2>
-                <p>Escanear QR Code ou buscar por Crachá / CPF</p>
+                <p>Escanear QR Code ou buscar por Crachá / CPF / Nome</p>
             </div>
         </header>
 
-        <!-- BUSCA MANUAL -->
+        <!-- BUSCA MANUAL COM AUTOCOMPLETE INTELIGENTE -->
         <div class="search-box-container">
             <div class="search-input-wrapper">
                 <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="input-busca-manual" placeholder="Insira o Crachá / ID ou CPF..." />
+                <input type="text" id="input-busca-manual" placeholder="Buscar por Nome, Crachá ou CPF..." autocomplete="off" />
                 <button type="button" id="btn-buscar-manual" class="btn-search">Consultar</button>
             </div>
+            <!-- Lista Flutuante de Sugestões -->
+            <ul id="autocomplete-results" class="autocomplete-list hidden"></ul>
         </div>
 
         <!-- Área da Câmera -->
@@ -44,7 +46,6 @@
 
         <!-- CARTÃO DE RETIRADA -->
         <div id="cartao-retirada" class="card-container hidden">
-            <!-- Cabeçalho do Cartão -->
             <div class="colaborador-card">
                 <div class="colab-top-bar">
                     <span id="badge-publico" class="publico-tag">---</span>
@@ -92,6 +93,7 @@
     <script>
         let html5QrCode = null;
         let codigoAtualScan = null;
+        let debounceTimer = null;
 
         const CATEGORIAS_KITS = {
             "INFANTIL": ["Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro"],
@@ -110,17 +112,85 @@
         document.addEventListener("DOMContentLoaded", () => {
             iniciarScanner();
 
+            const inputBusca = document.getElementById("input-busca-manual");
+            const listaSugestoes = document.getElementById("autocomplete-results");
+
             document.getElementById("btn-novo-scan").addEventListener("click", () => {
                 document.getElementById("cartao-retirada").classList.add("hidden");
                 esconderAlerta();
                 iniciarScanner();
             });
 
-            document.getElementById("btn-buscar-manual").addEventListener("click", realizarBuscaManual);
-            document.getElementById("input-busca-manual").addEventListener("keypress", (e) => {
-                if (e.key === "Enter") realizarBuscaManual();
+            document.getElementById("btn-buscar-manual").addEventListener("click", () => realizarBuscaManual());
+
+            inputBusca.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    esconderSugestoes();
+                    realizarBuscaManual();
+                }
+            });
+
+            // Lógica de Autocomplete ao Digitar (com Debounce de 300ms)
+            inputBusca.addEventListener("input", (e) => {
+                clearTimeout(debounceTimer);
+                const termo = e.target.value.trim();
+
+                if (termo.length < 2) {
+                    esconderSugestoes();
+                    return;
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/api/autocompletar?q=${encodeURIComponent(termo)}`);
+                        const result = await response.json();
+
+                        if (result.sucesso && result.sugestoes.length > 0) {
+                            renderizarSugestoes(result.sugestoes);
+                        } else {
+                            esconderSugestoes();
+                        }
+                    } catch (err) {
+                        console.error("Erro na busca de sugestões:", err);
+                    }
+                }, 300);
+            });
+
+            // Esconde autocomplete se clicar fora
+            document.addEventListener("click", (e) => {
+                if (!e.target.closest(".search-box-container")) {
+                    esconderSugestoes();
+                }
             });
         });
+
+        function renderizarSugestoes(sugestoes) {
+            const listContainer = document.getElementById("autocomplete-results");
+            listContainer.innerHTML = "";
+
+            sugestoes.forEach(item => {
+                const li = document.createElement("li");
+                li.className = "autocomplete-item";
+                li.innerHTML = `
+                    <div class="ac-main">${item.nome_colaborador}</div>
+                    <div class="ac-sub">Crachá: <strong>${item.id_colaborador}</strong> | Kits: ${item.resumo_kits}</div>
+                `;
+                li.addEventListener("click", () => {
+                    document.getElementById("input-busca-manual").value = item.codigo_retirada;
+                    esconderSugestoes();
+                    consultarRetirada(item.codigo_retirada);
+                });
+                listContainer.appendChild(li);
+            });
+
+            listContainer.classList.remove("hidden");
+        }
+
+        function esconderSugestoes() {
+            const listContainer = document.getElementById("autocomplete-results");
+            listContainer.classList.add("hidden");
+            listContainer.innerHTML = "";
+        }
 
         function iniciarScanner() {
             if (!html5QrCode) {
@@ -150,10 +220,10 @@
             }
         }
 
-        function realizarBuscaManual() {
-            const termo = document.getElementById("input-busca-manual").value.trim();
+        function realizarBuscaManual(termoParam) {
+            const termo = termoParam || document.getElementById("input-busca-manual").value.trim();
             if (!termo) {
-                mostrarAlerta("Digite um Crachá ou CPF para consultar.", "danger");
+                mostrarAlerta("Digite um Nome, Crachá ou CPF para consultar.", "danger");
                 return;
             }
 
@@ -337,7 +407,7 @@
                 const labelMod = mod === "---" ? " Selecionar Modelo da Mochila..." : mod;
                 const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
                 if (selected) encontrado = true;
-                html += `<option value="${mod}" ${selected ? 'selected' : ''}>${labelMod}</option>`;
+                html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}</option>`;
             });
 
             if (!encontrado && modeloAtual) {

@@ -3,7 +3,6 @@ from flask import Flask, render_template
 from dotenv import load_dotenv
 from app.models import db
 
-# 1. Carrega o .env localizado na RAIZ do projeto (Baixas_Qrcode/.env)
 raiz_projeto = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 env_path = os.path.join(raiz_projeto, '.env')
 
@@ -19,14 +18,9 @@ def create_app():
 
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     
-    # 2. Busca a URL do banco
     database_url = os.getenv('DATABASE_URL')
-    
     if not database_url:
-        raise ValueError(
-            f"A variável 'DATABASE_URL' não foi encontrada! "
-            f"Verifique se o arquivo .env existe em: {env_path}"
-        )
+        raise ValueError(f"DATABASE_URL não configurada em: {env_path}")
 
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -34,32 +28,32 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    # OTIMIZAÇÕES DE PERFORMANCE DE CONEXÃO COM O BANCO SUPABASE
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 10,
+        'max_overflow': 20,
+        'pool_recycle': 300,
+        'pool_pre_ping': True
+    }
+
     db.init_app(app)
 
-    # -------------------------------------------------------------
-    # ROTAS DO MENU PRINCIPAL E INTERFACE
-    # -------------------------------------------------------------
     @app.route('/')
     def index():
-        # Renderiza a estrutura da barra lateral (Menu com os ícones)
         return render_template('index.html')
 
     @app.route('/entregar-kit')
     def entregar_kit():
-        # Renderiza a tela de scanner / cartão de entrega
         return render_template('cartao_retirada.html')
 
     @app.route('/dashboard')
     def dashboard():
-        # Renderiza a tela do Dashboard de métricas
         return render_template('dashboard.html')
 
     @app.route('/estoque')
     def estoque():
-        # Renderiza a tela de gestão do Estoque
         return render_template('estoque.html')
 
-    # REGISTRO DAS ROTAS DA API
     from app.views.api_routes import api_bp
     app.register_blueprint(api_bp)
 

@@ -1,8 +1,57 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime
+from sqlalchemy import or_
 from app.models import db, RetiradaDependente, RetiradaJovemAprendiz
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+@api_bp.route('/autocompletar', methods=['GET'])
+def autocompletar_nome():
+    """
+    Endpoint leve para sugestões dinâmicas enquanto o usuário digita.
+    Limita a 8 resultados para maximizar a performance.
+    """
+    query = request.args.get('q', '').strip()
+    if not query or len(query) < 2:
+        return jsonify({'sucesso': True, 'sugestoes': []}), 200
+
+    termo_like = f"%{query}%"
+
+    # Busca em Dependentes por Nome do Colaborador ou Nomes no Resumo de Kits
+    deps = RetiradaDependente.query.filter(
+        or_(
+            RetiradaDependente.nome_colaborador.ilike(termo_like),
+            RetiradaDependente.resumo_kits.ilike(termo_like)
+        )
+    ).limit(8).all()
+
+    sugestoes = []
+    for d in deps:
+        sugestoes.append({
+            'codigo_retirada': d.codigo_retirada,
+            'id_colaborador': d.id_colaborador,
+            'nome_colaborador': d.nome_colaborador or "NÃO INFORMADO",
+            'resumo_kits': d.resumo_kits,
+            'tipo_publico': 'Dependente'
+        })
+
+    # Busca em Jovens Aprendizes caso a lista ainda não tenha atingido 8
+    if len(sugestoes) < 8:
+        jovens = RetiradaJovemAprendiz.query.filter(
+            RetiradaJovemAprendiz.resumo_kits.ilike(termo_like)
+        ).limit(8 - len(sugestoes)).all()
+
+        for j in jovens:
+            sugestoes.append({
+                'codigo_retirada': j.codigo_retirada,
+                'id_colaborador': j.id_colaborador,
+                'nome_colaborador': f"Jovem Aprendiz (ID {j.id_colaborador})",
+                'resumo_kits': j.resumo_kits,
+                'tipo_publico': 'Jovem Aprendiz'
+            })
+
+    return jsonify({'sucesso': True, 'sugestoes': sugestoes}), 200
+
 
 @api_bp.route('/buscar/<string:termo_busca>', methods=['GET'])
 def buscar_retirada(termo_busca):
@@ -10,61 +59,37 @@ def buscar_retirada(termo_busca):
     if 'RETIRADA_KIT:' in termo:
         termo = termo.replace('RETIRADA_KIT:', '').strip()
     
-    # Limpa caracteres não numéricos para verificar se é CPF/Crachá
     apenas_numeros = "".join(filter(str.isdigit, termo))
     
     reg_dep = None
     reg_jovem = None
 
-    # 1. Tenta buscar por Código de Retirada (UUID)
+    # 1. Busca por Código UUID
     reg_dep = RetiradaDependente.query.filter_by(codigo_retirada=termo).first()
     if not reg_dep:
         reg_jovem = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=termo).first()
 
-    # 2. Se não achou e possui números, tenta por Crachá (id_colaborador)
+    # 2. Busca por Crachá / ID numérico
     if not reg_dep and not reg_jovem and apenas_numeros.isdigit():
         id_num = int(apenas_numeros)
         reg_dep = RetiradaDependente.query.filter_by(id_colaborador=id_num).first()
         if not reg_dep:
             reg_jovem = RetiradaJovemAprendiz.query.filter_by(id_colaborador=id_num).first()
 
-    # 3. Retorna os resultados encontrados
-    if reg_dep:
-        dados = reg_dep.to_dict()
-        dados['tipo_publico'] = 'Dependente'
-        return jsonify({'sucesso': True, 'dados': dados}), 200
+    # 3. Busca por Nome (Colaborador ou Dependente)
+    if not reg_dep and not reg_jovem:
+        termo_like = f"%{termo}%"
+        reg_dep = RetiradaDependente.query.filter(
+            or_(
+                RetiradaDependente.nome_colaborador.ilike(termo_like),
+                RetiradaDependente.resumo_kits.ilike(termo_like)
+            )
+        ).first()
 
-    if reg_jovem:
-        dados = reg_jovem.to_dict()
-        dados['tipo_publico'] = 'Jovem Aprendiz'
-        return jsonify({'sucesso': True, 'dados': dados}), 200
-
-    return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este QR Code, Crachá ou CPF.'}), 404
-
-from flask import Blueprint, jsonify, request
-from datetime import datetime
-from app.models import db, RetiradaDependente, RetiradaJovemAprendiz
-
-api_bp = Blueprint('api', __name__, url_prefix='/api')
-
-@api_bp.route('/buscar/<string:termo_busca>', methods=['GET'])
-def buscar_retirada(termo_busca):
-    termo = str(termo_busca).strip()
-    if 'RETIRADA_KIT:' in termo:
-        termo = termo.replace('RETIRADA_KIT:', '').strip()
-    
-    apenas_numeros = "".join(filter(str.isdigit, termo))
-    
-    reg_dep = RetiradaDependente.query.filter_by(codigo_retirada=termo).first()
-    reg_jovem = None
-    if not reg_dep:
-        reg_jovem = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=termo).first()
-
-    if not reg_dep and not reg_jovem and apenas_numeros.isdigit():
-        id_num = int(apenas_numeros)
-        reg_dep = RetiradaDependente.query.filter_by(id_colaborador=id_num).first()
         if not reg_dep:
-            reg_jovem = RetiradaJovemAprendiz.query.filter_by(id_colaborador=id_num).first()
+            reg_jovem = RetiradaJovemAprendiz.query.filter(
+                RetiradaJovemAprendiz.resumo_kits.ilike(termo_like)
+            ).first()
 
     if reg_dep:
         dados = reg_dep.to_dict()
@@ -76,7 +101,7 @@ def buscar_retirada(termo_busca):
         dados['tipo_publico'] = 'Jovem Aprendiz'
         return jsonify({'sucesso': True, 'dados': dados}), 200
 
-    return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este QR Code, Crachá ou CPF.'}), 404
+    return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este termo.'}), 404
 
 
 @api_bp.route('/dar-baixa-item', methods=['POST'])
