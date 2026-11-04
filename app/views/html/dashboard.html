@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Entregas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
+    <style>
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .metric-card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; }
+        .metric-card h4 { font-size: 0.85rem; color: #718096; }
+        .metric-card span { font-size: 1.8rem; font-weight: bold; color: #2b6cb0; }
+    </style>
+</head>
+<body style="padding: 20px;">
+    <h2>📊 Dashboard de Entregas</h2>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <h4>Total Entregue</h4>
+            <span id="dash-entregues">--</span>
+        </div>
+        <div class="metric-card">
+            <h4>Pendentes</h4>
+            <span id="dash-pendentes">--</span>
+        </div>
+        <div class="metric-card">
+            <h4>Parciais</h4>
+            <span id="dash-parciais">--</span>
+        </div>
+    </div>
+</body>
+</html>

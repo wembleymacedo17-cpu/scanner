@@ -67,3 +67,53 @@ class RetiradaJovemAprendiz(BaseRetirada):
             'data_entrega': self.data_entrega.isoformat() if self.data_entrega else None,
             'tipo_publico': 'JOVEM_APRENDIZ'
         }
+
+
+class EstoqueKit(db.Model):
+    """Mapeamento e controlo do estoque físico dos kits escolares."""
+    __tablename__ = 'estoque_kits'
+
+    id_estoque = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    codigo_kit = db.Column(db.String(50), unique=True, nullable=False, index=True)  # ex: 'KIT_INFANTIL_A', 'KIT_MEDIO'
+    descricao_kit = db.Column(db.String(255), nullable=False)
+    quantidade_disponivel = db.Column(db.Integer, nullable=False, default=0)
+    quantidade_reservada = db.Column(db.Integer, nullable=False, default=0)
+    ativo = db.Column(db.Boolean, nullable=False, default=True)
+    ultima_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id_estoque': self.id_estoque,
+            'codigo_kit': self.codigo_kit,
+            'descricao_kit': self.descricao_kit,
+            'quantidade_disponivel': self.quantidade_disponivel,
+            'quantidade_reservada': self.quantidade_reservada,
+            'ativo': self.ativo,
+            'ultima_atualizacao': self.ultima_atualizacao.isoformat() if self.ultima_atualizacao else None
+        }
+
+
+class MovimentacaoEstoque(db.Model):
+    """Registo para auditoria e histórico de entradas e saídas de estoque."""
+    __tablename__ = 'movimentacoes_estoque'
+
+    id_movimentacao = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_estoque = db.Column(db.Integer, db.ForeignKey('estoque_kits.id_estoque'), nullable=False, index=True)
+    tipo_movimentacao = db.Column(db.String(20), nullable=False)  # 'ENTRADA', 'SAIDA_ENTREGA', 'RESERVA', 'AJUSTE'
+    quantidade = db.Column(db.Integer, nullable=False)
+    codigo_retirada = db.Column(db.String(36), nullable=True)  # Vínculo opcional com a entrega realizada
+    observacao = db.Column(db.Text, nullable=True)
+    data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    estoque = db.relationship('EstoqueKit', backref=db.backref('movimentacoes', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id_movimentacao': self.id_movimentacao,
+            'id_estoque': self.id_estoque,
+            'tipo_movimentacao': self.tipo_movimentacao,
+            'quantidade': self.quantidade,
+            'codigo_retirada': self.codigo_retirada,
+            'observacao': self.observacao,
+            'data_movimentacao': self.data_movimentacao.isoformat() if self.data_movimentacao else None
+        }

@@ -1,0 +1,113 @@
+:root {
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --glass-border: rgba(255, 255, 255, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Área de Visualização das Páginas */
+.app-viewport {
+  width: 100%;
+  height: 100vh;
+  padding-bottom: 80px; /* Garante espaço para o menu flutuante não cobrir o conteúdo */
+}
+
+.app-viewport iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* --- MENU FLUTUANTE GLASSMORPHISM (UIVERSE ADAPTADO) --- */
+.menu {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 480px;
+  backdrop-filter: blur(16px) saturate(180%) contrast(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%) contrast(150%);
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  border-radius: 99rem;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  z-index: 999;
+}
+
+.menu::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.menu a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 999rem;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.2s var(--ease-spring),
+    color 0.2s var(--ease-spring),
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.3s ease-in-out;
+}
+
+.menu a:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.menu a svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.menu a span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* Estado Ativo (Selecionado) */
+.menu a.active {
+  background: rgba(59, 130, 246, 0.85); /* Azul vibrante moderno */
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.menu a:active {
+  transform: scale(0.95);
+}

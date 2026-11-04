@@ -28,7 +28,6 @@ def create_app():
             f"Verifique se o arquivo .env existe em: {env_path}"
         )
 
-    # Garante compatibilidade do prefixo da URL com o SQLAlchemy
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -37,12 +36,30 @@ def create_app():
 
     db.init_app(app)
 
-    # Rota raiz do HTML
+    # -------------------------------------------------------------
+    # ROTAS DO MENU PRINCIPAL E INTERFACE
+    # -------------------------------------------------------------
     @app.route('/')
     def index():
+        # Renderiza a estrutura da barra lateral (Menu com os ícones)
+        return render_template('index.html')
+
+    @app.route('/entregar-kit')
+    def entregar_kit():
+        # Renderiza a tela de scanner / cartão de entrega
         return render_template('cartao_retirada.html')
 
-    # REGISTRO DAS ROTAS DA API (Faltava esta parte)
+    @app.route('/dashboard')
+    def dashboard():
+        # Renderiza a tela do Dashboard de métricas
+        return render_template('dashboard.html')
+
+    @app.route('/estoque')
+    def estoque():
+        # Renderiza a tela de gestão do Estoque
+        return render_template('estoque.html')
+
+    # REGISTRO DAS ROTAS DA API
     from app.views.api_routes import api_bp
     app.register_blueprint(api_bp)
 
