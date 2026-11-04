@@ -9,21 +9,19 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- Header Principal -->
+        <!-- Header Principal com Ícone SVG Dinâmico -->
         <header class="app-header">
-            <div class="header-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9.57l8.622-5.03a.75.75 0 0 0 .378-.652V7.93ZM2.25 7.93v9.168c0 .265.14.51.378.652l8.622 5.03v-9.57l-9-5.25Z"/>
-                </svg>
+            <div id="header-icon-container" class="header-icon">
+                <!-- Ícone SVG injetado via JavaScript conforme o modo -->
             </div>
             <div>
-                <h2>Retirada de Kits Escolares</h2>
-                <p>Escanear QR Code ou buscar por Crachá / CPF / Nome</p>
+                <h2 id="titulo-modo">Retirada de Kits Escolares</h2>
+                <p id="subtitulo-modo">Consulta e baixa de entregas</p>
             </div>
         </header>
 
-        <!-- BUSCA MANUAL COM AUTOCOMPLETE INTELIGENTE -->
-        <div class="search-box-container">
+        <!-- BUSCA MANUAL COM AUTOCOMPLETE (Exibido no modo BUSCAR) -->
+        <div id="box-busca-container" class="search-box-container hidden">
             <div class="search-input-wrapper">
                 <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -32,12 +30,11 @@
                 <input type="text" id="input-busca-manual" placeholder="Buscar por Nome, Crachá ou CPF..." autocomplete="off" />
                 <button type="button" id="btn-buscar-manual" class="btn-search">Consultar</button>
             </div>
-            <!-- Lista Flutuante de Sugestões (Limpa) -->
             <ul id="autocomplete-results" class="autocomplete-list hidden"></ul>
         </div>
 
-        <!-- Área da Câmera (Fechada quando houver consulta) -->
-        <div id="reader-container" class="scanner-wrapper">
+        <!-- Área da Câmera (Exibida no modo Ler QR Code) -->
+        <div id="reader-container" class="scanner-wrapper hidden">
             <div id="reader"></div>
         </div>
 
@@ -83,7 +80,7 @@
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                         <circle cx="12" cy="13" r="4"></circle>
                     </svg>
-                    Escanear Outro / Nova Consulta
+                    Nova Consulta / Limpar
                 </button>
             </div>
         </div>
@@ -94,6 +91,22 @@
         let codigoAtualScan = null;
         let debounceTimer = null;
         let autoResetTimer = null;
+        let modoAtual = "manual";
+
+        // Ícones SVG customizados para o topo da página
+        const SVG_ICONS = {
+            camera: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 7V4a2 2 0 0 1 2-2h3"></path>
+                        <path d="M20 7V4a2 2 0 0 0-2-2h-3"></path>
+                        <path d="M4 17v3a2 2 0 0 0 2 2h3"></path>
+                        <path d="M20 17v3a2 2 0 0 1-2 2h-3"></path>
+                        <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                    </svg>`,
+            buscar: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>`
+        };
 
         const CATEGORIAS_KITS = {
             "INFANTIL": ["Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro"],
@@ -110,7 +123,10 @@
         ];
 
         document.addEventListener("DOMContentLoaded", () => {
-            iniciarScanner();
+            const urlParams = new URLSearchParams(window.location.search);
+            modoAtual = urlParams.get('modo') || 'manual';
+
+            configurarModoTela(modoAtual);
 
             const inputBusca = document.getElementById("input-busca-manual");
 
@@ -153,11 +169,37 @@
             });
 
             document.addEventListener("click", (e) => {
-                if (!e.target.closest(".search-box-container")) {
+                if (!e.target.closest("#box-busca-container")) {
                     esconderSugestoes();
                 }
             });
         });
+
+        function configurarModoTela(modo) {
+            const boxBusca = document.getElementById("box-busca-container");
+            const readerContainer = document.getElementById("reader-container");
+            const titulo = document.getElementById("titulo-modo");
+            const subtitulo = document.getElementById("subtitulo-modo");
+            const iconContainer = document.getElementById("header-icon-container");
+
+            if (modo === "camera") {
+                titulo.innerText = "Leitor de QR Code";
+                subtitulo.innerText = "Aproxime o QR Code do cartão para ler";
+                iconContainer.innerHTML = SVG_ICONS.camera;
+                boxBusca.style.display = "none";
+                readerContainer.classList.remove("hidden");
+                iniciarScanner();
+            } else {
+                titulo.innerText = "Consulta por Busca";
+                subtitulo.innerText = "Digite o Nome, Crachá ou CPF do colaborador";
+                iconContainer.innerHTML = SVG_ICONS.buscar;
+                pararScanner();
+                readerContainer.classList.add("hidden");
+                boxBusca.style.display = "block";
+                boxBusca.classList.remove("hidden");
+                document.getElementById("input-busca-manual").focus();
+            }
+        }
 
         function renderizarSugestoes(sugestoes) {
             const listContainer = document.getElementById("autocomplete-results");
@@ -176,7 +218,6 @@
                     <div class="ac-dependentes"><strong>Dependente(s):</strong> ${dependentesStr}</div>
                 `;
 
-                // Efeito Hover pré-seleção
                 li.addEventListener("mouseover", () => {
                     document.querySelectorAll(".autocomplete-item").forEach(el => el.classList.remove("selected"));
                     li.classList.add("selected");
@@ -214,7 +255,6 @@
             });
         }
 
-        // Parar e esconder o leitor de QR Code para economizar recursos e não poluir a tela
         function pararScanner() {
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => {
@@ -240,7 +280,6 @@
                 mostrarAlerta("Digite um Nome, Crachá ou CPF para consultar.", "danger");
                 return;
             }
-            pararScanner();
             consultarRetirada(termo);
         }
 
@@ -456,7 +495,6 @@
                     codigoAtualScan = result.dados.codigo_retirada;
                     renderizarCartao(result.dados);
 
-                    // Se todos os kits foram entregues, reseta a tela automaticamente após 3 segundos
                     if (result.dados.status === 'ENTREGUE') {
                         mostrarAlerta("Todos os kits foram baixados! Reiniciando consulta em 3 segundos...", "success");
                         autoResetTimer = setTimeout(() => {
@@ -476,7 +514,12 @@
             document.getElementById("cartao-retirada").classList.add("hidden");
             document.getElementById("input-busca-manual").value = "";
             esconderAlerta();
-            iniciarScanner();
+
+            if (modoAtual === "camera") {
+                iniciarScanner();
+            } else {
+                document.getElementById("input-busca-manual").focus();
+            }
         }
 
         function atualizarBadgeStatusGeral(status) {

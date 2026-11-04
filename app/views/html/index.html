@@ -8,22 +8,31 @@
 </head>
 <body>
 
-    <!-- Área onde as telas (Entregar Kit, Dashboard, Estoque) serão carregadas -->
+    <!-- Área de Exibição com Iframe e Scroll Independente -->
     <main class="app-viewport">
-        <iframe id="main-frame" src="/entregar-kit" frameborder="0"></iframe>
+        <iframe id="main-frame" src="/entregar-kit?modo=manual" frameborder="0"></iframe>
     </main>
 
-    <!-- MENU FLUTUANTE (GLASSMORPHISM UIVERSE) -->
+    <!-- MENU FLUTUANTE DE NAVEGAÇÃO -->
     <nav class="menu">
-        <!-- Rota 1: Entregar Kit (Ícone de QR Code / Scanner) -->
-        <a href="javascript:void(0)" class="menu-link active" onclick="carregarTela('/entregar-kit', this)">
+        <!-- 1. BUSCAR (Primeira Opção - Digitação/Autocomplete) -->
+        <a href="javascript:void(0)" class="menu-link active" onclick="carregarTela('/entregar-kit?modo=manual', this)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>BUSCAR</span>
+        </a>
+
+        <!-- 2. Ler QR Code (Segunda Opção - Câmera Direta) -->
+        <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/entregar-kit?modo=camera', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path fill-rule="evenodd" d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm10-2h2v2h-2v-2zm0 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0-2h2v2h-2v-2zm-2 0h2v2h-2v-2z" clip-rule="evenodd"/>
             </svg>
-            <span>Entregar Kit</span>
+            <span>Ler QR Code</span>
         </a>
 
-        <!-- Rota 2: Dashboard (Ícone de Gráfico de Colunas) -->
+        <!-- 3. Dashboard -->
         <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/dashboard', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.375 2.25c.966 0 1.75.784 1.75 1.75v16c0 .966-.784 1.75-1.75 1.75h-1.75a1.75 1.75 0 0 1-1.75-1.75v-16c0-.966.784-1.75 1.75-1.75h1.75ZM12.875 8.25c.966 0 1.75.784 1.75 1.75v10c0 .966-.784 1.75-1.75 1.75h-1.75a1.75 1.75 0 0 1-1.75-1.75v-10c0-.966.784-1.75 1.75-1.75h1.75ZM7.375 13.75c.966 0 1.75.784 1.75 1.75v4.5c0 .966-.784 1.75-1.75 1.75h-1.75a1.75 1.75 0 0 1-1.75-1.75v-4.5c0-.966.784-1.75 1.75-1.75h1.75Z"/>
@@ -31,7 +40,7 @@
             <span>Dashboard</span>
         </a>
 
-        <!-- Rota 3: Estoque (Ícone de Caixa/Inventory) -->
+        <!-- 4. Estoque -->
         <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/estoque', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9.57l8.622-5.03a.75.75 0 0 0 .378-.652V7.93ZM2.25 7.93v9.168c0 .265.14.51.378.652l8.622 5.03v-9.57l-9-5.25Z"/>
@@ -42,10 +51,7 @@
 
     <script>
         function carregarTela(url, elemento) {
-            // Troca o iframe
             document.getElementById('main-frame').src = url;
-
-            // Altera estado ativo no menu
             document.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
             });

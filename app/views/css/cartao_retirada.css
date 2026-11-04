@@ -9,6 +9,8 @@ body {
     background-color: #f1f5f9; 
     color: #0f172a; 
     padding: 16px; 
+    padding-bottom: 120px; 
+    overflow-y: auto;
 }
 
 .main-container { 
