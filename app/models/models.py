@@ -9,7 +9,7 @@ class BaseRetirada(db.Model):
     __abstract__ = True
 
     id_retirada = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    codigo_retirada = db.Column(db.String(36), unique=True, nullable=False, index=True)  # UUID
+    codigo_retirada = db.Column(db.String(36), unique=True, nullable=False, index=True)
     id_colaborador = db.Column(db.Integer, nullable=False, index=True)
     email = db.Column(db.String(255), nullable=True)
     telefone = db.Column(db.String(50), nullable=True)
@@ -18,6 +18,9 @@ class BaseRetirada(db.Model):
     status = db.Column(db.String(50), nullable=False, default='PENDENTE', index=True)
     data_geracao = db.Column(db.String(50), nullable=True)
     data_entrega = db.Column(db.DateTime, nullable=True)
+    
+    # --- COLUNA ADICIONADA ---
+    detalhes_entregas = db.Column(db.JSON, nullable=True)
 
 
 class RetiradaDependente(BaseRetirada):
@@ -45,6 +48,7 @@ class RetiradaDependente(BaseRetirada):
             'data_entrega': self.data_entrega.isoformat() if self.data_entrega else None,
             'necessita_recontato': self.necessita_recontato,
             'motivo_recontato': self.motivo_recontato,
+            'detalhes_entregas': self.detalhes_entregas or {},
             'tipo_publico': 'DEPENDENTE'
         }
 
@@ -65,6 +69,7 @@ class RetiradaJovemAprendiz(BaseRetirada):
             'status': self.status,
             'data_geracao': self.data_geracao,
             'data_entrega': self.data_entrega.isoformat() if self.data_entrega else None,
+            'detalhes_entregas': self.detalhes_entregas or {},
             'tipo_publico': 'JOVEM_APRENDIZ'
         }
 
@@ -74,7 +79,7 @@ class EstoqueKit(db.Model):
     __tablename__ = 'estoque_kits'
 
     id_estoque = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    codigo_kit = db.Column(db.String(50), unique=True, nullable=False, index=True)  # ex: 'KIT_INFANTIL_A', 'KIT_MEDIO'
+    codigo_kit = db.Column(db.String(50), unique=True, nullable=False, index=True)
     descricao_kit = db.Column(db.String(255), nullable=False)
     quantidade_disponivel = db.Column(db.Integer, nullable=False, default=0)
     quantidade_reservada = db.Column(db.Integer, nullable=False, default=0)
@@ -99,9 +104,9 @@ class MovimentacaoEstoque(db.Model):
 
     id_movimentacao = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_estoque = db.Column(db.Integer, db.ForeignKey('estoque_kits.id_estoque'), nullable=False, index=True)
-    tipo_movimentacao = db.Column(db.String(20), nullable=False)  # 'ENTRADA', 'SAIDA_ENTREGA', 'RESERVA', 'AJUSTE'
+    tipo_movimentacao = db.Column(db.String(20), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
-    codigo_retirada = db.Column(db.String(36), nullable=True)  # Vínculo opcional com a entrega realizada
+    codigo_retirada = db.Column(db.String(36), nullable=True)
     observacao = db.Column(db.Text, nullable=True)
     data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
@@ -117,5 +122,4 @@ class MovimentacaoEstoque(db.Model):
             'observacao': self.observacao,
             'data_movimentacao': self.data_movimentacao.isoformat() if self.data_movimentacao else None
         }
-
     

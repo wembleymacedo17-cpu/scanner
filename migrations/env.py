@@ -8,11 +8,17 @@ from sqlalchemy import pool
 from alembic import context
 from dotenv import load_dotenv
 
-# 1. Adiciona a raiz do projeto ao sys.path para conseguir importar o pacote 'app'
+# 1. Adiciona a raiz do projeto ao sys.path para conseguir importar a app
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# 2. Carrega as variáveis de ambiente a partir da pasta env/.env
-load_dotenv(os.path.join(os.path.dirname(__file__), '../env/.env'))
+# 2. Carrega as variáveis de ambiente a partir da raiz do projeto (.env)
+raiz_projeto = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+env_path = os.path.join(raiz_projeto, '.env')
+
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    load_dotenv()
 
 # Configuração do objeto Alembic Config
 config = context.config
@@ -21,12 +27,14 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# 3. Define a URL da base de dados do Supabase dinamicamente a partir do .env
+# 3. Define a URL da base de dados dinamicamente e corrige o prefixo para SQLAlchemy
 database_url = os.getenv("DATABASE_URL")
 if database_url:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
     config.set_main_option("sqlalchemy.url", database_url)
 
-# 4. Importa o objeto db do teu pacote app.models e define os metadados para autogenerate
+# 4. Importa os metadados dos modelos para suportar o autogenerate
 from app.models import db
 target_metadata = db.metadata
 

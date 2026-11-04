@@ -40,15 +40,13 @@
         <!-- Alerta Global -->
         <div id="alert-box" class="alert-banner hidden"></div>
 
-        <!-- CARTÃO DE RETIRADA (Visível após busca ou scan) -->
+        <!-- CARTÃO DE RETIRADA -->
         <div id="cartao-retirada" class="card-container hidden">
-            <!-- Cabeçalho do Cartão -->
             <div class="card-header">
                 <span id="badge-publico" class="publico-tag">---</span>
                 <span id="badge-status-geral" class="status-tag">PENDENTE</span>
             </div>
 
-            <!-- Dados do Colaborador -->
             <div class="colaborador-box">
                 <div class="info-group">
                     <span class="label">NOME DO COLABORADOR</span>
@@ -68,13 +66,11 @@
 
             <hr class="divider">
 
-            <!-- Lista de Kits / Dependentes -->
             <div class="kits-section">
                 <h3>Kits a Entregar</h3>
                 <div id="lista-kits-container" class="kits-grid"></div>
             </div>
 
-            <!-- Rodapé com Botão de Nova Busca -->
             <div class="card-footer">
                 <button id="btn-novo-scan" class="btn btn-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
@@ -90,7 +86,6 @@
     <script>
         let html5QrCode = null;
         let codigoAtualScan = null;
-        let dadosRetiradaAtual = null;
 
         const MODELOS_ESTOQUE = [
             "Abelha", "Unicornio", "Borboleta", "Dino", "Tigre",
@@ -108,7 +103,6 @@
                 iniciarScanner();
             });
 
-            // Consulta manual por input
             document.getElementById("btn-buscar-manual").addEventListener("click", realizarBuscaManual);
             document.getElementById("input-busca-manual").addEventListener("keypress", (e) => {
                 if (e.key === "Enter") realizarBuscaManual();
@@ -166,7 +160,6 @@
                 const result = await response.json();
 
                 if (response.ok && result.sucesso) {
-                    dadosRetiradaAtual = result.dados;
                     codigoAtualScan = result.dados.codigo_retirada;
                     renderizarCartao(result.dados);
                 } else {
@@ -227,6 +220,7 @@
             document.getElementById("cartao-retirada").classList.remove("hidden");
         }
 
+        // Identifica e extrai o modelo exato contido no resumo_kits (ex: "JULIA STEFANIE - Ensino Médio - EM-11")
         function parseResumoKits(resumoStr, detalhesEntregas, statusGeral) {
             if (!resumoStr) return [];
             
@@ -236,7 +230,20 @@
             return partes.map((parte, i) => {
                 const pedacos = parte.split('-').map(s => s.trim());
                 let nome = pedacos[0] || "Dependente";
-                let modelo = pedacos[pedacos.length - 1] || "Padrão";
+
+                // Tenta encontrar qual modelo da lista de estoques está presente na string
+                let modeloDetectado = null;
+                for (let mod of MODELOS_ESTOQUE) {
+                    const regex = new RegExp(`\\b${mod}\\b`, 'i');
+                    if (regex.test(parte)) {
+                        modeloDetectado = mod;
+                        break;
+                    }
+                }
+
+                if (!modeloDetectado) {
+                    modeloDetectado = pedacos[pedacos.length - 1] || "Padrão";
+                }
 
                 const chaveItem = `kit_${i}`;
                 const statusItem = entregas[chaveItem] || {};
@@ -245,7 +252,7 @@
                 return {
                     id_item: chaveItem,
                     nome_dependente: nome,
-                    modelo_selecionado: statusItem.modelo || modelo,
+                    modelo_selecionado: statusItem.modelo || modeloDetectado,
                     entregue: jaEntregue
                 };
             });
@@ -286,7 +293,7 @@
 
                 if (response.ok && result.sucesso) {
                     mostrarAlerta(result.mensagem, "success");
-                    dadosRetiradaAtual = result.dados;
+                    codigoAtualScan = result.dados.codigo_retirada;
                     renderizarCartao(result.dados);
                 } else {
                     mostrarAlerta(result.mensagem || "Erro ao efetuar baixa do kit.", "danger");
