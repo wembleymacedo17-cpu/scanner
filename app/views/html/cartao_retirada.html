@@ -11,9 +11,26 @@
     <div class="main-container">
         <!-- Header da Página -->
         <header class="app-header">
-            <h2>📦 Cartão de Retirada de Kit</h2>
-            <p>Escanear QR Code para gerenciar entregas e estoque</p>
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9.57l8.622-5.03a.75.75 0 0 0 .378-.652V7.93ZM2.25 7.93v9.168c0 .265.14.51.378.652l8.622 5.03v-9.57l-9-5.25Z"/>
+                </svg>
+                Cartão de Retirada de Kit
+            </h2>
+            <p>Escanear QR Code ou buscar por Crachá/CPF para registrar entregas</p>
         </header>
+
+        <!-- BUSCA MANUAL POR CRACHÁ OU CPF -->
+        <div class="search-box-container">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="input-busca-manual" placeholder="Buscar por Crachá / ID ou CPF..." />
+                <button type="button" id="btn-buscar-manual" class="btn-search">Consultar</button>
+            </div>
+        </div>
 
         <!-- Área da Câmera -->
         <div id="reader-container" class="scanner-wrapper">
@@ -23,7 +40,7 @@
         <!-- Alerta Global -->
         <div id="alert-box" class="alert-banner hidden"></div>
 
-        <!-- CARTÃO DE RETIRADA (Visível após escanear) -->
+        <!-- CARTÃO DE RETIRADA (Visível após busca ou scan) -->
         <div id="cartao-retirada" class="card-container hidden">
             <!-- Cabeçalho do Cartão -->
             <div class="card-header">
@@ -51,30 +68,30 @@
 
             <hr class="divider">
 
-            <!-- Lista de Kits / Dependentes (Gerado Dinamicamente) -->
+            <!-- Lista de Kits / Dependentes -->
             <div class="kits-section">
                 <h3>Kits a Entregar</h3>
-                <div id="lista-kits-container" class="kits-grid">
-                    <!-- Os cards individuais de cada dependente entram aqui via JS -->
-                </div>
+                <div id="lista-kits-container" class="kits-grid"></div>
             </div>
 
-            <!-- Rodapé com Botão de Escanear Outro -->
+            <!-- Rodapé com Botão de Nova Busca -->
             <div class="card-footer">
                 <button id="btn-novo-scan" class="btn btn-secondary">
-                    📷 Escanear Outro QR Code
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    Escanear Outro / Nova Consulta
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Lógica JS do Cartão e Baixa Parcial -->
     <script>
         let html5QrCode = null;
         let codigoAtualScan = null;
         let dadosRetiradaAtual = null;
 
-        // Lista de modelos disponíveis no estoque para seleção editável
         const MODELOS_ESTOQUE = [
             "Abelha", "Unicornio", "Borboleta", "Dino", "Tigre",
             "EFI-1", "EFI-2", "EFI-3", "EFI-4", "EFI-5", "EFI-6", "EFI-7", "EFI-8", "EFI-9", "EFI-10",
@@ -84,10 +101,17 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             iniciarScanner();
+
             document.getElementById("btn-novo-scan").addEventListener("click", () => {
                 document.getElementById("cartao-retirada").classList.add("hidden");
                 esconderAlerta();
                 iniciarScanner();
+            });
+
+            // Consulta manual por input
+            document.getElementById("btn-buscar-manual").addEventListener("click", realizarBuscaManual);
+            document.getElementById("input-busca-manual").addEventListener("keypress", (e) => {
+                if (e.key === "Enter") realizarBuscaManual();
             });
         });
 
@@ -109,23 +133,44 @@
             if (codigoLimpo.includes("RETIRADA_KIT:")) {
                 codigoLimpo = codigoLimpo.replace("RETIRADA_KIT:", "").trim();
             }
-            codigoAtualScan = codigoLimpo;
 
-            html5QrCode.stop().then(() => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    consultarRetirada(codigoLimpo);
+                }).catch(err => console.error(err));
+            } else {
                 consultarRetirada(codigoLimpo);
-            }).catch(err => console.error(err));
+            }
         }
 
-        async function consultarRetirada(codigo) {
+        function realizarBuscaManual() {
+            const termo = document.getElementById("input-busca-manual").value.trim();
+            if (!termo) {
+                mostrarAlerta("Digite um Crachá ou CPF para consultar.", "danger");
+                return;
+            }
+
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    consultarRetirada(termo);
+                }).catch(() => consultarRetirada(termo));
+            } else {
+                consultarRetirada(termo);
+            }
+        }
+
+        async function consultarRetirada(termo) {
             try {
-                const response = await fetch(`/api/buscar/${codigo}`);
+                esconderAlerta();
+                const response = await fetch(`/api/buscar/${encodeURIComponent(termo)}`);
                 const result = await response.json();
 
                 if (response.ok && result.sucesso) {
                     dadosRetiradaAtual = result.dados;
+                    codigoAtualScan = result.dados.codigo_retirada;
                     renderizarCartao(result.dados);
                 } else {
-                    mostrarAlerta(result.mensagem || "QR Code não encontrado.", "danger");
+                    mostrarAlerta(result.mensagem || "Registro não encontrado.", "danger");
                 }
             } catch (err) {
                 mostrarAlerta("Erro de conexão com o servidor.", "danger");
@@ -133,7 +178,6 @@
         }
 
         function renderizarCartao(dados) {
-            // Preenche dados do Colaborador
             document.getElementById("badge-publico").innerText = `Público: ${dados.tipo_publico || 'Dependente'}`;
             document.getElementById("colab-nome").innerText = dados.nome_colaborador || "NÃO INFORMADO";
             document.getElementById("colab-id").innerText = dados.id_colaborador;
@@ -141,7 +185,6 @@
 
             atualizarBadgeStatusGeral(dados.status);
 
-            // Desmembra a string resumo_kits (separada por |) em itens individuais
             const container = document.getElementById("lista-kits-container");
             container.innerHTML = "";
 
@@ -151,9 +194,13 @@
                 const cardKit = document.createElement("div");
                 cardKit.className = `kit-item-card ${item.entregue ? 'kit-entregue' : ''}`;
                 
+                const iconUserSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                const iconCheckSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                const iconBoxSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
+
                 cardKit.innerHTML = `
                     <div class="kit-item-header">
-                        <span class="kit-dependente-nome">👤 ${item.nome_dependente}</span>
+                        <span class="kit-dependente-nome">${iconUserSVG} ${item.nome_dependente}</span>
                         <span class="kit-status-badge ${item.entregue ? 'badge-entregue' : 'badge-pendente'}">
                             ${item.entregue ? 'ENTREGUE' : 'PENDENTE'}
                         </span>
@@ -170,7 +217,7 @@
                         <button id="btn-entregar-${index}" class="btn ${item.entregue ? 'btn-disabled' : 'btn-entregar'}"
                                 ${item.entregue ? 'disabled' : ''} 
                                 onclick="entregarKitIndividual(${index})">
-                            ${item.entregue ? '✓ Kit Entregue' : '📦 Confirmar Entrega Deste Kit'}
+                            ${item.entregue ? iconCheckSVG + ' Kit Entregue' : iconBoxSVG + ' Confirmar Entrega Deste Kit'}
                         </button>
                     </div>
                 `;
@@ -187,7 +234,6 @@
             const entregas = detalhesEntregas || {};
 
             return partes.map((parte, i) => {
-                // Tenta extrair: NOME DEPENDENTE - ETAPA - MODELO
                 const pedacos = parte.split('-').map(s => s.trim());
                 let nome = pedacos[0] || "Dependente";
                 let modelo = pedacos[pedacos.length - 1] || "Padrão";
@@ -240,7 +286,6 @@
 
                 if (response.ok && result.sucesso) {
                     mostrarAlerta(result.mensagem, "success");
-                    // Recarrega o cartão atualizado
                     dadosRetiradaAtual = result.dados;
                     renderizarCartao(result.dados);
                 } else {

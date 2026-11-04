@@ -117,3 +117,5 @@ class MovimentacaoEstoque(db.Model):
             'observacao': self.observacao,
             'data_movimentacao': self.data_movimentacao.isoformat() if self.data_movimentacao else None
         }
+
+    
