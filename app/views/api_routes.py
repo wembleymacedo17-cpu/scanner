@@ -191,7 +191,7 @@ def dar_baixa_item():
     if modelo_baixa == '---' or not modelo_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
 
-    # 1. Busca rápida por chave primária/índice
+    # 1. Busca o registo da retirada (Dependente ou Jovem Aprendiz)
     reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
     tipo_pub = 'Dependente'
     if not reg:
@@ -199,22 +199,28 @@ def dar_baixa_item():
         tipo_pub = 'Jovem Aprendiz'
 
     if not reg:
-        return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
+        return jsonify({'sucesso': False, 'mensagem': 'Registo de retirada não encontrado.'}), 404
 
-    # 2. Validação instantânea de estoque para ÓRFÃOS usando os valores persistidos
+    # 2. Busca o item de estoque e valida disponibilidade para ÓRFÃOS
+    item_est = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa, ativo=True).first()
+    
     resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
     is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
 
     if is_orfeo:
-        item_est = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa, ativo=True).first()
         if not item_est:
             return jsonify({
                 'sucesso': False, 
                 'mensagem': f'O modelo "{modelo_baixa}" ainda não teve entrada cadastrada no estoque!'
             }), 400
         
-        # Sobra calculada instantaneamente sem recalibrar a base inteira
-        sobra_atual = item_est.quantidade_disponivel - (item_est.quantidade_reservada or 0)
+        # Saldo real em mãos = Entrada Lote - Saídas Presenciais
+        lote_total = item_est.quantidade_disponivel or 0
+        saidas = item_est.quantidade_baixada or 0
+        saldo_balcao = max(0, lote_total - saidas)
+        reserva = item_est.quantidade_reservada or 0
+        
+        sobra_atual = saldo_balcao - reserva
 
         if sobra_atual <= 0:
             return jsonify({
@@ -222,7 +228,7 @@ def dar_baixa_item():
                 'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
             }), 400
 
-    # 3. Atualiza os detalhes de entregas
+    # 3. Atualiza o JSON de detalhes de entrega do kit específico
     detalhes = dict(reg.detalhes_entregas or {})
     chave_item = f"kit_{index_kit}"
 
@@ -233,7 +239,7 @@ def dar_baixa_item():
         'data_entrega': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    # 4. Atualiza status do registro principal
+    # 4. Recalcula o status do registo pai (ENTREGUE vs ENTREGA PARCIAL)
     total_kits = reg.qtd_kits
     qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') == True)
 
@@ -247,7 +253,7 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # 5. Salva histórico da baixa
+    # 5. Registo de Histórico da Baixa
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
@@ -268,11 +274,12 @@ def dar_baixa_item():
     )
     db.session.add(log_baixa)
     
-    # 6. Registra saída no estoque
-    item_estoque = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa).first()
-    if item_estoque:
+    # 6. REGISTRO DA BAIXA PRESENCIAL NA NOVA COLUNA DO BANCO (INCREMENTA A SAÍDA)
+    if item_est:
+        item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
+
         mov = MovimentacaoEstoque(
-            id_estoque=item_estoque.id_estoque,
+            id_estoque=item_est.id_estoque,
             tipo_movimentacao='SAIDA_BAIXA',
             quantidade=1,
             codigo_retirada=reg.codigo_retirada,
@@ -686,17 +693,25 @@ def ajustar_estoque():
 @api_bp.route('/estoque/disponibilidade', methods=['GET'])
 def estoque_disponibilidade():
     """
-    Retorna a disponibilidade em tempo real consultando diretamente 
-    os campos persistidos no banco (Execução ultra rápida em < 10ms).
+    Retorna o saldo real no balcão e as sobras para Órfãos de forma ultra rápida.
     """
     estoques = EstoqueKit.query.filter_by(ativo=True).all()
     disponibilidade = {}
 
     for est in estoques:
         reserva = est.quantidade_reservada or 0
-        sobra = est.quantidade_disponivel - reserva
+        
+        # Se a coluna de saídas existir no modelo, usamos ela. Se não, usamos a quantidade_disponivel atualizada.
+        saidas = getattr(est, 'quantidade_baixada', 0) or 0
+        entrada_total = getattr(est, 'quantidade_total_entrada', est.quantidade_disponivel + saidas)
+        saldo_balcao = est.quantidade_disponivel
+        
+        sobra = saldo_balcao - reserva
+
         disponibilidade[est.codigo_kit] = {
-            'entrada_total': est.quantidade_disponivel,
+            'entrada_total': entrada_total,
+            'saidas_presenciais': saidas,
+            'saldo_balcao': saldo_balcao,
             'reserva_garantida': reserva,
             'sobra_orfaos': max(0, sobra)
         }

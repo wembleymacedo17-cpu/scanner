@@ -6,11 +6,11 @@
     <title>Gestão de Estoque - Kits</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
-        .main-container { max-width: 1100px !important; width: 95% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
-        .cards-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .main-container { max-width: 1200px !important; width: 95% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
+        .cards-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
         .card-stat { background: #ffffff; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .card-stat h4 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
-        .card-stat .value { font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+        .card-stat h4 { font-size: 0.78rem; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
+        .card-stat .value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
         
         .form-entrada-box { background: #ffffff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
         .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
@@ -28,12 +28,14 @@
         .table-container { background: #ffffff; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
         th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.78rem; }
+        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; white-space: nowrap; }
         
+        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
 
-        /* NOTIFICAÇÃO TOAST CUSTOMIZADA (Substitui o alert do navegador) */
+        /* NOTIFICAÇÃO TOAST CUSTOMIZADA */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -66,7 +68,7 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* MODAL CUSTOMIZADO PARA REJUSTAR ESTOQUE */
+        /* MODAL CUSTOMIZADO PARA REJUSTAR SALDO DO BALCÃO */
         .custom-modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -121,12 +123,12 @@
     <!-- MODAL DE AJUSTE CUSTOMIZADO -->
     <div class="custom-modal-overlay" id="modal-ajuste">
         <div class="custom-modal-card">
-            <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Estoque Físico</h3>
-            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">Altere o total físico do modelo <strong id="modal-nome-kit">---</strong></p>
+            <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Saldo Físico (Balcão)</h3>
+            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">Altere o saldo atual no balcão para o modelo <strong id="modal-nome-kit">---</strong></p>
             
             <input type="hidden" id="modal-codigo-kit" />
             <div class="form-group-item">
-                <label>Nova Quantidade Total</label>
+                <label>Novo Saldo no Balcão</label>
                 <input type="number" id="modal-input-qtd" min="0" required />
             </div>
 
@@ -141,23 +143,31 @@
         <header class="app-header" style="margin-bottom: 20px;">
             <div>
                 <h2>Controle e Calibragem de Estoque</h2>
-                <p>Gerenciamento de entrada de caixas e reserva em tempo real</p>
+                <p>Gerenciamento de entradas, movimentação de saídas e saldos no balcão em tempo real</p>
             </div>
         </header>
 
         <!-- RESUMO DE ESTOQUE -->
         <div class="cards-summary">
             <div class="card-stat">
-                <h4>Total Físico Entrada</h4>
-                <div class="value" id="stat-total-disponivel">0</div>
+                <h4>Lote Entregue (Total)</h4>
+                <div class="value" id="stat-lote-total">0</div>
             </div>
             <div class="card-stat">
-                <h4>Reservas Garantidas (Kits Escolhidos)</h4>
+                <h4>Saídas Presenciais</h4>
+                <div class="value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+            </div>
+            <div class="card-stat">
+                <h4>Saldo Físico no Balcão</h4>
+                <div class="value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+            </div>
+            <div class="card-stat">
+                <h4>Reservas Garantidas</h4>
                 <div class="value" style="color: #b45309;" id="stat-total-reservado">0</div>
             </div>
             <div class="card-stat">
-                <h4>Kits Órfãos / Sem Escolha (Total)</h4>
-                <div class="value" style="color: #0284c7;" id="stat-total-orfaos">232</div>
+                <h4>Disponível Órfãos</h4>
+                <div class="value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
             </div>
         </div>
 
@@ -186,20 +196,22 @@
             </form>
         </div>
 
-        <!-- TABELA ESTOQUE -->
+        <!-- TABELA ESTOQUE REESTRUTURADA -->
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>Modelo Kit</th>
-                        <th>Entrada Física Total</th>
+                        <th>Lote Entregue (Total)</th>
+                        <th>Saídas Presenciais</th>
+                        <th>Saldo Físico Balcão</th>
                         <th>Reservas Garantidas</th>
                         <th>Sobra (Disponível Órfãos)</th>
                         <th>Ação</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-estoque">
-                    <tr><td colspan="5">Carregando estoque...</td></tr>
+                    <tr><td colspan="7">Carregando estoque...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -237,7 +249,6 @@
                 if (data.sucesso) {
                     populacaoSelect(data.estoque);
                     renderizarTabela(data.estoque);
-                    document.getElementById("stat-total-orfaos").innerText = data.calibragem.orfaos_pendentes || 232;
                 }
             } catch (err) {
                 console.error("Erro ao carregar estoque:", err);
@@ -257,7 +268,7 @@
                 const opt = document.createElement("option");
                 opt.value = m;
                 if (mapaComEstoque[m] !== undefined && mapaComEstoque[m] > 0) {
-                    opt.innerText = `✓ ${m} (${mapaComEstoque[m]} un no estoque)`;
+                    opt.innerText = `✓ ${m} (${mapaComEstoque[m]} un no balcão)`;
                     opt.style.fontWeight = "bold";
                     opt.style.color = "#0284c7";
                 } else {
@@ -271,36 +282,52 @@
             const tbody = document.getElementById("tabela-estoque");
             tbody.innerHTML = "";
 
-            let totalFisico = 0;
-            let totalReserva = 0;
+            let totalLoteGlobal = 0;
+            let totalSaidasGlobal = 0;
+            let totalBalcaoGlobal = 0;
+            let totalReservaGlobal = 0;
+            let totalSobraOrfaosGlobal = 0;
 
             if (lista.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='5'>Nenhum modelo cadastrado no estoque ainda.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='7'>Nenhum modelo cadastrado no estoque ainda.</td></tr>";
                 return;
             }
 
             lista.forEach(item => {
-                totalFisico += item.quantidade_disponivel;
-                totalReserva += item.quantidade_reservada;
+                const saidas = item.quantidade_baixada || 0;
+                const saldoBalcao = item.quantidade_disponivel;
+                const loteEntregue = item.quantidade_total_entrada || (saldoBalcao + saidas);
+                const reservas = item.quantidade_reservada || 0;
+                const sobraOrfaos = saldoBalcao - reservas;
 
-                const sobraOrfaos = item.quantidade_disponivel - item.quantidade_reservada;
-                const badgeClass = sobraOrfaos >= 0 ? 'badge-sobra' : 'badge-reserva';
+                totalLoteGlobal += loteEntregue;
+                totalSaidasGlobal += saidas;
+                totalBalcaoGlobal += saldoBalcao;
+                totalReservaGlobal += reservas;
+                if (sobraOrfaos > 0) totalSobraOrfaosGlobal += sobraOrfaos;
+
+                const badgeClass = sobraOrfaos > 0 ? 'badge-sobra' : 'badge-esgotado';
 
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td><strong>${item.codigo_kit}</strong></td>
-                    <td><strong>${item.quantidade_disponivel} un</strong></td>
-                    <td><span class="badge-reserva">${item.quantidade_reservada} garantidas</span></td>
+                    <td><strong>${loteEntregue} un</strong></td>
+                    <td><span class="badge-saida">${saidas} baixados</span></td>
+                    <td><strong style="color: #16a34a;">${saldoBalcao} un em mãos</strong></td>
+                    <td><span class="badge-reserva">${reservas} garantidas</span></td>
                     <td><span class="${badgeClass}">${sobraOrfaos} un p/ órfãos</span></td>
                     <td>
-                        <button class="btn-editar-qtd" onclick="abrirModalAjuste('${item.codigo_kit}', ${item.quantidade_disponivel})">✏️ Ajustar</button>
+                        <button class="btn-editar-qtd" onclick="abrirModalAjuste('${item.codigo_kit}', ${saldoBalcao})">✏️ Ajustar Balcão</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById("stat-total-disponivel").innerText = totalFisico;
-            document.getElementById("stat-total-reservado").innerText = totalReserva;
+            document.getElementById("stat-lote-total").innerText = totalLoteGlobal;
+            document.getElementById("stat-total-saidas").innerText = totalSaidasGlobal;
+            document.getElementById("stat-saldo-balcao").innerText = totalBalcaoGlobal;
+            document.getElementById("stat-total-reservado").innerText = totalReservaGlobal;
+            document.getElementById("stat-total-orfaos").innerText = totalSobraOrfaosGlobal;
         }
 
         async function adicionarEntradaEstoque(e) {
@@ -337,10 +364,10 @@
             }
         }
 
-        function abrirModalAjuste(codigoKit, quantidadeAtual) {
+        function abrirModalAjuste(codigoKit, quantidadeBalcaoAtual) {
             document.getElementById("modal-nome-kit").innerText = codigoKit;
             document.getElementById("modal-codigo-kit").value = codigoKit;
-            document.getElementById("modal-input-qtd").value = quantidadeAtual;
+            document.getElementById("modal-input-qtd").value = quantidadeBalcaoAtual;
             document.getElementById("modal-ajuste").style.display = "flex";
         }
 

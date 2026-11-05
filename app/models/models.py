@@ -150,18 +150,28 @@ class EstoqueKit(db.Model):
     id_estoque = db.Column(db.Integer, primary_key=True, autoincrement=True)
     codigo_kit = db.Column(db.String(50), unique=True, nullable=False, index=True)
     descricao_kit = db.Column(db.String(255), nullable=False)
-    quantidade_disponivel = db.Column(db.Integer, nullable=False, default=0)
-    quantidade_reservada = db.Column(db.Integer, nullable=False, default=0)
+    quantidade_disponivel = db.Column(db.Integer, nullable=False, default=0) 
+    quantidade_reservada = db.Column(db.Integer, nullable=False, default=0)  
+    quantidade_baixada = db.Column(db.Integer, nullable=False, default=0)    
     ativo = db.Column(db.Boolean, nullable=False, default=True)
     ultima_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
+        saidas = self.quantidade_baixada or 0
+        lote_total = self.quantidade_disponivel or 0
+        saldo_balcao = max(0, lote_total - saidas)
+        reserva = self.quantidade_reservada or 0
+        sobra_orfaos = saldo_balcao - reserva
+
         return {
             'id_estoque': self.id_estoque,
             'codigo_kit': self.codigo_kit,
             'descricao_kit': self.descricao_kit,
-            'quantidade_disponivel': self.quantidade_disponivel,
-            'quantidade_reservada': self.quantidade_reservada,
+            'quantidade_total_entrada': lote_total,
+            'quantidade_baixada': saidas,
+            'quantidade_disponivel': saldo_balcao,  # Retorna o saldo real em mãos para as telas
+            'quantidade_reservada': reserva,
+            'sobra_orfaos': max(0, sobra_orfaos),
             'ativo': self.ativo,
             'ultima_atualizacao': self.ultima_atualizacao.isoformat() if self.ultima_atualizacao else None
         }
