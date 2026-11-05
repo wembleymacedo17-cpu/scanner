@@ -7,9 +7,33 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .login-card { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
+        
+        /* Container Principal (Logo + Card Centralizados) */
+        .login-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Logo FUNFARME Fora do Card */
+        .logo-funfarme-external {
+            height: 200px;
+            width: auto;
+            max-width: 500px;
+            object-fit: contain;
+            margin-bottom: 24px;
+            filter: brightness(0) invert(1); /* Mantém a logo branca para alto contraste */
+            transition: transform 0.2s ease;
+        }
+        .logo-funfarme-external:hover {
+            transform: scale(1.02);
+        }
+
+        .login-card { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px 24px; width: 100%; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
         .login-header { text-align: center; margin-bottom: 24px; }
-        .login-icon-box { background: #0284c7; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; }
+        .login-icon-box { background: #0284c7; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; }
         .login-header h2 { font-size: 1.3rem; color: #ffffff; margin-bottom: 4px; }
         .login-header p { font-size: 0.85rem; color: #94a3b8; }
         .form-group { margin-bottom: 16px; }
@@ -23,33 +47,39 @@
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="login-header">
-            <div class="login-icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
+    <div class="login-wrapper">
+        <!-- LOGO DA FUNFARME POSICIONADA FORA DO CARD -->
+        <img src="{{ url_for('static', filename='img/Logo_funfarme.png') }}" alt="Logo FUNFARME" class="logo-funfarme-external">
+
+        <!-- CARTÃO DE LOGIN -->
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <h2>Retirada de Kits</h2>
+                <p>Informe suas credenciais para acessar</p>
             </div>
-            <h2>Retirada de Kits</h2>
-            <p>Informe suas credenciais para acessar</p>
+
+            <form id="form-login">
+                <div class="form-group">
+                    <label for="email">E-mail de Acesso</label>
+                    <input type="email" id="email" required placeholder="seu.email@funfarme.com.br" />
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" required placeholder="••••••••" />
+                </div>
+
+                <button type="submit" class="btn-login">Entrar no Sistema</button>
+            </form>
+
+            <div id="alert-error" class="alert alert-danger"></div>
         </div>
-
-        <form id="form-login">
-            <div class="form-group">
-                <label for="email">E-mail de Acesso</label>
-                <input type="email" id="email" required placeholder="seu.email@funfarme.com.br" />
-            </div>
-
-            <div class="form-group">
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" required placeholder="••••••••" />
-            </div>
-
-            <button type="submit" class="btn-login">Entrar no Sistema</button>
-        </form>
-
-        <div id="alert-error" class="alert alert-danger"></div>
     </div>
 
     <script>
