@@ -6,26 +6,104 @@
     <title>Histórico de Baixas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
+        /* Ajuste de Largura Total para Desktop e Responsivo para Celular */
+        .main-container {
+            max-width: 1050px !important;
+            width: 95% !important;
+            margin: 15px auto !important;
+            padding-bottom: 90px !important;
+        }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            margin-bottom: 12px;
+        }
+
+        .btn-voltar {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-voltar:hover {
+            background: #e2e8f0;
+        }
+
         .table-container {
             background: #ffffff;
             border-radius: 12px;
             padding: 16px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             overflow-x: auto;
-            margin-top: 16px;
             border: 1px solid #e2e8f0;
+            -webkit-overflow-scrolling: touch;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; color: #475569; font-weight: 700; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.5px; }
+
+        .row-clicavel {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .row-clicavel:hover {
+            background: #f0f9ff;
+        }
+
         .badge-op {
-            background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;
+            background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; display: inline-block;
+        }
+
+        .badge-count {
+            background: #0284c7; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-block;
+        }
+
+        .badge-perfil-tag {
+            padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;
+        }
+        .badge-ADMIN { background: #fee2e2; color: #991b1b; }
+        .badge-OPERADOR { background: #e0f2fe; color: #0369a1; }
+
+        .nome-beneficiario-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nome-filho-tag {
+            font-size: 0.8rem;
+            color: #0284c7;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 600px) {
+            .main-container {
+                width: 98% !important;
+                margin: 5px auto !important;
+            }
+            th, td { padding: 8px 10px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <!-- Header sem emoji -->
+        <!-- Header -->
         <header class="app-header">
             <div class="header-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -34,46 +112,169 @@
                 </svg>
             </div>
             <div>
-                <h2>Histórico de Entregas</h2>
-                <p>Registro de baixas efetuadas pelos operadores</p>
+                <h2 id="titulo-pagina">Histórico de Entregas</h2>
+                <p id="subtitulo-pagina">Registro de baixas efetuadas no sistema</p>
             </div>
         </header>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data / Hora</th>
-                        <th>Operador</th>
-                        <th>Beneficiário</th>
-                        <th>Público</th>
-                        <th>Modelo Kit</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-historico">
-                    <tr><td colspan="5">Carregando histórico...</td></tr>
-                </tbody>
-            </table>
+        <!-- SEÇÃO 1: RANKING DE OPERADORES (APENAS ADMIN) -->
+        <div id="secao-ranking" class="hidden">
+            <div class="view-header">
+                <h3 style="color: #1e293b;">Ranking de Entregas por Usuário</h3>
+                <span style="font-size: 0.82rem; color: #64748b;">Clique no usuário para ver o extrato detalhado</span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Posição</th>
+                            <th>Operador / Usuário</th>
+                            <th style="width: 120px;">Perfil</th>
+                            <th style="width: 180px;">Última Baixa (Brasília)</th>
+                            <th style="text-align: right; width: 130px;">Total Baixas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-ranking">
+                        <tr><td colspan="5">Carregando ranking...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2: EXTRATO DETALHADO DE BAIXAS -->
+        <div id="secao-extrato" class="hidden">
+            <div class="view-header">
+                <button id="btn-voltar-ranking" class="btn-voltar hidden" onclick="carregarRanking()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Voltar ao Ranking
+                </button>
+                <span id="label-operador-filtro" style="font-size: 0.88rem; font-weight: 700; color: #0369a1;"></span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 160px;">Data / Hora (Brasília)</th>
+                            <th style="width: 160px;">Operador</th>
+                            <th>Beneficiário (Titular & Filho)</th>
+                            <th style="width: 140px;">Público</th>
+                            <th style="width: 140px;">Modelo Kit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-extrato">
+                        <tr><td colspan="5">Carregando histórico...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+        let perfilLogado = 'OPERADOR';
+
         document.addEventListener("DOMContentLoaded", async () => {
+            await inicializarTela();
+        });
+
+        async function inicializarTela() {
             try {
                 const res = await fetch('/api/historico-baixas');
                 const data = await res.json();
-                const tbody = document.getElementById("tabela-historico");
+                perfilLogado = data.perfil_logado || 'OPERADOR';
+
+                if (perfilLogado === 'ADMIN') {
+                    carregarRanking();
+                } else {
+                    carregarExtratoOperador();
+                }
+            } catch (err) {
+                console.error("Erro ao inicializar histórico:", err);
+            }
+        }
+
+        async function carregarRanking() {
+            document.getElementById("secao-ranking").classList.remove("hidden");
+            document.getElementById("secao-extrato").classList.add("hidden");
+            document.getElementById("btn-voltar-ranking").classList.add("hidden");
+            document.getElementById("titulo-pagina").innerText = "Ranking de Entregas";
+            document.getElementById("subtitulo-pagina").innerText = "Desempenho de baixas cadastradas por operador";
+
+            try {
+                const res = await fetch('/api/historico-ranking-operadores');
+                const data = await res.json();
+                const tbody = document.getElementById("tabela-ranking");
+
+                if (data.sucesso && data.ranking.length > 0) {
+                    tbody.innerHTML = "";
+                    data.ranking.forEach((u, index) => {
+                        const tr = document.createElement("tr");
+                        tr.className = "row-clicavel";
+                        tr.onclick = () => carregarExtratoOperador(u.id_usuario, u.nome);
+
+                        tr.innerHTML = `
+                            <td><strong>#${index + 1}</strong></td>
+                            <td>
+                                <strong>${u.nome}</strong><br>
+                                <span style="font-size: 0.78rem; color: #64748b;">${u.email}</span>
+                            </td>
+                            <td><span class="badge-perfil-tag badge-${u.perfil}">${u.perfil}</span></td>
+                            <td>${u.ultima_baixa}</td>
+                            <td style="text-align: right;"><span class="badge-count">${u.total_baixas}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = "<tr><td colspan='5'>Nenhum registro encontrado.</td></tr>";
+                }
+            } catch (err) {
+                console.error("Erro ao carregar ranking:", err);
+            }
+        }
+
+        async function carregarExtratoOperador(idUsuario = null, nomeUsuario = null) {
+            document.getElementById("secao-ranking").classList.add("hidden");
+            document.getElementById("secao-extrato").classList.remove("hidden");
+
+            if (perfilLogado === 'ADMIN') {
+                document.getElementById("btn-voltar-ranking").classList.remove("hidden");
+                document.getElementById("titulo-pagina").innerText = "Extrato Detalhado";
+                document.getElementById("subtitulo-pagina").innerText = nomeUsuario ? `Baixas efetuadas por: ${nomeUsuario}` : "Histórico de baixas";
+                document.getElementById("label-operador-filtro").innerText = nomeUsuario ? `Filtrado por: ${nomeUsuario}` : "";
+            } else {
+                document.getElementById("titulo-pagina").innerText = "Minhas Entregas";
+                document.getElementById("subtitulo-pagina").innerText = "Registro das suas baixas efetuadas";
+            }
+
+            const url = idUsuario ? `/api/historico-baixas?id_usuario=${idUsuario}` : '/api/historico-baixas';
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const tbody = document.getElementById("tabela-extrato");
 
                 if (data.sucesso && data.historico.length > 0) {
                     tbody.innerHTML = "";
                     data.historico.forEach(item => {
                         const tr = document.createElement("tr");
+                        
+                        // Formata a exibição do Beneficiário + Filho
+                        let formatoNome = `<strong>${item.nome_beneficiario}</strong> (ID ${item.id_colaborador})`;
+                        if (item.nome_beneficiario.includes(" — Filho: ")) {
+                            const partes = item.nome_beneficiario.split(" — Filho: ");
+                            formatoNome = `
+                                <div class="nome-beneficiario-box">
+                                    <strong>${partes[0]} <span style="font-weight: normal; color: #64748b;">(ID ${item.id_colaborador})</span></strong>
+                                    <span class="nome-filho-tag">Filho: ${partes[1]}</span>
+                                </div>
+                            `;
+                        }
+
                         tr.innerHTML = `
                             <td>${item.data_baixa}</td>
                             <td><span class="badge-op">${item.nome_operador}</span></td>
-                            <td><strong>${item.nome_beneficiario}</strong> (ID ${item.id_colaborador})</td>
+                            <td>${formatoNome}</td>
                             <td>${item.tipo_publico}</td>
-                            <td>${item.modelo_baixa}</td>
+                            <td><strong>${item.modelo_baixa}</strong></td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -81,9 +282,9 @@
                     tbody.innerHTML = "<tr><td colspan='5'>Nenhum registro de baixa encontrado.</td></tr>";
                 }
             } catch (err) {
-                console.error("Erro ao buscar histórico:", err);
+                console.error("Erro ao carregar extrato:", err);
             }
-        });
+        }
     </script>
 </body>
 </html>

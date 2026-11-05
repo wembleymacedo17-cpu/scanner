@@ -6,6 +6,11 @@
     <title>Cartão de Retirada - Kits Escolares</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        .main-container {
+            padding-bottom: 90px !important;
+        }
+    </style>
 </head>
 <body>
     <div class="main-container">
@@ -470,6 +475,11 @@
             const selectModelo = document.getElementById(`select-modelo-${indexItem}`);
             const modeloEscolhido = selectModelo ? selectModelo.value.trim() : "---";
 
+            // Captura o nome do dependente/filho do elemento visual do card
+            const cardKit = selectModelo ? selectModelo.closest('.kit-item-card') : null;
+            const elNomeDep = cardKit ? cardKit.querySelector('.kit-dependente-nome') : null;
+            const nomeDependente = elNomeDep ? elNomeDep.innerText.trim() : "";
+
             if (modeloEscolhido === "---" || !modeloEscolhido) {
                 mostrarAlerta("Atenção: Selecione um modelo de kit válido antes de confirmar a entrega!", "danger");
                 selectModelo.focus();
@@ -484,7 +494,8 @@
                     body: JSON.stringify({
                         codigo_retirada: codigoAtualScan,
                         index_kit: indexItem,
-                        modelo_baixa: modeloEscolhido
+                        modelo_baixa: modeloEscolhido,
+                        nome_dependente: nomeDependente
                     })
                 });
 

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from datetime import datetime
-from sqlalchemy import or_, cast, String
+from sqlalchemy import or_, cast, String ,func
 from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa
 from datetime import datetime, timedelta
 
@@ -182,6 +182,7 @@ def dar_baixa_item():
     codigo_str = data.get('codigo_retirada', '').strip()
     index_kit = data.get('index_kit')
     modelo_baixa = data.get('modelo_baixa', 'Padrão')
+    nome_dependente = data.get('nome_dependente', '').strip() # Captura o filho específico
 
     if 'RETIRADA_KIT:' in codigo_str:
         codigo_str = codigo_str.replace('RETIRADA_KIT:', '').strip()
@@ -204,6 +205,7 @@ def dar_baixa_item():
     detalhes[chave_item] = {
         'entregue': True,
         'modelo': modelo_baixa,
+        'nome_dependente': nome_dependente,
         'data_entrega': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
@@ -220,17 +222,22 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # REGISTRO NO HISTÓRICO VINCULADO AO OPERADOR LOGADO
+    # REGISTRO NO HISTÓRICO COM O NOME DO DEPENDENTE/FILHO
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
-    nome_beneficiario = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
+    nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
+
+    # Se foi informado o dependente, concatena: "NOME DO PAI (Filho: NOME DO FILHO)"
+    nome_completo_registro = nome_titular
+    if nome_dependente and nome_dependente != nome_titular:
+        nome_completo_registro = f"{nome_titular} — Filho: {nome_dependente}"
 
     log_baixa = HistoricoBaixa(
         id_usuario=id_user,
         nome_operador=nome_op,
         codigo_retirada=reg.codigo_retirada,
         id_colaborador=reg.id_colaborador,
-        nome_beneficiario=nome_beneficiario,
+        nome_beneficiario=nome_completo_registro,
         tipo_publico=tipo_pub,
         index_kit=index_kit,
         modelo_baixa=modelo_baixa
@@ -246,7 +253,6 @@ def dar_baixa_item():
 
 
 
-
 @api_bp.route('/historico-baixas', methods=['GET'])
 def listar_historico():
     id_user = session.get('usuario_id')
@@ -255,18 +261,22 @@ def listar_historico():
     if not id_user:
         return jsonify({'sucesso': False, 'mensagem': 'Usuário não autenticado.'}), 401
 
-    # Operadores veem apenas as próprias baixas. Admins também podem ver tudo ou o próprio histórico.
-    if perfil_user == 'ADMIN':
-        query = HistoricoBaixa.query
-    else:
-        query = HistoricoBaixa.query.filter_by(id_usuario=id_user)
+    user_target_id = request.args.get('id_usuario', type=int)
 
-    historicos = query.order_by(HistoricoBaixa.data_baixa.desc()).limit(100).all()
+    # 1. Se for OPERADOR, ignora parâmetros e força o filtro por ele mesmo
+    if perfil_user != 'ADMIN':
+        user_target_id = id_user
+
+    # Se for ADMIN e não passou id_usuario, retorna a lista geral com fuso ajustado
+    query = HistoricoBaixa.query
+    if user_target_id:
+        query = query.filter_by(id_usuario=user_target_id)
+
+    historicos = query.order_by(HistoricoBaixa.data_baixa.desc()).limit(200).all()
 
     lista_formatada = []
     for h in historicos:
         dados = h.to_dict()
-        # Ajusta fuso horário (-3 horas em relação ao UTC)
         if h.data_baixa:
             data_brasilia = h.data_baixa - timedelta(hours=3)
             dados['data_baixa'] = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
@@ -274,7 +284,51 @@ def listar_historico():
 
     return jsonify({
         'sucesso': True,
+        'perfil_logado': perfil_user,
         'historico': lista_formatada
+    }), 200
+
+
+@api_bp.route('/historico-ranking-operadores', methods=['GET'])
+def ranking_operadores():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    # Agrupa baixas por usuário/operador
+    subquery = db.session.query(
+        HistoricoBaixa.id_usuario,
+        func.count(HistoricoBaixa.id_historico).label('total_baixas'),
+        func.max(HistoricoBaixa.data_baixa).label('ultima_baixa')
+    ).group_by(HistoricoBaixa.id_usuario).subquery()
+
+    usuarios = Usuario.query.all()
+    ranking = []
+
+    for u in usuarios:
+        dados_baixa = db.session.query(subquery.c.total_baixas, subquery.c.ultima_baixa)\
+            .filter(subquery.c.id_usuario == u.id_usuario).first()
+        
+        total = dados_baixa.total_baixas if dados_baixa else 0
+        ultima = None
+        if dados_baixa and dados_baixa.ultima_baixa:
+            dt_br = dados_baixa.ultima_baixa - timedelta(hours=3)
+            ultima = dt_br.strftime("%d/%m/%Y %H:%M:%S")
+
+        ranking.append({
+            'id_usuario': u.id_usuario,
+            'nome': u.nome,
+            'email': u.email,
+            'perfil': u.perfil,
+            'total_baixas': total,
+            'ultima_baixa': ultima or "Nenhuma baixa"
+        })
+
+    # Ordena pelo total de baixas (decrescente)
+    ranking.sort(key=lambda x: x['total_baixas'], reverse=True)
+
+    return jsonify({
+        'sucesso': True,
+        'ranking': ranking
     }), 200
 
 @api_bp.route('/usuarios', methods=['GET'])
