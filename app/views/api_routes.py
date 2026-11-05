@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, session
 from datetime import datetime, timedelta
 from sqlalchemy import or_, cast, String, func
 from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa, MovimentacaoEstoque , EstoqueKit
+from app.services.estoque_service import recalibrar_estoque
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -558,3 +559,85 @@ def excluir_usuario(id_usuario):
     db.session.delete(user)
     db.session.commit()
     return jsonify({'sucesso': True, 'mensagem': 'Usuário excluído com sucesso!'}), 200
+
+@api_bp.route('/estoque/listar', methods=['GET'])
+def listar_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    info_calibragem = recalibrar_estoque()
+    itens = EstoqueKit.query.filter_by(ativo=True).order_by(EstoqueKit.codigo_kit.asc()).all()
+    
+    return jsonify({
+        'sucesso': True,
+        'estoque': [item.to_dict() for item in itens],
+        'calibragem': info_calibragem
+    }), 200
+
+@api_bp.route('/estoque/entrada', methods=['POST'])
+def entrada_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    data = request.json or {}
+    codigo_kit = data.get('codigo_kit', '').strip()
+    quantidade = data.get('quantidade', 0)
+    observacao = data.get('observacao', 'Entrada manual de lote')
+
+    if not codigo_kit or quantidade <= 0:
+        return jsonify({'sucesso': False, 'mensagem': 'Informe o modelo e uma quantidade válida.'}), 400
+
+    item = EstoqueKit.query.filter_by(codigo_kit=codigo_kit).first()
+    if not item:
+        item = EstoqueKit(
+            codigo_kit=codigo_kit,
+            descricao_kit=f"Kit Escolar {codigo_kit}",
+            quantidade_disponivel=quantidade,
+            quantidade_reservada=0
+        )
+        db.session.add(item)
+    else:
+        item.quantidade_disponivel += quantidade
+
+    db.session.flush()
+
+    mov = MovimentacaoEstoque(
+        id_estoque=item.id_estoque,
+        tipo_movimentacao='ENTRADA',
+        quantidade=quantidade,
+        observacao=f"{observacao} (Admin: {session.get('usuario_nome')})"
+    )
+    db.session.add(mov)
+    db.session.commit()
+
+    return jsonify({'sucesso': True, 'mensagem': f'{quantidade} unidades adicionadas ao modelo {codigo_kit}!'}), 200
+
+@api_bp.route('/estoque/ajustar', methods=['PUT'])
+def ajustar_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    data = request.json or {}
+    codigo_kit = data.get('codigo_kit', '').strip()
+    nova_quantidade = data.get('quantidade')
+
+    if not codigo_kit or nova_quantidade is None or nova_quantidade < 0:
+        return jsonify({'sucesso': False, 'mensagem': 'Informações inválidas para ajuste.'}), 400
+
+    item = EstoqueKit.query.filter_by(codigo_kit=codigo_kit).first()
+    if not item:
+        return jsonify({'sucesso': False, 'mensagem': 'Modelo não encontrado no estoque.'}), 404
+
+    qtd_antiga = item.quantidade_disponivel
+    item.quantidade_disponivel = nova_quantidade
+
+    mov = MovimentacaoEstoque(
+        id_estoque=item.id_estoque,
+        tipo_movimentacao='AJUSTE_MANUAL',
+        quantidade=nova_quantidade - qtd_antiga,
+        observacao=f"Ajuste manual de {qtd_antiga} un para {nova_quantidade} un por {session.get('usuario_nome')}"
+    )
+    db.session.add(mov)
+    db.session.commit()
+
+    return jsonify({'sucesso': True, 'mensagem': f'Estoque do modelo {codigo_kit} redefinido para {nova_quantidade} unidades com sucesso!'}), 200

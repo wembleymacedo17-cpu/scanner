@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Estoque - Kits</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
+    <style>
+        .main-container { max-width: 1100px !important; width: 95% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
+        .cards-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .card-stat { background: #ffffff; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .card-stat h4 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
+        .card-stat .value { font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+        
+        .form-entrada-box { background: #ffffff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .form-group-item { flex: 1; min-width: 180px; }
+        .form-group-item label { display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px; }
+        .form-group-item input, .form-group-item select { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.88rem; outline: none; }
+        
+        .btn-add-estoque { background: #0284c7; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s; }
+        .btn-add-estoque:hover { background: #0369a1; }
+        .btn-add-estoque:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .btn-editar-qtd { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-editar-qtd:hover { background: #e2e8f0; color: #0284c7; }
+
+        .table-container { background: #ffffff; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.78rem; }
+        
+        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+
+        /* NOTIFICAÇÃO TOAST CUSTOMIZADA (Substitui o alert do navegador) */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-card {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 14px 18px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-left: 4px solid #0284c7;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast-card.success { border-left-color: #22c55e; }
+        .toast-card.error { border-left-color: #ef4444; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* MODAL CUSTOMIZADO PARA REJUSTAR ESTOQUE */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            justify-content: flex-end;
+        }
+
+        .btn-modal-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-confirm {
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL DE AJUSTE CUSTOMIZADO -->
+    <div class="custom-modal-overlay" id="modal-ajuste">
+        <div class="custom-modal-card">
+            <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Estoque Físico</h3>
+            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">Altere o total físico do modelo <strong id="modal-nome-kit">---</strong></p>
+            
+            <input type="hidden" id="modal-codigo-kit" />
+            <div class="form-group-item">
+                <label>Nova Quantidade Total</label>
+                <input type="number" id="modal-input-qtd" min="0" required />
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalAjuste()">Cancelar</button>
+                <button type="button" class="btn-modal-confirm" onclick="confirmarAjusteEstoque()">Salvar Alteração</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <header class="app-header" style="margin-bottom: 20px;">
+            <div>
+                <h2>Controle e Calibragem de Estoque</h2>
+                <p>Gerenciamento de entrada de caixas e reserva em tempo real</p>
+            </div>
+        </header>
+
+        <!-- RESUMO DE ESTOQUE -->
+        <div class="cards-summary">
+            <div class="card-stat">
+                <h4>Total Físico Entrada</h4>
+                <div class="value" id="stat-total-disponivel">0</div>
+            </div>
+            <div class="card-stat">
+                <h4>Reservas Garantidas (Kits Escolhidos)</h4>
+                <div class="value" style="color: #b45309;" id="stat-total-reservado">0</div>
+            </div>
+            <div class="card-stat">
+                <h4>Kits Órfãos / Sem Escolha (Total)</h4>
+                <div class="value" style="color: #0284c7;" id="stat-total-orfaos">232</div>
+            </div>
+        </div>
+
+        <!-- FORMULÁRIO ENTRADA -->
+        <div class="form-entrada-box">
+            <h3 style="font-size: 1rem; color: #1e293b; margin-bottom: 14px;">Dar Entrada de Lote / Mochilas</h3>
+            <form id="form-entrada" onsubmit="adicionarEntradaEstoque(event)">
+                <div class="form-row">
+                    <div class="form-group-item">
+                        <label>Modelo do Kit</label>
+                        <select id="select-modelo-kit" required></select>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label>Quantidade Recebida</label>
+                        <input type="number" id="input-qtd" min="1" placeholder="Ex: 300" required />
+                    </div>
+
+                    <div class="form-group-item" style="flex: 2;">
+                        <label>Observação / Lote</label>
+                        <input type="text" id="input-obs" placeholder="Ex: Nota Fiscal 1234 / Lote 1" />
+                    </div>
+
+                    <button type="submit" id="btn-submit-entrada" class="btn-add-estoque">+ Dar Entrada</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TABELA ESTOQUE -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Modelo Kit</th>
+                        <th>Entrada Física Total</th>
+                        <th>Reservas Garantidas</th>
+                        <th>Sobra (Disponível Órfãos)</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-estoque">
+                    <tr><td colspan="5">Carregando estoque...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const MODELOS_KITS = [
+            "Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro",
+            "EFI-1", "EFI-2", "EFI-3", "EFI-4", "EFI-5", "EFI-6", "EFI-7", "EFI-8", "EFI-9", "EFI-10", "EFI-11",
+            "EFII-1", "EFII-2", "EFII-3", "EFII-4", "EFII-5", "EFII-6", "EFII-7", "EFII-8", "EFII-9", "EFII-10", "EFII-11", "EFII-12", "EFII-13", "EFII-14", "EFII-15", "EFII-16",
+            "EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12", "EM-13"
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarEstoque();
+        });
+
+        function mostrarToast(mensagem, tipo = 'success') {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast-card ${tipo}`;
+            toast.innerHTML = `<span>${mensagem}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3500);
+        }
+
+        async function carregarEstoque() {
+            try {
+                const res = await fetch('/api/estoque/listar');
+                const data = await res.json();
+
+                if (data.sucesso) {
+                    populacaoSelect(data.estoque);
+                    renderizarTabela(data.estoque);
+                    document.getElementById("stat-total-orfaos").innerText = data.calibragem.orfaos_pendentes || 232;
+                }
+            } catch (err) {
+                console.error("Erro ao carregar estoque:", err);
+            }
+        }
+
+        function populacaoSelect(estoqueList) {
+            const select = document.getElementById("select-modelo-kit");
+            select.innerHTML = "";
+            
+            const mapaComEstoque = {};
+            estoqueList.forEach(item => {
+                mapaComEstoque[item.codigo_kit] = item.quantidade_disponivel;
+            });
+
+            MODELOS_KITS.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m;
+                if (mapaComEstoque[m] !== undefined && mapaComEstoque[m] > 0) {
+                    opt.innerText = `✓ ${m} (${mapaComEstoque[m]} un no estoque)`;
+                    opt.style.fontWeight = "bold";
+                    opt.style.color = "#0284c7";
+                } else {
+                    opt.innerText = m;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        function renderizarTabela(lista) {
+            const tbody = document.getElementById("tabela-estoque");
+            tbody.innerHTML = "";
+
+            let totalFisico = 0;
+            let totalReserva = 0;
+
+            if (lista.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='5'>Nenhum modelo cadastrado no estoque ainda.</td></tr>";
+                return;
+            }
+
+            lista.forEach(item => {
+                totalFisico += item.quantidade_disponivel;
+                totalReserva += item.quantidade_reservada;
+
+                const sobraOrfaos = item.quantidade_disponivel - item.quantidade_reservada;
+                const badgeClass = sobraOrfaos >= 0 ? 'badge-sobra' : 'badge-reserva';
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${item.codigo_kit}</strong></td>
+                    <td><strong>${item.quantidade_disponivel} un</strong></td>
+                    <td><span class="badge-reserva">${item.quantidade_reservada} garantidas</span></td>
+                    <td><span class="${badgeClass}">${sobraOrfaos} un p/ órfãos</span></td>
+                    <td>
+                        <button class="btn-editar-qtd" onclick="abrirModalAjuste('${item.codigo_kit}', ${item.quantidade_disponivel})">✏️ Ajustar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("stat-total-disponivel").innerText = totalFisico;
+            document.getElementById("stat-total-reservado").innerText = totalReserva;
+        }
+
+        async function adicionarEntradaEstoque(e) {
+            e.preventDefault();
+            const btnSubmit = document.getElementById("btn-submit-entrada");
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Adicionando...";
+
+            const codigo_kit = document.getElementById("select-modelo-kit").value;
+            const quantidade = parseInt(document.getElementById("input-qtd").value);
+            const observacao = document.getElementById("input-obs").value;
+
+            try {
+                const res = await fetch('/api/estoque/entrada', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo_kit, quantidade, observacao })
+                });
+                const data = await res.json();
+
+                if (data.sucesso) {
+                    mostrarToast(data.mensagem, 'success');
+                    document.getElementById("input-qtd").value = "";
+                    document.getElementById("input-obs").value = "";
+                    await carregarEstoque();
+                } else {
+                    mostrarToast(data.mensagem, 'error');
+                }
+            } catch (err) {
+                mostrarToast("Erro na comunicação com o servidor.", 'error');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "+ Dar Entrada";
+            }
+        }
+
+        function abrirModalAjuste(codigoKit, quantidadeAtual) {
+            document.getElementById("modal-nome-kit").innerText = codigoKit;
+            document.getElementById("modal-codigo-kit").value = codigoKit;
+            document.getElementById("modal-input-qtd").value = quantidadeAtual;
+            document.getElementById("modal-ajuste").style.display = "flex";
+        }
+
+        function fecharModalAjuste() {
+            document.getElementById("modal-ajuste").style.display = "none";
+        }
+
+        async function confirmarAjusteEstoque() {
+            const codigoKit = document.getElementById("modal-codigo-kit").value;
+            const novaQuantidade = parseInt(document.getElementById("modal-input-qtd").value);
+
+            if (isNaN(novaQuantidade) || novaQuantidade < 0) {
+                mostrarToast("Digite um número válido.", 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/estoque/ajustar', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo_kit: codigoKit, quantidade: novaQuantidade })
+                });
+                const data = await res.json();
+                
+                if (data.sucesso) {
+                    fecharModalAjuste();
+                    mostrarToast(data.mensagem, 'success');
+                    carregarEstoque();
+                } else {
+                    mostrarToast(data.mensagem, 'error');
+                }
+            } catch (err) {
+                mostrarToast("Erro ao processar ajuste.", 'error');
+            }
+        }
+    </script>
+</body>
+</html>
