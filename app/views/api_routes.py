@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from datetime import datetime, timedelta
 from sqlalchemy import or_, cast, String, func
-from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa
+from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa, MovimentacaoEstoque , EstoqueKit
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -260,7 +260,9 @@ def listar_historico():
     if perfil_user != 'ADMIN':
         user_target_id = id_user
 
+    # INCLUÍDO HistoricoBaixa.id_historico NA CONSULTA PROJETADA
     query = db.session.query(
+        HistoricoBaixa.id_historico,
         HistoricoBaixa.data_baixa,
         HistoricoBaixa.nome_operador,
         HistoricoBaixa.nome_beneficiario,
@@ -282,6 +284,7 @@ def listar_historico():
             dt_str = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
 
         lista_formatada.append({
+            'id_historico': h.id_historico,  # <--- CAMPO ENVIADO PARA O FRONTEND
             'data_baixa': dt_str,
             'nome_operador': h.nome_operador,
             'nome_beneficiario': h.nome_beneficiario,
@@ -296,6 +299,151 @@ def listar_historico():
         'historico': lista_formatada
     }), 200
 
+@api_bp.route('/editar-baixa-historico', methods=['PUT'])
+def editar_baixa_historico():
+    # 1. Trava de Segurança: Apenas Administrador
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas administradores podem alterar baixas.'}), 403
+
+    data = request.json or {}
+    id_historico = data.get('id_historico')
+    novo_modelo = data.get('novo_modelo', '').strip()
+
+    if not id_historico or not novo_modelo:
+        return jsonify({'sucesso': False, 'mensagem': 'Dados incompletos.'}), 400
+
+    log_baixa = HistoricoBaixa.query.get(id_historico)
+    if not log_baixa:
+        return jsonify({'sucesso': False, 'mensagem': 'Registro de histórico não encontrado.'}), 404
+
+    modelo_antigo = log_baixa.modelo_baixa
+    if modelo_antigo == novo_modelo:
+        return jsonify({'sucesso': True, 'mensagem': 'O modelo selecionado é idêntico ao atual.'}), 200
+
+    # 2. Busca o registro pai da retirada
+    reg = RetiradaDependente.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
+    if not reg:
+        reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
+
+    if reg:
+        detalhes = dict(reg.detalhes_entregas or {})
+        chave_item = f"kit_{log_baixa.index_kit}"
+        if chave_item in detalhes and isinstance(detalhes[chave_item], dict):
+            detalhes[chave_item]['modelo'] = novo_modelo
+            reg.detalhes_entregas = detalhes
+
+    # 3. Ajuste de Estoque (Estorna antigo + Subtrai novo)
+    item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
+    if item_antigo:
+        item_antigo.quantidade_disponivel += 1
+        item_antigo.quantidade_reservada = max(0, item_antigo.quantidade_reservada - 1)
+        mov_estorno = MovimentacaoEstoque(
+            id_estoque=item_antigo.id_estoque,
+            tipo_movimentacao='ESTORNO_CORRECAO',
+            quantidade=1,
+            codigo_retirada=log_baixa.codigo_retirada,
+            observacao=f"Estorno por correção de baixa do histórico (Admin: {session.get('usuario_nome')})"
+        )
+        db.session.add(mov_estorno)
+
+    item_novo = EstoqueKit.query.filter_by(codigo_kit=novo_modelo).first()
+    if item_novo:
+        if item_novo.quantidade_disponivel < 1:
+            return jsonify({'sucesso': False, 'mensagem': f'Estoque insuficiente para o modelo {novo_modelo}.'}), 400
+        item_novo.quantidade_disponivel -= 1
+        item_novo.quantidade_reservada += 1
+        mov_saida = MovimentacaoEstoque(
+            id_estoque=item_novo.id_estoque,
+            tipo_movimentacao='SAIDA_CORRECAO',
+            quantidade=1,
+            codigo_retirada=log_baixa.codigo_retirada,
+            observacao=f"Saída por troca de kit no histórico de {modelo_antigo} para {novo_modelo}"
+        )
+        db.session.add(mov_saida)
+
+    # 4. Atualiza o histórico
+    log_baixa.modelo_baixa = novo_modelo
+    db.session.commit()
+
+    return jsonify({
+        'sucesso': True,
+        'mensagem': f'Modelo alterado com sucesso de "{modelo_antigo}" para "{novo_modelo}"!'
+    }), 200
+@api_bp.route('/revogar-baixa-historico', methods=['POST'])
+def revogar_baixa_historico():
+    # 1. Trava de Segurança: Exclusivo ADMIN
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas administradores podem revogar baixas.'}), 403
+
+    data = request.json or {}
+    id_historico = data.get('id_historico')
+
+    if not id_historico:
+        return jsonify({'sucesso': False, 'mensagem': 'ID do histórico não informado.'}), 400
+
+    log_baixa = HistoricoBaixa.query.get(id_historico)
+    if not log_baixa:
+        return jsonify({'sucesso': False, 'mensagem': 'Registro de histórico não encontrado.'}), 404
+
+    modelo_estornado = log_baixa.modelo_baixa
+    codigo_retirada = log_baixa.codigo_retirada
+    index_kit_revogado = log_baixa.index_kit
+
+    # 2. Busca o registro da retirada (Dependente ou Jovem Aprendiz)
+    reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_retirada).first()
+    if not reg:
+        reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=codigo_retirada).first()
+
+    if not reg:
+        return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada correspondente não foi encontrado.'}), 404
+
+    # 3. Atualiza o JSON de detalhes das entregas
+    detalhes = dict(reg.detalhes_entregas or {})
+    chave_item = f"kit_{index_kit_revogado}"
+
+    if chave_item in detalhes:
+        detalhes[chave_item] = {
+            'entregue': False,
+            'modelo': '---',
+            'data_entrega': None
+        }
+        reg.detalhes_entregas = detalhes
+
+    # 4. Recalcula o status geral (PENDENTE vs ENTREGA PARCIAL)
+    qtd_entregues_restantes = sum(
+        1 for v in detalhes.values() 
+        if isinstance(v, dict) and v.get('entregue') == True
+    )
+
+    if qtd_entregues_restantes == 0:
+        reg.status = 'PENDENTE'
+        reg.data_entrega = None
+    else:
+        reg.status = 'ENTREGA PARCIAL'
+
+    # 5. Devolve o kit ao Estoque (Estorno)
+    item_estoque = EstoqueKit.query.filter_by(codigo_kit=modelo_estornado).first()
+    if item_estoque:
+        item_estoque.quantidade_disponivel += 1
+        item_estoque.quantidade_reservada = max(0, item_estoque.quantidade_reservada - 1)
+        
+        mov_estorno = MovimentacaoEstoque(
+            id_estoque=item_estoque.id_estoque,
+            tipo_movimentacao='REVOGACAO_ADMIN',
+            quantidade=1,
+            codigo_retirada=codigo_retirada,
+            observacao=f"Revogação de baixa efetuada pelo Admin ({session.get('usuario_nome')}) - Modelo {modelo_estornado}"
+        )
+        db.session.add(mov_estorno)
+
+    # 6. Exclui o registro do histórico
+    db.session.delete(log_baixa)
+    db.session.commit()
+
+    return jsonify({
+        'sucesso': True,
+        'mensagem': f'Baixa revogada com sucesso! O modelo "{modelo_estornado}" foi devolvido ao estoque e o status foi atualizado para {reg.status}.'
+    }), 200
 
 @api_bp.route('/historico-ranking-operadores', methods=['GET'])
 def ranking_operadores():

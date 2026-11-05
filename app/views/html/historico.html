@@ -23,7 +23,6 @@
             flex-wrap: wrap;
         }
 
-        /* Campo de Pesquisa Instantânea */
         .search-wrapper {
             position: relative;
             min-width: 280px;
@@ -69,7 +68,6 @@
             gap: 6px;
             transition: all 0.2s;
         }
-
         .btn-voltar:hover { background: #e2e8f0; }
 
         .table-container {
@@ -99,23 +97,43 @@
         .nome-beneficiario-box { display: flex; flex-direction: column; }
         .nome-filho-tag { font-size: 0.8rem; color: #0284c7; font-weight: 600; margin-top: 2px; }
 
+        /* Botões de Ação Admin */
+        .action-btns-group {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
         .btn-edit-baixa {
             background: #f59e0b;
             color: #ffffff;
             border: none;
-            padding: 5px 10px;
+            padding: 5px 9px;
             border-radius: 6px;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 4px;
         }
-        .btn-edit-baixa:hover { opacity: 0.88; }
 
-        /* Modal de Edição */
+        .btn-revogar-baixa {
+            background: #ef4444;
+            color: #ffffff;
+            border: none;
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-edit-baixa:hover, .btn-revogar-baixa:hover { opacity: 0.88; }
+
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -144,7 +162,6 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- Header -->
         <header class="app-header">
             <div class="header-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -158,7 +175,7 @@
             </div>
         </header>
 
-        <!-- SEÇÃO 1: RANKING DE OPERADORES (APENAS ADMIN) -->
+        <!-- SEÇÃO 1: RANKING DE OPERADORES (ADMIN) -->
         <div id="secao-ranking" class="hidden">
             <div class="view-header">
                 <h3 style="color: #1e293b;">Ranking de Entregas por Usuário</h3>
@@ -182,7 +199,7 @@
             </div>
         </div>
 
-        <!-- SEÇÃO 2: EXTRATO DETALHADO DE BAIXAS -->
+        <!-- SEÇÃO 2: EXTRATO DETALHADO -->
         <div id="secao-extrato" class="hidden">
             <div class="view-header">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -193,7 +210,6 @@
                     <span id="label-operador-filtro" style="font-size: 0.88rem; font-weight: 700; color: #0369a1;"></span>
                 </div>
 
-                <!-- Campo de Pesquisa Instantânea no Histórico -->
                 <div class="search-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" id="input-pesquisa-historico" placeholder="Pesquisar por Beneficiário, Filho, Modelo..." oninput="filtrarTabelaExtrato()" />
@@ -204,12 +220,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 150px;">Data / Hora</th>
-                            <th style="width: 140px;">Operador</th>
+                            <th style="width: 140px;">Data / Hora</th>
+                            <th style="width: 130px;">Operador</th>
                             <th>Beneficiário (Titular & Filho)</th>
-                            <th style="width: 120px;">Público</th>
-                            <th style="width: 130px;">Modelo Kit</th>
-                            <th id="th-acoes-admin" style="width: 100px; text-align: right;" class="hidden">Ações</th>
+                            <th style="width: 110px;">Público</th>
+                            <th style="width: 120px;">Modelo Kit</th>
+                            <th id="th-acoes-admin" style="width: 170px; text-align: right;" class="hidden">Ações Admin</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-extrato">
@@ -220,19 +236,17 @@
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE BAISAS (EXCLUSIVO ADMIN) -->
+    <!-- MODAL DE EDIÇÃO -->
     <div id="modal-editar-baixa" class="modal-overlay hidden">
         <div class="modal-box">
             <h3 style="color: #1e293b; margin-bottom: 8px;">Alterar Modelo do Kit</h3>
-            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">O estoque do modelo anterior será estornado e o novo será deduzido automaticamente.</p>
+            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">O estoque do modelo anterior será estornado e o novo será deduzido.</p>
             
             <input type="hidden" id="modal-hist-id" />
             
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Novo Modelo Mochila</label>
-                <select id="modal-select-modelo" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none;">
-                    <!-- Preenchido via JavaScript -->
-                </select>
+                <select id="modal-select-modelo" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none;"></select>
             </div>
 
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
@@ -371,7 +385,7 @@
                 const tr = document.createElement("tr");
 
                 let formatoNome = `<strong>${item.nome_beneficiario}</strong> (ID ${item.id_colaborador})`;
-                if (item.nome_beneficiario.includes(" — Filho: ")) {
+                if (item.nome_beneficiario && item.nome_beneficiario.includes(" — Filho: ")) {
                     const partes = item.nome_beneficiario.split(" — Filho: ");
                     formatoNome = `
                         <div class="nome-beneficiario-box">
@@ -383,12 +397,19 @@
 
                 let acaoAdminHtml = "";
                 if (perfilLogado === 'ADMIN') {
+                    const idHist = item.id_historico;
                     acaoAdminHtml = `
                         <td style="text-align: right;">
-                            <button class="btn-edit-baixa" onclick="abrirModalEdicao(${item.id_historico}, '${item.modelo_baixa}')">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                Editar
-                            </button>
+                            <div class="action-btns-group">
+                                <button class="btn-edit-baixa" onclick="abrirModalEdicao(${idHist}, '${item.modelo_baixa}')" title="Alterar Modelo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    Editar
+                                </button>
+                                <button class="btn-revogar-baixa" onclick="revogarBaixa(${idHist}, '${item.modelo_baixa}')" title="Revogar Baixa e Devolver ao Estoque">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                    Revogar
+                                </button>
+                            </div>
                         </td>
                     `;
                 }
@@ -425,6 +446,10 @@
         }
 
         function abrirModalEdicao(idHist, modeloAtual) {
+            if (!idHist || idHist === 'undefined') {
+                alert("Erro: O identificador do registro de baixa não foi localizado.");
+                return;
+            }
             document.getElementById("modal-hist-id").value = idHist;
             document.getElementById("modal-select-modelo").value = modeloAtual;
             document.getElementById("modal-editar-baixa").classList.remove("hidden");
@@ -437,6 +462,11 @@
         async function salvarAlteracaoBaixa() {
             const idHist = document.getElementById("modal-hist-id").value;
             const novoModelo = document.getElementById("modal-select-modelo").value;
+
+            if (!idHist || idHist === 'undefined') {
+                alert("Erro: O identificador da baixa é inválido.");
+                return;
+            }
 
             try {
                 const res = await fetch('/api/editar-baixa-historico', {
@@ -457,6 +487,34 @@
                 }
             } catch (err) {
                 alert("Erro ao salvar alteração da baixa.");
+            }
+        }
+
+        async function revogarBaixa(idHist, modeloKit) {
+            if (!idHist || idHist === 'undefined') {
+                alert("Erro: O identificador do registro de baixa não foi localizado.");
+                return;
+            }
+
+            if (!confirm(`Tem certeza que deseja REVOGAR a baixa do kit "${modeloKit}"?\n\nO status do cartão será atualizado (PENDENTE ou ENTREGA PARCIAL) e a mochila voltará ao estoque.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/revogar-baixa-historico', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_historico: idHist })
+                });
+
+                const data = await res.json();
+                alert(data.mensagem);
+
+                if (data.sucesso) {
+                    carregarExtratoOperador(usuarioFiltroAtual);
+                }
+            } catch (err) {
+                alert("Erro ao revogar a baixa do kit.");
             }
         }
     </script>
