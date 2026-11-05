@@ -717,3 +717,48 @@ def estoque_disponibilidade():
         }
 
     return jsonify({'sucesso': True, 'disponibilidade': disponibilidade}), 200
+@api_bp.route('/estoque/detalhes/<string:modelo_kit>', methods=['GET'])
+def estoque_detalhes_modelo(modelo_kit):
+    """
+    Retorna a lista estratificada de todas as baixas 
+    realizadas para um modelo específico de kit.
+    """
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas administradores podem visualizar os detalhes.'}), 403
+
+    modelo_limpo = str(modelo_kit).strip()
+    
+    # Consulta o histórico de baixas filtrando pelo modelo
+    baixas = db.session.query(
+        HistoricoBaixa.data_baixa,
+        HistoricoBaixa.nome_operador,
+        HistoricoBaixa.nome_beneficiario,
+        HistoricoBaixa.id_colaborador,
+        HistoricoBaixa.tipo_publico
+    ).filter(
+        HistoricoBaixa.modelo_baixa.ilike(modelo_limpo)
+    ).order_by(
+        HistoricoBaixa.data_baixa.desc()
+    ).all()
+
+    lista_estratificada = []
+    for b in baixas:
+        dt_str = ""
+        if b.data_baixa:
+            data_brasilia = b.data_baixa - timedelta(hours=3)
+            dt_str = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
+
+        lista_estratificada.append({
+            'data_baixa': dt_str,
+            'nome_operador': b.nome_operador or 'Sistema / Anônimo',
+            'nome_beneficiario': b.nome_beneficiario or 'NÃO INFORMADO',
+            'id_colaborador': b.id_colaborador,
+            'tipo_publico': b.tipo_publico
+        })
+
+    return jsonify({
+        'sucesso': True,
+        'modelo': modelo_limpo,
+        'total_baixado': len(lista_estratificada),
+        'historico': lista_estratificada
+    }), 200
