@@ -98,7 +98,9 @@
         let autoResetTimer = null;
         let modoAtual = "manual";
 
-        // Ícones SVG customizados para o topo da página
+        // Variável global para armazenar a disponibilidade real de sobras do estoque
+        let mapaDisponibilidadeEstoque = {};
+
         const SVG_ICONS = {
             camera: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 7V4a2 2 0 0 1 2-2h3"></path>
@@ -132,6 +134,7 @@
             modoAtual = urlParams.get('modo') || 'manual';
 
             configurarModoTela(modoAtual);
+            carregarDisponibilidadeEstoque();
 
             const inputBusca = document.getElementById("input-busca-manual");
 
@@ -179,6 +182,19 @@
                 }
             });
         });
+
+        // Consulta ao servidor para obter o saldo real de sobras por modelo
+        async function carregarDisponibilidadeEstoque() {
+            try {
+                const res = await fetch('/api/estoque/disponibilidade');
+                const data = await res.json();
+                if (data.sucesso) {
+                    mapaDisponibilidadeEstoque = data.disponibilidade || {};
+                }
+            } catch (e) {
+                console.error("Erro ao carregar disponibilidade do estoque:", e);
+            }
+        }
 
         function configurarModoTela(modo) {
             const boxBusca = document.getElementById("box-busca-container");
@@ -293,6 +309,9 @@
                 esconderAlerta();
                 if (autoResetTimer) clearTimeout(autoResetTimer);
 
+                // Atualiza a disponibilidade das sobras antes de montar o cartão
+                await carregarDisponibilidadeEstoque();
+
                 const response = await fetch(`/api/buscar/${encodeURIComponent(termo)}`);
                 const result = await response.json();
 
@@ -340,7 +359,7 @@
                     <div class="kit-item-body">
                         <div class="select-container">
                             <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''}>
-                                ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada)}
+                                ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada, item.eOrfao)}
                             </select>
                         </div>
                     </div>
@@ -442,12 +461,14 @@
                     nome_dependente: itemObj.nome,
                     modelo_selecionado: statusItem.modelo || modeloDetectado,
                     categoria_detectada: itemObj.categoria,
+                    eOrfao: itemObj.eOrfao,
                     entregue: jaEntregue
                 };
             });
         }
 
-        function gerarOptionsModelos(modeloAtual, categoria) {
+        // Função para gerar as opções do <select> desativando modelos esgotados para Órfãos
+        function gerarOptionsModelos(modeloAtual, categoria, eOrfao) {
             let html = "";
             let listaFiltrada = (categoria === "LIVRE" || categoria === "TODAS") ? TODOS_OS_KITS : (CATEGORIAS_KITS[categoria] || TODOS_OS_KITS);
             
@@ -458,13 +479,27 @@
             let encontrado = false;
 
             listaFiltrada.forEach(mod => {
-                const labelMod = mod === "---" ? " Selecionar Modelo da Mochila..." : mod;
+                if (mod === "---") {
+                    const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
+                    html += `<option value="${mod}" ${selected ? 'selected' : ''}> Selecionar Modelo da Mochila...</option>`;
+                    return;
+                }
+
+                const infoEst = mapaDisponibilidadeEstoque[mod] || { sobra_orfaos: 0, entrada_total: 0 };
+                const sobra = infoEst.sobra_orfaos;
                 const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
                 if (selected) encontrado = true;
-                html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}</option>`;
+
+                // Se o beneficiário for Órfão e a sobra for ZERO, desativa a opção
+                if (eOrfao && sobra <= 0 && !selected) {
+                    html += `<option value="${mod}" disabled style="color: #94a3b8; background-color: #f1f5f9;">🚫 ${mod} (Esgotado p/ Órfãos)</option>`;
+                } else {
+                    const textoSobra = eOrfao ? ` (${sobra} un disponíveis)` : '';
+                    html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}${textoSobra}</option>`;
+                }
             });
 
-            if (!encontrado && modeloAtual) {
+            if (!encontrado && modeloAtual && modeloAtual !== "---") {
                 html = `<option value="${modeloAtual}" selected>${modeloAtual}</option>` + html;
             }
 
@@ -475,7 +510,6 @@
             const selectModelo = document.getElementById(`select-modelo-${indexItem}`);
             const modeloEscolhido = selectModelo ? selectModelo.value.trim() : "---";
 
-            // Captura o nome do dependente/filho do elemento visual do card
             const cardKit = selectModelo ? selectModelo.closest('.kit-item-card') : null;
             const elNomeDep = cardKit ? cardKit.querySelector('.kit-dependente-nome') : null;
             const nomeDependente = elNomeDep ? elNomeDep.innerText.trim() : "";
@@ -504,6 +538,9 @@
                 if (response.ok && result.sucesso) {
                     mostrarAlerta(result.mensagem, "success");
                     codigoAtualScan = result.dados.codigo_retirada;
+                    
+                    // Recarrega as sobras de estoque após a baixa
+                    await carregarDisponibilidadeEstoque();
                     renderizarCartao(result.dados);
 
                     if (result.dados.status === 'ENTREGUE') {

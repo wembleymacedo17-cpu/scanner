@@ -179,7 +179,7 @@ def dar_baixa_item():
     data = request.json or {}
     codigo_str = data.get('codigo_retirada', '').strip()
     index_kit = data.get('index_kit')
-    modelo_baixa = data.get('modelo_baixa', 'Padrão')
+    modelo_baixa = data.get('modelo_baixa', '---').strip()
     nome_dependente = data.get('nome_dependente', '').strip()
 
     if 'RETIRADA_KIT:' in codigo_str:
@@ -188,6 +188,10 @@ def dar_baixa_item():
     if not codigo_str or index_kit is None:
         return jsonify({'sucesso': False, 'mensagem': 'Dados incompletos para baixa.'}), 400
 
+    if modelo_baixa == '---' or not modelo_baixa:
+        return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
+
+    # 1. Busca o registo da retirada (Dependente ou Jovem Aprendiz)
     reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
     tipo_pub = 'Dependente'
     if not reg:
@@ -195,8 +199,33 @@ def dar_baixa_item():
         tipo_pub = 'Jovem Aprendiz'
 
     if not reg:
-        return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
+        return jsonify({'sucesso': False, 'mensagem': 'Registo de retirada não encontrado.'}), 404
 
+    # --- TRAVA DE ESTOQUE PARA ÓRFÃOS / SEM ESCOLHA ---
+    resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
+    is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
+
+    if is_orfeo:
+        item_est = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa, ativo=True).first()
+        if not item_est:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'O modelo "{modelo_baixa}" ainda não teve entrada cadastrada no estoque!'
+            }), 400
+        
+        # Calcula a sobra real para Órfãos (Entrada Total - Reservas Garantidas)
+        from app.services.estoque_service import recalibrar_estoque
+        calib = recalibrar_estoque()
+        reserva_mod = calib.get('reservas_por_modelo', {}).get(modelo_baixa, 0)
+        sobra_atual = item_est.quantidade_disponivel - reserva_mod
+
+        if sobra_atual <= 0:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
+            }), 400
+
+    # 2. Atualiza o JSON de detalhes de entrega do kit específico
     detalhes = dict(reg.detalhes_entregas or {})
     chave_item = f"kit_{index_kit}"
 
@@ -207,6 +236,7 @@ def dar_baixa_item():
         'data_entrega': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
+    # 3. Recalcula o status do registo pai (ENTREGUE vs ENTREGA PARCIAL)
     total_kits = reg.qtd_kits
     qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') == True)
 
@@ -220,6 +250,7 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
+    # 4. Registo de Histórico da Baixa
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
@@ -239,6 +270,19 @@ def dar_baixa_item():
         modelo_baixa=modelo_baixa
     )
     db.session.add(log_baixa)
+    
+    # 5. Registo da movimentação de saída no estoque
+    item_estoque = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa).first()
+    if item_estoque:
+        mov = MovimentacaoEstoque(
+            id_estoque=item_estoque.id_estoque,
+            tipo_movimentacao='SAIDA_BAIXA',
+            quantidade=1,
+            codigo_retirada=reg.codigo_retirada,
+            observacao=f"Baixa presencial ({tipo_pub}) - Beneficiário: {nome_completo_registro}"
+        )
+        db.session.add(mov)
+
     db.session.commit()
 
     return jsonify({
@@ -641,3 +685,27 @@ def ajustar_estoque():
     db.session.commit()
 
     return jsonify({'sucesso': True, 'mensagem': f'Estoque do modelo {codigo_kit} redefinido para {nova_quantidade} unidades com sucesso!'}), 200
+
+@api_bp.route('/estoque/disponibilidade', methods=['GET'])
+def estoque_disponibilidade():
+    """
+    Retorna o mapa de sobras por modelo para desativar 
+    mochilas esgotadas na tela de baixa de órfãos.
+    """
+    from app.services.estoque_service import recalibrar_estoque
+    calib = recalibrar_estoque()
+    mapa_reservas = calib.get('reservas_por_modelo', {})
+
+    estoques = EstoqueKit.query.filter_by(ativo=True).all()
+    disponibilidade = {}
+
+    for est in estoques:
+        reserva = mapa_reservas.get(est.codigo_kit, 0)
+        sobra = est.quantidade_disponivel - reserva
+        disponibilidade[est.codigo_kit] = {
+            'entrada_total': est.quantidade_disponivel,
+            'reserva_garantida': reserva,
+            'sobra_orfaos': max(0, sobra)
+        }
+
+    return jsonify({'sucesso': True, 'disponibilidade': disponibilidade}), 200
