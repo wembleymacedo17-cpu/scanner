@@ -318,16 +318,26 @@ body {
     gap: 6px;
 }
 
-.btn-entregar { background: #16a34a; color: #ffffff; }
-.btn-entregar:hover { background: #15803d; }
+/* BOTÃO DE CONFIRMAR BAIXA (LARANJA ANTES DE CLICAR) */
+.btn-entregar { 
+    background: #f97316; 
+    color: #ffffff; 
+    border: none;
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+}
 
-/* BOTÃO DE KIT JA ENTREGUE COM COR DESTACADA */
+.btn-entregar:hover { 
+    background: #ea580c; 
+}
+
+/* BOTÃO DE KIT JÁ ENTREGUE (VERDE APÓS O CLIQUE) */
 .btn-disabled { 
     background: #16a34a; 
     color: #ffffff; 
     cursor: not-allowed; 
-    opacity: 0.9;
+    opacity: 1;
     font-weight: 700;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.2);
 }
 
 .btn-secondary { background: #334155; color: #ffffff; margin-top: 18px; }

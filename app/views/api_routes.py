@@ -193,6 +193,7 @@ def dar_baixa_item():
     if modelo_baixa == '---' or not modelo_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
 
+    # 1. Busca o registro da retirada
     reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
     tipo_pub = 'Dependente'
     if not reg:
@@ -200,33 +201,40 @@ def dar_baixa_item():
         tipo_pub = 'Jovem Aprendiz'
 
     if not reg:
-        return jsonify({'sucesso': False, 'mensagem': 'Registo de retirada não encontrado.'}), 404
+        return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
 
+    # 2. VALIDAÇÃO GERAL DE ESTOQUE (Trava para Todos os Públicos e Órfãos)
     item_est = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa, ativo=True).first()
-    
+    if not item_est:
+        return jsonify({
+            'sucesso': False, 
+            'mensagem': f'O modelo "{modelo_baixa}" ainda não possui entrada cadastrada no estoque!'
+        }), 400
+
+    lote_total = item_est.quantidade_disponivel or 0
+    saidas = item_est.quantidade_baixada or 0
+    saldo_balcao = max(0, lote_total - saidas)
+
     resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
     is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
 
     if is_orfeo:
-        if not item_est:
-            return jsonify({
-                'sucesso': False, 
-                'mensagem': f'O modelo "{modelo_baixa}" ainda não teve entrada cadastrada no estoque!'
-            }), 400
-        
-        lote_total = item_est.quantidade_disponivel or 0
-        saidas = item_est.quantidade_baixada or 0
-        saldo_balcao = max(0, lote_total - saidas)
         reserva = item_est.quantidade_reservada or 0
-        
         sobra_atual = saldo_balcao - reserva
-
         if sobra_atual <= 0:
             return jsonify({
                 'sucesso': False, 
                 'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
             }), 400
+    else:
+        # Trava para solicitações regulares: impede baixa se não houver saldo físico no balcão
+        if saldo_balcao <= 0:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
+            }), 400
 
+    # 3. Atualiza o JSON de detalhes de entrega
     detalhes = dict(reg.detalhes_entregas or {})
     chave_item = f"kit_{index_kit}"
 
@@ -250,6 +258,7 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
+    # 4. Histórico da Baixa
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
@@ -270,6 +279,7 @@ def dar_baixa_item():
     )
     db.session.add(log_baixa)
     
+    # 5. Decrementa o saldo físico incrementando as saídas
     if item_est:
         item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
 
