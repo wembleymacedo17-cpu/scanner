@@ -17,15 +17,27 @@
             max-width: 400px;
         }
 
-        /* Logo FUNFARME Fora do Card */
+       
         .logo-funfarme-external {
-            height: 200px;
-            width: auto;
-            max-width: 500px;
+            width: 100%;             /* Ocupa a largura disponível com flexibilidade */
+            max-width: 400px;        /* Tamanho máximo no PC para não ficar gigante */
+            height: auto;            /* Mantém a proporção exata da imagem sem esticar/achatar */
             object-fit: contain;
-            margin-bottom: 24px;
-            filter: brightness(0) invert(1); /* Mantém a logo branca para alto contraste */
-            transition: transform 0.2s ease;
+            margin-bottom: 20px;
+            filter: brightness(0) invert(1);
+            display: block;
+        }
+
+        /* Regra específica para telas de celular pequenas (até 480px) */
+        @media (max-width: 480px) {
+            .logo-funfarme-external {
+                max-width: 210px;    /* Reduz levemente para caber confortavelmente com folga nas laterais */
+                margin-bottom: 16px;
+            }
+
+            .login-wrapper {
+                padding: 0 10px;     /* Garante uma margem de segurança nas bordas da tela */
+            }
         }
         .logo-funfarme-external:hover {
             transform: scale(1.02);
