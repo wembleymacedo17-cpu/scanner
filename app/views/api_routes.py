@@ -191,7 +191,7 @@ def dar_baixa_item():
     if modelo_baixa == '---' or not modelo_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
 
-    # 1. Busca o registo da retirada (Dependente ou Jovem Aprendiz)
+    # 1. Busca rápida por chave primária/índice
     reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
     tipo_pub = 'Dependente'
     if not reg:
@@ -199,9 +199,9 @@ def dar_baixa_item():
         tipo_pub = 'Jovem Aprendiz'
 
     if not reg:
-        return jsonify({'sucesso': False, 'mensagem': 'Registo de retirada não encontrado.'}), 404
+        return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
 
-    # --- TRAVA DE ESTOQUE PARA ÓRFÃOS / SEM ESCOLHA ---
+    # 2. Validação instantânea de estoque para ÓRFÃOS usando os valores persistidos
     resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
     is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
 
@@ -213,11 +213,8 @@ def dar_baixa_item():
                 'mensagem': f'O modelo "{modelo_baixa}" ainda não teve entrada cadastrada no estoque!'
             }), 400
         
-        # Calcula a sobra real para Órfãos (Entrada Total - Reservas Garantidas)
-        from app.services.estoque_service import recalibrar_estoque
-        calib = recalibrar_estoque()
-        reserva_mod = calib.get('reservas_por_modelo', {}).get(modelo_baixa, 0)
-        sobra_atual = item_est.quantidade_disponivel - reserva_mod
+        # Sobra calculada instantaneamente sem recalibrar a base inteira
+        sobra_atual = item_est.quantidade_disponivel - (item_est.quantidade_reservada or 0)
 
         if sobra_atual <= 0:
             return jsonify({
@@ -225,7 +222,7 @@ def dar_baixa_item():
                 'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
             }), 400
 
-    # 2. Atualiza o JSON de detalhes de entrega do kit específico
+    # 3. Atualiza os detalhes de entregas
     detalhes = dict(reg.detalhes_entregas or {})
     chave_item = f"kit_{index_kit}"
 
@@ -236,7 +233,7 @@ def dar_baixa_item():
         'data_entrega': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    # 3. Recalcula o status do registo pai (ENTREGUE vs ENTREGA PARCIAL)
+    # 4. Atualiza status do registro principal
     total_kits = reg.qtd_kits
     qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') == True)
 
@@ -250,7 +247,7 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # 4. Registo de Histórico da Baixa
+    # 5. Salva histórico da baixa
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
@@ -271,7 +268,7 @@ def dar_baixa_item():
     )
     db.session.add(log_baixa)
     
-    # 5. Registo da movimentação de saída no estoque
+    # 6. Registra saída no estoque
     item_estoque = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa).first()
     if item_estoque:
         mov = MovimentacaoEstoque(
@@ -689,18 +686,14 @@ def ajustar_estoque():
 @api_bp.route('/estoque/disponibilidade', methods=['GET'])
 def estoque_disponibilidade():
     """
-    Retorna o mapa de sobras por modelo para desativar 
-    mochilas esgotadas na tela de baixa de órfãos.
+    Retorna a disponibilidade em tempo real consultando diretamente 
+    os campos persistidos no banco (Execução ultra rápida em < 10ms).
     """
-    from app.services.estoque_service import recalibrar_estoque
-    calib = recalibrar_estoque()
-    mapa_reservas = calib.get('reservas_por_modelo', {})
-
     estoques = EstoqueKit.query.filter_by(ativo=True).all()
     disponibilidade = {}
 
     for est in estoques:
-        reserva = mapa_reservas.get(est.codigo_kit, 0)
+        reserva = est.quantidade_reservada or 0
         sobra = est.quantidade_disponivel - reserva
         disponibilidade[est.codigo_kit] = {
             'entrada_total': est.quantidade_disponivel,

@@ -89,7 +89,7 @@ body {
 
 .btn-search:hover { background: #0369a1; }
 
-/* LISTA DE SUGESTÕES (AUTOCOMPLETE LIMPO COM HOVER PRE-SELECIONADO) */
+/* LISTA DE SUGESTÕES (AUTOCOMPLETE) */
 .autocomplete-list {
     position: absolute;
     top: 100%;
@@ -118,7 +118,6 @@ body {
 
 .autocomplete-item:last-child { border-bottom: none; }
 
-/* Efeito ao passar o mouse ou focar no item */
 .autocomplete-item:hover,
 .autocomplete-item.selected { 
     background-color: #e0f2fe;
@@ -150,6 +149,39 @@ body {
 .scanner-wrapper.hidden { display: none; }
 
 #reader { width: 100%; border-radius: 8px; overflow: hidden; }
+
+/* NOTIFICAÇÃO / ALERTA DE TOPO DESTACADO NO TELEMÓVEL */
+.alert-banner { 
+    padding: 14px 18px; 
+    border-radius: 12px; 
+    font-weight: 700; 
+    font-size: 0.92rem; 
+    text-align: center; 
+    margin-bottom: 18px; 
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease-in-out;
+    animation: fadeInDown 0.3s ease-in-out;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-banner.hidden { display: none; }
+
+.alert-danger { 
+    background: #fef2f2; 
+    color: #991b1b; 
+    border: 2px solid #f87171; 
+}
+
+.alert-success { 
+    background: #15803d; 
+    color: #ffffff; 
+    border: 2px solid #16a34a; 
+    box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3);
+}
 
 /* CARTÃO DE RETIRADA */
 .card-container { 
@@ -225,14 +257,19 @@ body {
 
 .kit-item-card.kit-pendente {
     border: 1px solid #e2e8f0;
-    border-left: 4px solid #f97316;
+    border-left: 5px solid #f97316;
 }
 
+/* DESTAQUE VERDE CLARO E BORDAS VIVAS PARA KITS ENTREGUES */
 .kit-item-card.kit-entregue { 
-    background: #f8fafc; 
-    border: 1px solid #e2e8f0;
-    border-left: 4px solid #22c55e;
-    opacity: 0.85;
+    background: #f0fdf4; 
+    border: 1px solid #bbf7d0;
+    border-left: 5px solid #16a34a;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.08);
+}
+
+.kit-item-card.kit-entregue .kit-dependente-nome {
+    color: #14532d;
 }
 
 .kit-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -283,18 +320,15 @@ body {
 
 .btn-entregar { background: #16a34a; color: #ffffff; }
 .btn-entregar:hover { background: #15803d; }
-.btn-disabled { background: #94a3b8; color: #ffffff; cursor: not-allowed; }
+
+/* BOTÃO DE KIT JA ENTREGUE COM COR DESTACADA */
+.btn-disabled { 
+    background: #16a34a; 
+    color: #ffffff; 
+    cursor: not-allowed; 
+    opacity: 0.9;
+    font-weight: 700;
+}
+
 .btn-secondary { background: #334155; color: #ffffff; margin-top: 18px; }
 .btn-secondary:hover { background: #1e293b; }
-
-.alert-banner { 
-    padding: 12px; 
-    border-radius: 8px; 
-    font-weight: 600; 
-    font-size: 0.85rem; 
-    text-align: center; 
-    margin-bottom: 14px; 
-}
-.alert-banner.hidden { display: none; }
-.alert-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-.alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }

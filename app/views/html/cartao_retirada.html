@@ -25,6 +25,9 @@
             </div>
         </header>
 
+        <!-- Alerta Global (Notificação no topo da página) -->
+        <div id="alert-box" class="alert-banner hidden"></div>
+
         <!-- BUSCA MANUAL COM AUTOCOMPLETE (Exibido no modo BUSCAR) -->
         <div id="box-busca-container" class="search-box-container hidden">
             <div class="search-input-wrapper">
@@ -42,9 +45,6 @@
         <div id="reader-container" class="scanner-wrapper hidden">
             <div id="reader"></div>
         </div>
-
-        <!-- Alerta Global -->
-        <div id="alert-box" class="alert-banner hidden"></div>
 
         <!-- CARTÃO DE RETIRADA -->
         <div id="cartao-retirada" class="card-container hidden">
@@ -183,7 +183,7 @@
             });
         });
 
-        // Consulta ao servidor para obter o saldo real de sobras por modelo
+        // Consulta rápida ao backend para obter as sobras sem recomputar a base inteira
         async function carregarDisponibilidadeEstoque() {
             try {
                 const res = await fetch('/api/estoque/disponibilidade');
@@ -304,18 +304,19 @@
             consultarRetirada(termo);
         }
 
+        // CONSULTA ULTRA RÁPIDA EM PARALELO
         async function consultarRetirada(termo) {
             try {
                 esconderAlerta();
                 if (autoResetTimer) clearTimeout(autoResetTimer);
 
-                // Atualiza a disponibilidade das sobras antes de montar o cartão
-                await carregarDisponibilidadeEstoque();
+                const promiseBusca = fetch(`/api/buscar/${encodeURIComponent(termo)}`);
+                const promiseEstoque = carregarDisponibilidadeEstoque();
 
-                const response = await fetch(`/api/buscar/${encodeURIComponent(termo)}`);
-                const result = await response.json();
+                const [responseBusca] = await Promise.all([promiseBusca, promiseEstoque]);
+                const result = await responseBusca.json();
 
-                if (response.ok && result.sucesso) {
+                if (responseBusca.ok && result.sucesso) {
                     codigoAtualScan = result.dados.codigo_retirada;
                     renderizarCartao(result.dados);
                 } else {
@@ -467,7 +468,6 @@
             });
         }
 
-        // Função para gerar as opções do <select> desativando modelos esgotados para Órfãos
         function gerarOptionsModelos(modeloAtual, categoria, eOrfao) {
             let html = "";
             let listaFiltrada = (categoria === "LIVRE" || categoria === "TODAS") ? TODOS_OS_KITS : (CATEGORIAS_KITS[categoria] || TODOS_OS_KITS);
@@ -490,7 +490,6 @@
                 const selected = (mod.toLowerCase() === (modeloAtual || "").toLowerCase());
                 if (selected) encontrado = true;
 
-                // Se o beneficiário for Órfão e a sobra for ZERO, desativa a opção
                 if (eOrfao && sobra <= 0 && !selected) {
                     html += `<option value="${mod}" disabled style="color: #94a3b8; background-color: #f1f5f9;">🚫 ${mod} (Esgotado p/ Órfãos)</option>`;
                 } else {
@@ -539,8 +538,7 @@
                     mostrarAlerta(result.mensagem, "success");
                     codigoAtualScan = result.dados.codigo_retirada;
                     
-                    // Recarrega as sobras de estoque após a baixa
-                    await carregarDisponibilidadeEstoque();
+                    carregarDisponibilidadeEstoque();
                     renderizarCartao(result.dados);
 
                     if (result.dados.status === 'ENTREGUE') {
@@ -581,6 +579,9 @@
             box.innerText = msg;
             box.className = `alert-banner alert-${tipo}`;
             box.classList.remove("hidden");
+
+            // Rola a tela suavemente para o topo para o alerta ficar visível nos telemóveis
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function esconderAlerta() {
