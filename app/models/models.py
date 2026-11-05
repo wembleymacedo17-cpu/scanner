@@ -38,8 +38,14 @@ class HistoricoBaixa(db.Model):
     """Tabela para registro e auditoria de cada baixa realizada."""
     __tablename__ = 'historico_baixas'
 
+    # Definição dos índices compostos e otimizações de tabela
+    __table_args__ = (
+        db.Index('idx_historico_user_data', 'id_usuario', db.desc('data_baixa')),
+        db.Index('idx_historico_data_baixa', db.desc('data_baixa')),
+    )
+
     id_historico = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_usuario = db.Column(db.Integer, db.ForeignKey('usuarios.id_usuario'), nullable=True, index=True)
+    id_usuario = db.Column(db.Integer, db.ForeignKey('usuarios.id_usuario'), nullable=True)
     nome_operador = db.Column(db.String(255), nullable=True)
     codigo_retirada = db.Column(db.String(36), nullable=False, index=True)
     id_colaborador = db.Column(db.Integer, nullable=False)
@@ -47,7 +53,7 @@ class HistoricoBaixa(db.Model):
     tipo_publico = db.Column(db.String(50), nullable=False)
     index_kit = db.Column(db.Integer, nullable=False)
     modelo_baixa = db.Column(db.String(100), nullable=False)
-    data_baixa = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    data_baixa = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     def to_dict(self):
         return {
@@ -62,6 +68,7 @@ class HistoricoBaixa(db.Model):
             'modelo_baixa': self.modelo_baixa,
             'data_baixa': self.data_baixa.strftime("%d/%m/%Y %H:%M:%S")
         }
+        
 
 
 class BaseRetirada(db.Model):

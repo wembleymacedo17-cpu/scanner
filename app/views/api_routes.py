@@ -1,8 +1,7 @@
 from flask import Blueprint, jsonify, request, session
-from datetime import datetime
-from sqlalchemy import or_, cast, String ,func
-from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa
 from datetime import datetime, timedelta
+from sqlalchemy import or_, cast, String, func
+from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -93,7 +92,6 @@ def autocompletar_nome():
     termo_like = f"%{query}%"
     sugestoes = []
 
-    # 1. Busca nos Dependentes (por nome, resumo ou crachá)
     deps = RetiradaDependente.query.filter(
         or_(
             RetiradaDependente.nome_colaborador.ilike(termo_like),
@@ -111,7 +109,6 @@ def autocompletar_nome():
             'tipo_publico': 'Dependente'
         })
 
-    # 2. Busca nos Jovens Aprendizes
     limite_restante = 8 - len(sugestoes)
     if limite_restante > 0:
         jovens = RetiradaJovemAprendiz.query.filter(
@@ -182,7 +179,7 @@ def dar_baixa_item():
     codigo_str = data.get('codigo_retirada', '').strip()
     index_kit = data.get('index_kit')
     modelo_baixa = data.get('modelo_baixa', 'Padrão')
-    nome_dependente = data.get('nome_dependente', '').strip() # Captura o filho específico
+    nome_dependente = data.get('nome_dependente', '').strip()
 
     if 'RETIRADA_KIT:' in codigo_str:
         codigo_str = codigo_str.replace('RETIRADA_KIT:', '').strip()
@@ -222,12 +219,10 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # REGISTRO NO HISTÓRICO COM O NOME DO DEPENDENTE/FILHO
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
 
-    # Se foi informado o dependente, concatena: "NOME DO PAI (Filho: NOME DO FILHO)"
     nome_completo_registro = nome_titular
     if nome_dependente and nome_dependente != nome_titular:
         nome_completo_registro = f"{nome_titular} — Filho: {nome_dependente}"
@@ -252,7 +247,6 @@ def dar_baixa_item():
     }), 200
 
 
-
 @api_bp.route('/historico-baixas', methods=['GET'])
 def listar_historico():
     id_user = session.get('usuario_id')
@@ -263,24 +257,38 @@ def listar_historico():
 
     user_target_id = request.args.get('id_usuario', type=int)
 
-    # 1. Se for OPERADOR, ignora parâmetros e força o filtro por ele mesmo
     if perfil_user != 'ADMIN':
         user_target_id = id_user
 
-    # Se for ADMIN e não passou id_usuario, retorna a lista geral com fuso ajustado
-    query = HistoricoBaixa.query
+    query = db.session.query(
+        HistoricoBaixa.data_baixa,
+        HistoricoBaixa.nome_operador,
+        HistoricoBaixa.nome_beneficiario,
+        HistoricoBaixa.id_colaborador,
+        HistoricoBaixa.tipo_publico,
+        HistoricoBaixa.modelo_baixa
+    )
+
     if user_target_id:
-        query = query.filter_by(id_usuario=user_target_id)
+        query = query.filter(HistoricoBaixa.id_usuario == user_target_id)
 
     historicos = query.order_by(HistoricoBaixa.data_baixa.desc()).limit(200).all()
 
     lista_formatada = []
     for h in historicos:
-        dados = h.to_dict()
+        dt_str = ""
         if h.data_baixa:
             data_brasilia = h.data_baixa - timedelta(hours=3)
-            dados['data_baixa'] = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
-        lista_formatada.append(dados)
+            dt_str = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
+
+        lista_formatada.append({
+            'data_baixa': dt_str,
+            'nome_operador': h.nome_operador,
+            'nome_beneficiario': h.nome_beneficiario,
+            'id_colaborador': h.id_colaborador,
+            'tipo_publico': h.tipo_publico,
+            'modelo_baixa': h.modelo_baixa
+        })
 
     return jsonify({
         'sucesso': True,
@@ -294,52 +302,67 @@ def ranking_operadores():
     if session.get('usuario_perfil') != 'ADMIN':
         return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
 
-    # Agrupa baixas por usuário/operador
-    subquery = db.session.query(
-        HistoricoBaixa.id_usuario,
-        func.count(HistoricoBaixa.id_historico).label('total_baixas'),
+    resultados = db.session.query(
+        Usuario.id_usuario,
+        Usuario.nome,
+        Usuario.email,
+        Usuario.perfil,
+        func.coalesce(func.count(HistoricoBaixa.id_historico), 0).label('total_baixas'),
         func.max(HistoricoBaixa.data_baixa).label('ultima_baixa')
-    ).group_by(HistoricoBaixa.id_usuario).subquery()
+    ).outerjoin(
+        HistoricoBaixa, Usuario.id_usuario == HistoricoBaixa.id_usuario
+    ).group_by(
+        Usuario.id_usuario, Usuario.nome, Usuario.email, Usuario.perfil
+    ).order_by(
+        func.count(HistoricoBaixa.id_historico).desc()
+    ).all()
 
-    usuarios = Usuario.query.all()
     ranking = []
-
-    for u in usuarios:
-        dados_baixa = db.session.query(subquery.c.total_baixas, subquery.c.ultima_baixa)\
-            .filter(subquery.c.id_usuario == u.id_usuario).first()
-        
-        total = dados_baixa.total_baixas if dados_baixa else 0
+    for r in resultados:
         ultima = None
-        if dados_baixa and dados_baixa.ultima_baixa:
-            dt_br = dados_baixa.ultima_baixa - timedelta(hours=3)
+        if r.ultima_baixa:
+            dt_br = r.ultima_baixa - timedelta(hours=3)
             ultima = dt_br.strftime("%d/%m/%Y %H:%M:%S")
 
         ranking.append({
-            'id_usuario': u.id_usuario,
-            'nome': u.nome,
-            'email': u.email,
-            'perfil': u.perfil,
-            'total_baixas': total,
+            'id_usuario': r.id_usuario,
+            'nome': r.nome,
+            'email': r.email,
+            'perfil': r.perfil,
+            'total_baixas': r.total_baixas,
             'ultima_baixa': ultima or "Nenhuma baixa"
         })
-
-    # Ordena pelo total de baixas (decrescente)
-    ranking.sort(key=lambda x: x['total_baixas'], reverse=True)
 
     return jsonify({
         'sucesso': True,
         'ranking': ranking
     }), 200
 
+
 @api_bp.route('/usuarios', methods=['GET'])
 def listar_usuarios():
     if session.get('usuario_perfil') != 'ADMIN':
         return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
 
-    users = Usuario.query.order_by(Usuario.data_criacao.desc()).all()
+    users = db.session.query(
+        Usuario.id_usuario,
+        Usuario.nome,
+        Usuario.email,
+        Usuario.perfil,
+        Usuario.ativo
+    ).order_by(Usuario.data_criacao.desc()).all()
+
     return jsonify({
         'sucesso': True,
-        'usuarios': [u.to_dict() for u in users]
+        'usuarios': [
+            {
+                'id_usuario': u.id_usuario,
+                'nome': u.nome,
+                'email': u.email,
+                'perfil': u.perfil,
+                'ativo': u.ativo
+            } for u in users
+        ]
     }), 200
 
 
@@ -352,7 +375,6 @@ def atualizar_usuario(id_usuario):
     if not user:
         return jsonify({'sucesso': False, 'mensagem': 'Usuário não encontrado.'}), 404
 
-    # TRAVA DE SEGURANÇA: Usuário Master Root não pode ser alterado
     if user.email.lower() == 'admin@funfarme.com.br':
         return jsonify({'sucesso': False, 'mensagem': 'O usuário Administrador Master não pode ser alterado.'}), 400
 
@@ -379,7 +401,6 @@ def excluir_usuario(id_usuario):
     if not user:
         return jsonify({'sucesso': False, 'mensagem': 'Usuário não encontrado.'}), 404
 
-    # TRAVA DE SEGURANÇA: Usuário Master Root não pode ser excluído
     if user.email.lower() == 'admin@funfarme.com.br':
         return jsonify({'sucesso': False, 'mensagem': 'O usuário Administrador Master não pode ser excluído.'}), 400
 
