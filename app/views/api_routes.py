@@ -608,7 +608,8 @@ def listar_estoque():
         return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
 
     info_calibragem = recalibrar_estoque()
-    itens = EstoqueKit.query.filter_by(ativo=True).order_by(EstoqueKit.codigo_kit.asc()).all()
+    # REMOVIDO o filtro ativo=True para exibir TODOS os kits (ativos e inativos)
+    itens = EstoqueKit.query.order_by(EstoqueKit.codigo_kit.asc()).all()
     
     return jsonify({
         'sucesso': True,
@@ -616,6 +617,67 @@ def listar_estoque():
         'calibragem': info_calibragem
     }), 200
 
+@api_bp.route('/estoque/alternar-status', methods=['PUT'])
+def alternar_status_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas administradores podem alterar o status.'}), 403
+
+    data = request.json or {}
+    codigo_kit = data.get('codigo_kit', '').strip()
+
+    if not codigo_kit:
+        return jsonify({'sucesso': False, 'mensagem': 'Modelo do kit não informado.'}), 400
+
+    item = EstoqueKit.query.filter_by(codigo_kit=codigo_kit).first()
+    if not item:
+        return jsonify({'sucesso': False, 'mensagem': 'Modelo não encontrado no estoque.'}), 404
+
+    # Inverte o status atual (se True vira False, se False vira True)
+    item.ativo = not item.ativo
+    novo_status_str = "ativado" if item.ativo else "inativado"
+
+    mov = MovimentacaoEstoque(
+        id_estoque=item.id_estoque,
+        tipo_movimentacao='ALTERACAO_STATUS',
+        quantidade=0,
+        observacao=f"Modelo {novo_status_str} pelo Admin {session.get('usuario_nome')}"
+    )
+    db.session.add(mov)
+    db.session.commit()
+
+    return jsonify({
+        'sucesso': True,
+        'mensagem': f'O modelo "{codigo_kit}" foi {novo_status_str} com sucesso!',
+        'novo_status': item.ativo
+    }), 200
+
+@api_bp.route('/estoque/inativar', methods=['PUT'])
+def inativar_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas administradores podem inativar modelos.'}), 403
+
+    data = request.json or {}
+    codigo_kit = data.get('codigo_kit', '').strip()
+
+    if not codigo_kit:
+        return jsonify({'sucesso': False, 'mensagem': 'Modelo do kit não informado.'}), 400
+
+    item = EstoqueKit.query.filter_by(codigo_kit=codigo_kit).first()
+    if not item:
+        return jsonify({'sucesso': False, 'mensagem': 'Modelo não encontrado no estoque.'}), 404
+
+    item.ativo = False
+
+    mov = MovimentacaoEstoque(
+        id_estoque=item.id_estoque,
+        tipo_movimentacao='INATIVACAO',
+        quantidade=0,
+        observacao=f"Modelo inativado pelo Admin {session.get('usuario_nome')}"
+    )
+    db.session.add(mov)
+    db.session.commit()
+
+    return jsonify({'sucesso': True, 'mensagem': f'O modelo "{codigo_kit}" foi inativado e bloqueado para novas baixas!'}), 200
 
 @api_bp.route('/estoque/entrada', methods=['POST'])
 def entrada_estoque():
