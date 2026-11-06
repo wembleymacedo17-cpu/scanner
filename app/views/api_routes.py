@@ -798,3 +798,21 @@ def estoque_exportar_modelo(modelo_kit):
         headers={"Content-disposition": f"attachment; filename=extrato_mochila_{modelo_limpo}.csv"}
     )
     return response
+
+@api_bp.route('/validar-senha-admin', methods=['POST'])
+def validar_senha_admin():
+    id_user = session.get('usuario_id')
+    if not id_user or session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso não autorizado.'}), 403
+
+    data = request.json or {}
+    senha = data.get('senha', '').strip()
+
+    if not senha:
+        return jsonify({'sucesso': False, 'mensagem': 'Por favor, informe sua senha de confirmação.'}), 400
+
+    user = Usuario.query.get(id_user)
+    if not user or not user.checar_senha(senha):
+        return jsonify({'sucesso': False, 'mensagem': 'Senha de confirmação incorreta!'}), 401
+
+    return jsonify({'sucesso': True, 'mensagem': 'Senha validada com sucesso!'}), 200

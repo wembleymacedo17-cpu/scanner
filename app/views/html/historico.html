@@ -97,7 +97,6 @@
         .nome-beneficiario-box { display: flex; flex-direction: column; }
         .nome-filho-tag { font-size: 0.8rem; color: #0284c7; font-weight: 600; margin-top: 2px; }
 
-        /* Botões de Ação Admin */
         .action-btns-group {
             display: flex;
             gap: 6px;
@@ -133,7 +132,7 @@
         }
         .btn-edit-baixa:hover, .btn-revogar-baixa:hover { opacity: 0.88; }
 
-        /* Modal */
+        /* MODAIS E ALERTAS INTERNOS */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -149,7 +148,18 @@
             width: 90%;
             max-width: 420px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
         }
+
+        .modal-alert {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .modal-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
         .hidden { display: none !important; }
 
@@ -174,6 +184,8 @@
                 <p id="subtitulo-pagina">Registro de baixas efetuadas no sistema</p>
             </div>
         </header>
+
+        <div id="alert-msg-historico" class="alert-banner hidden"></div>
 
         <!-- SEÇÃO 1: RANKING DE OPERADORES (ADMIN) -->
         <div id="secao-ranking" class="hidden">
@@ -236,7 +248,28 @@
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO -->
+    <!-- MODAL DE CONFIRMAÇÃO DE SENHA DO ADMIN COM ALERTA INTERNO -->
+    <div id="modal-confirmar-senha" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 style="color: #0f172a; margin-bottom: 6px;" id="senha-modal-titulo">Autenticação de Segurança</h3>
+            <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 12px;" id="senha-modal-subtitulo">Confirme sua senha de Administrador para prosseguir com esta ação.</p>
+            
+            <!-- Alerta Interno do Modal -->
+            <div id="modal-hist-alert" class="modal-alert modal-alert-danger"></div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Senha do Usuário Logado</label>
+                <input type="password" id="modal-input-senha" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none; box-sizing: border-box;" placeholder="••••••••" onkeydown="if(event.key==='Enter') executarAcaoComSenha();" />
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-voltar" onclick="fecharModalSenha()">Cancelar</button>
+                <button type="button" class="btn-revogar-baixa" style="padding: 8px 16px; font-size: 0.85rem;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DA BAIXA -->
     <div id="modal-editar-baixa" class="modal-overlay hidden">
         <div class="modal-box">
             <h3 style="color: #1e293b; margin-bottom: 8px;">Alterar Modelo do Kit</h3>
@@ -251,7 +284,7 @@
 
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-voltar" onclick="fecharModalEdicao()">Cancelar</button>
-                <button type="button" class="btn-edit-baixa" style="padding: 8px 16px; font-size: 0.85rem;" onclick="salvarAlteracaoBaixa()">Salvar Alteração</button>
+                <button type="button" class="btn-edit-baixa" style="padding: 8px 16px; font-size: 0.85rem;" onclick="iniciarEdicaoComSenha()">Salvar Alteração</button>
             </div>
         </div>
     </div>
@@ -260,6 +293,7 @@
         let perfilLogado = 'OPERADOR';
         let dadosHistoricoBrutos = [];
         let usuarioFiltroAtual = null;
+        let acaoPendenteCallback = null;
 
         const MODELOS_KITS = [
             "Abelha", "Unicornio", "Borboleta", "Cachorro", "Dinossauro",
@@ -272,6 +306,15 @@
             populacaoSelectModal();
             await inicializarTela();
         });
+
+        function exibirAlerta(msg, tipo = 'success') {
+            const box = document.getElementById("alert-msg-historico");
+            box.innerText = msg;
+            box.className = `alert-banner alert-${tipo}`;
+            box.classList.remove("hidden");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => box.classList.add("hidden"), 4000);
+        }
 
         function populacaoSelectModal() {
             const select = document.getElementById("modal-select-modelo");
@@ -405,7 +448,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     Editar
                                 </button>
-                                <button class="btn-revogar-baixa" onclick="revogarBaixa(${idHist}, '${item.modelo_baixa}')" title="Revogar Baixa e Devolver ao Estoque">
+                                <button class="btn-revogar-baixa" onclick="solicitarRevogacao(${idHist}, '${item.modelo_baixa}')" title="Revogar Baixa e Devolver ao Estoque">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                     Revogar
                                 </button>
@@ -445,9 +488,68 @@
             renderizarTabelaExtrato(filtrados);
         }
 
+        /* GERENCIAMENTO DO MODAL DE SENHA E ALERTA INTERNO */
+        function abrirModalSenha(titulo, subtitulo, callback) {
+            document.getElementById("senha-modal-titulo").innerText = titulo;
+            document.getElementById("senha-modal-subtitulo").innerText = subtitulo;
+            document.getElementById("modal-input-senha").value = "";
+            fecharAlertaModal();
+            acaoPendenteCallback = callback;
+            document.getElementById("modal-confirmar-senha").classList.remove("hidden");
+            document.getElementById("modal-input-senha").focus();
+        }
+
+        function fecharModalSenha() {
+            document.getElementById("modal-confirmar-senha").classList.add("hidden");
+            fecharAlertaModal();
+            acaoPendenteCallback = null;
+        }
+
+        function exibirAlertaModal(msg) {
+            const alertBox = document.getElementById("modal-hist-alert");
+            alertBox.innerText = msg;
+            alertBox.style.display = "block";
+        }
+
+        function fecharAlertaModal() {
+            const alertBox = document.getElementById("modal-hist-alert");
+            alertBox.style.display = "none";
+            alertBox.innerText = "";
+        }
+
+        async function executarAcaoComSenha() {
+            const senha = document.getElementById("modal-input-senha").value.trim();
+            
+            if (!senha) {
+                exibirAlertaModal("Por favor, digite sua senha de confirmação.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/validar-senha-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha })
+                });
+
+                const data = await res.json();
+                if (!data.sucesso) {
+                    exibirAlertaModal(data.mensagem || "Senha incorreta!");
+                    return;
+                }
+
+                fecharAlertaModal();
+                const callback = acaoPendenteCallback;
+                fecharModalSenha();
+                if (callback) await callback();
+            } catch (err) {
+                exibirAlertaModal("Erro de conexão ao validar credenciais.");
+            }
+        }
+
         function abrirModalEdicao(idHist, modeloAtual) {
             if (!idHist || idHist === 'undefined') {
-                alert("Erro: O identificador do registro de baixa não foi localizado.");
+                exibirAlerta("Identificador do registro de baixa não localizado.", "danger");
                 return;
             }
             document.getElementById("modal-hist-id").value = idHist;
@@ -459,14 +561,18 @@
             document.getElementById("modal-editar-baixa").classList.add("hidden");
         }
 
+        function iniciarEdicaoComSenha() {
+            fecharModalEdicao();
+            abrirModalSenha(
+                "Confirmar Alteração de Modelo",
+                "Digite sua senha de Administrador para estornar o modelo anterior e registrar a nova entrega.",
+                salvarAlteracaoBaixa
+            );
+        }
+
         async function salvarAlteracaoBaixa() {
             const idHist = document.getElementById("modal-hist-id").value;
             const novoModelo = document.getElementById("modal-select-modelo").value;
-
-            if (!idHist || idHist === 'undefined') {
-                alert("Erro: O identificador da baixa é inválido.");
-                return;
-            }
 
             try {
                 const res = await fetch('/api/editar-baixa-historico', {
@@ -479,27 +585,30 @@
                 });
 
                 const data = await res.json();
-                alert(data.mensagem);
+                exibirAlerta(data.mensagem, data.sucesso ? "success" : "danger");
 
                 if (data.sucesso) {
-                    fecharModalEdicao();
                     carregarExtratoOperador(usuarioFiltroAtual);
                 }
             } catch (err) {
-                alert("Erro ao salvar alteração da baixa.");
+                exibirAlerta("Erro ao salvar alteração da baixa.", "danger");
             }
         }
 
-        async function revogarBaixa(idHist, modeloKit) {
+        function solicitarRevogacao(idHist, modeloKit) {
             if (!idHist || idHist === 'undefined') {
-                alert("Erro: O identificador do registro de baixa não foi localizado.");
+                exibirAlerta("Identificador da baixa não localizado.", "danger");
                 return;
             }
 
-            if (!confirm(`Tem certeza que deseja REVOGAR a baixa do kit "${modeloKit}"?\n\nO status do cartão será atualizado (PENDENTE ou ENTREGA PARCIAL) e a mochila voltará ao estoque.`)) {
-                return;
-            }
+            abrirModalSenha(
+                `Revogar Baixa (${modeloKit})`,
+                `Digite sua senha para devolver o kit "${modeloKit}" ao estoque e redefinir o status do cartão.`,
+                () => revogarBaixa(idHist)
+            );
+        }
 
+        async function revogarBaixa(idHist) {
             try {
                 const res = await fetch('/api/revogar-baixa-historico', {
                     method: 'POST',
@@ -508,13 +617,13 @@
                 });
 
                 const data = await res.json();
-                alert(data.mensagem);
+                exibirAlerta(data.mensagem, data.sucesso ? "success" : "danger");
 
                 if (data.sucesso) {
                     carregarExtratoOperador(usuarioFiltroAtual);
                 }
             } catch (err) {
-                alert("Erro ao revogar a baixa do kit.");
+                exibirAlerta("Erro ao revogar a baixa do kit.", "danger");
             }
         }
     </script>
