@@ -320,6 +320,26 @@
         </a>
     </nav>
 
+    <!-- MODAL DE ALERTA DE SEGURANÇA E EXPIRAÇÃO DE SESSÃO -->
+    <div id="modal-sessao-derrubada" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 16px; padding: 32px 24px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div style="background: rgba(239, 68, 68, 0.15); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; border: 1px solid rgba(239, 68, 68, 0.3);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 style="color: #ffffff; font-size: 1.25rem; margin-bottom: 8px; font-weight: 700;" id="titulo-modal-sessao">Acesso Simultâneo Detectado</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;" id="msg-detalhe-sessao">
+                Sua conta foi conectada em outro dispositivo. Por motivos de segurança, esta sessão foi encerrada.
+            </p>
+            <button onclick="window.top.location.href='/login'" style="width: 100%; padding: 12px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;">
+                Ir para o Login Agora
+            </button>
+        </div>
+    </div>
+
     <script>
         function carregarTela(url, elemento) {
             document.getElementById('main-frame').src = url;
@@ -334,7 +354,9 @@
             window.top.location.href = '/login';
         }
 
-        // Interceptor Global de Fetch para expirar a sessão no Navegador caso outro dispositivo conecte
+        // ==============================================================================
+        // 1. INTERCEPTOR GLOBAL DE FETCH (MODAL DE ALERTA AO DERRUBAR SESSÃO)
+        // ==============================================================================
         const originalFetch = window.fetch;
         window.fetch = async function(...args) {
             const response = await originalFetch(...args);
@@ -342,12 +364,73 @@
             if (response.status === 401) {
                 const data = await response.clone().json().catch(() => ({}));
                 if (data.sessao_expirada) {
-                    alert(data.mensagem || "Sua conta foi conectada em outro dispositivo!");
-                    window.top.location.href = "/login";
+                    exibirModalSessao(
+                        "Acesso Simultâneo Detectado",
+                        data.mensagem || "Sua conta foi conectada em outro dispositivo. Por motivos de segurança, esta sessão foi encerrada."
+                    );
                 }
             }
             return response;
         };
+
+        function exibirModalSessao(titulo, mensagem) {
+            const modal = document.getElementById("modal-sessao-derrubada");
+            if (modal) {
+                document.getElementById("titulo-modal-sessao").innerText = titulo;
+                document.getElementById("msg-detalhe-sessao").innerText = mensagem;
+                modal.style.display = "flex";
+            } else {
+                alert(mensagem);
+                window.top.location.href = "/login";
+            }
+        }
+
+        // ==============================================================================
+        // 2. CONTROLE DE INATIVIDADE INTELIGENTE (30 MINUTOS COM RESET AUTOMÁTICO)
+        // ==============================================================================
+        (function() {
+            const TEMPO_INATIVIDADE_MS = 30 * 60 * 1000; // 30 minutos em milissegundos
+            let timerInatividade;
+
+            function resetarTimerInatividade() {
+                clearTimeout(timerInatividade);
+                timerInatividade = setTimeout(desconectarPorInatividade, TEMPO_INATIVIDADE_MS);
+            }
+
+            async function desconectarPorInatividade() {
+                try {
+                    await fetch('/api/logout', { method: 'POST' });
+                } catch (e) {}
+
+                exibirModalSessao(
+                    "Sessão Expirada por Inatividade",
+                    "Sua sessão foi encerrada automaticamente após 30 minutos sem atividade no sistema por medida de segurança."
+                );
+            }
+
+            // Ouve qualquer movimento, toque na tela, clique ou digitação no computador ou celular
+            ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evento => {
+                window.addEventListener(evento, resetarTimerInatividade, true);
+            });
+
+            // Ouve também as interações dentro do Iframe principal
+            const iframe = document.getElementById('main-frame');
+            if (iframe) {
+                iframe.addEventListener('load', () => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evento => {
+                            iframeDoc.addEventListener(evento, resetarTimerInatividade, true);
+                        });
+                    } catch (e) {
+                        // Caso ocorra restrição de mesma origem em dev
+                    }
+                });
+            }
+
+            // Inicia o temporizador
+            resetarTimerInatividade();
+        })();
     </script>
 </body>
 </html>
