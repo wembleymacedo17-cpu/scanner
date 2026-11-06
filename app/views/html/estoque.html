@@ -39,25 +39,26 @@
         .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
 
-        /* MODAL CUSTOMIZADO */
-        .custom-modal-overlay {
+        /* MODAIS CUSTOMIZADOS */
+        .custom-modal-overlay, .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
             z-index: 99999;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .custom-modal-card {
+        .custom-modal-card, .modal-box {
             background: #ffffff;
             border-radius: 16px;
             padding: 24px;
             width: 90%;
             max-width: 400px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative;
         }
 
         .modal-estratificado-card {
@@ -76,7 +77,6 @@
             margin-bottom: 14px;
         }
 
-        /* BARRA DE FILTRO DO MODAL */
         .modal-filter-bar {
             display: flex;
             gap: 10px;
@@ -113,9 +113,7 @@
             text-decoration: none;
         }
 
-        .btn-export-excel:hover {
-            background: #15803d;
-        }
+        .btn-export-excel:hover { background: #15803d; }
 
         .modal-body-scroll {
             overflow-y: auto;
@@ -129,7 +127,7 @@
             justify-content: flex-end;
         }
 
-        .btn-modal-cancel {
+        .btn-modal-cancel, .btn-voltar-modal {
             background: #f1f5f9;
             color: #475569;
             border: 1px solid #cbd5e1;
@@ -139,7 +137,7 @@
             cursor: pointer;
         }
 
-        .btn-modal-confirm {
+        .btn-modal-confirm, .btn-confirm-action {
             background: #0284c7;
             color: #ffffff;
             border: none;
@@ -148,6 +146,18 @@
             font-weight: 700;
             cursor: pointer;
         }
+
+        .modal-alert {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .modal-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        .hidden { display: none !important; }
 
         /* TOAST */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
@@ -160,7 +170,7 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS -->
-    <div class="custom-modal-overlay" id="modal-estratificado">
+    <div class="custom-modal-overlay hidden" id="modal-estratificado">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
                 <div>
@@ -200,8 +210,8 @@
         </div>
     </div>
 
-    <!-- MODAL DE AJUSTE -->
-    <div class="custom-modal-overlay" id="modal-ajuste">
+    <!-- MODAL DE AJUSTE DE ESTOQUE -->
+    <div class="custom-modal-overlay hidden" id="modal-ajuste">
         <div class="custom-modal-card">
             <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Saldo Físico (Balcão)</h3>
             <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">Altere o saldo atual no balcão para o modelo <strong id="modal-nome-kit">---</strong></p>
@@ -215,6 +225,27 @@
             <div class="modal-actions">
                 <button type="button" class="btn-modal-cancel" onclick="fecharModalAjuste()">Cancelar</button>
                 <button type="button" class="btn-modal-confirm" onclick="confirmarAjusteEstoque()">Salvar Alteração</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE SENHA DO ADMIN (PADRÃO DO SISTEMA) -->
+    <div id="modal-confirmar-senha" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 style="color: #0f172a; margin-bottom: 6px;" id="senha-modal-titulo">Autenticação de Segurança</h3>
+            <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 12px;" id="senha-modal-subtitulo">Confirme sua senha de Administrador para prosseguir com esta ação.</p>
+            
+            <!-- Banner de Alerta Interno -->
+            <div id="modal-alert-msg" class="modal-alert modal-alert-danger"></div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Senha do Usuário Logado</label>
+                <input type="password" id="modal-input-senha" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none; box-sizing: border-box;" placeholder="••••••••" onkeydown="if(event.key==='Enter') executarAcaoComSenha();" />
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-voltar-modal" onclick="fecharModalSenha()">Cancelar</button>
+                <button type="button" class="btn-confirm-action" style="padding: 8px 16px; font-size: 0.85rem;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
             </div>
         </div>
     </div>
@@ -306,6 +337,7 @@
         ];
 
         let dadosEstratificadosAtuais = [];
+        let acaoPendenteCallback = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             carregarEstoque();
@@ -412,7 +444,7 @@
             const bodyTabela = document.getElementById("tabela-estratificada-body");
             bodyTabela.innerHTML = "<tr><td colspan='4'>Carregando registros do histórico...</td></tr>";
             
-            document.getElementById("modal-estratificado").style.display = "flex";
+            document.getElementById("modal-estratificado").classList.remove("hidden");
 
             try {
                 const res = await fetch(`/api/estoque/detalhes/${encodeURIComponent(modeloKit)}`);
@@ -470,21 +502,22 @@
         }
 
         function fecharModalEstratificado() {
-            document.getElementById("modal-estratificado").style.display = "none";
+            document.getElementById("modal-estratificado").classList.add("hidden");
         }
 
         function abrirModalAjuste(codigoKit, quantidadeBalcaoAtual) {
             document.getElementById("modal-nome-kit").innerText = codigoKit;
             document.getElementById("modal-codigo-kit").value = codigoKit;
             document.getElementById("modal-input-qtd").value = quantidadeBalcaoAtual;
-            document.getElementById("modal-ajuste").style.display = "flex";
+            document.getElementById("modal-ajuste").classList.remove("hidden");
         }
 
         function fecharModalAjuste() {
-            document.getElementById("modal-ajuste").style.display = "none";
+            document.getElementById("modal-ajuste").classList.add("hidden");
         }
 
-        async function confirmarAjusteEstoque() {
+        // CONFIRMAÇÃO DE AJUSTE PROTEGIDA POR SENHA DO ADMIN
+        function confirmarAjusteEstoque() {
             const codigoKit = document.getElementById("modal-codigo-kit").value;
             const novaQuantidade = parseInt(document.getElementById("modal-input-qtd").value);
 
@@ -493,6 +526,16 @@
                 return;
             }
 
+            // Fecha o modal de quantidade e exige a senha do Admin antes de salvar
+            fecharModalAjuste();
+            abrirModalSenha(
+                "Confirmar Ajuste de Estoque",
+                `Digite sua senha de Administrador para alterar o saldo do modelo "${codigoKit}" para ${novaQuantidade} unidades.`,
+                () => salvarAjusteEstoqueServidor(codigoKit, novaQuantidade)
+            );
+        }
+
+        async function salvarAjusteEstoqueServidor(codigoKit, novaQuantidade) {
             try {
                 const res = await fetch('/api/estoque/ajustar', {
                     method: 'PUT',
@@ -502,7 +545,6 @@
                 const data = await res.json();
                 
                 if (data.sucesso) {
-                    fecharModalAjuste();
                     mostrarToast(data.mensagem, 'success');
                     carregarEstoque();
                 } else {
@@ -510,6 +552,63 @@
                 }
             } catch (err) {
                 mostrarToast("Erro ao processar ajuste.", 'error');
+            }
+        }
+
+        /* GERENCIAMENTO DO MODAL DE SENHA PADRÃO DO SISTEMA */
+        function abrirModalSenha(titulo, subtitulo, callback) {
+            document.getElementById("senha-modal-titulo").innerText = titulo;
+            document.getElementById("senha-modal-subtitulo").innerText = subtitulo;
+            document.getElementById("modal-input-senha").value = "";
+            fecharAlertaModal();
+            acaoPendenteCallback = callback;
+            document.getElementById("modal-confirmar-senha").classList.remove("hidden");
+            document.getElementById("modal-input-senha").focus();
+        }
+
+        function fecharModalSenha() {
+            document.getElementById("modal-confirmar-senha").classList.add("hidden");
+            fecharAlertaModal();
+            acaoPendenteCallback = null;
+        }
+
+        function exibirAlertaModal(msg) {
+            const box = document.getElementById("modal-alert-msg");
+            box.innerText = msg;
+            box.style.display = "block";
+        }
+
+        function fecharAlertaModal() {
+            const box = document.getElementById("modal-alert-msg");
+            box.style.display = "none";
+            box.innerText = "";
+        }
+
+        async function executarAcaoComSenha() {
+            const senha = document.getElementById("modal-input-senha").value.trim();
+            if (!senha) {
+                exibirAlertaModal("Por favor, digite sua senha de confirmação.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/validar-senha-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha })
+                });
+
+                const data = await res.json();
+                if (!data.sucesso) {
+                    exibirAlertaModal(data.mensagem || "Senha incorreta!");
+                    return;
+                }
+
+                const callback = acaoPendenteCallback;
+                fecharModalSenha();
+                if (callback) await callback();
+            } catch (err) {
+                exibirAlertaModal("Erro de conexão ao validar credenciais.");
             }
         }
 
