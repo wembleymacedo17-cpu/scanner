@@ -86,6 +86,7 @@ def extrair_nomes_dependentes(resumo_str):
     return nomes
 
 
+# Em api_routes.py, mantenha as rotas limpas:
 @api_bp.route('/login', methods=['POST'])
 def login_api():
     data = request.json or {}
@@ -109,7 +110,7 @@ def login_api():
     session['usuario_email'] = user.email
     session['usuario_perfil'] = user.perfil
     session['session_token'] = novo_token
-    session['ultimo_check_sessao'] = time.time()  # Timestamp inicial
+    session['ultimo_check_sessao'] = time.time()
 
     return jsonify({
         'sucesso': True,

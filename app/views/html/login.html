@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Retirada de Kits Escolares</title>
+    <script>
+        // Trava Anti-Iframe: Se a página de login tentar carregar dentro de um iframe,
+        // força a janela principal a redirecionar para a URL de login limpa.
+        if (window.top !== window.self) {
+            window.top.location.href = window.location.href;
+        }
+    </script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -17,7 +24,6 @@
             max-width: 400px;
         }
 
-       
         .logo-funfarme-external {
             width: 100%;             /* Ocupa a largura disponível com flexibilidade */
             max-width: 400px;        /* Tamanho máximo no PC para não ficar gigante */

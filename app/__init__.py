@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, session, redirect, url_for
+import time
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify
 from dotenv import load_dotenv
 from app.models import db, Usuario
 
@@ -37,6 +38,35 @@ def create_app():
 
     db.init_app(app)
 
+    # MIDDLEWARE GLOBAL (VALIDA SESSÃO ÚNICA EM ROTAS HTML E API)
+    @app.before_request
+    def verificar_sessao_global():
+        # Ignora arquivos estáticos e rotas públicas
+        if request.endpoint in ['login_page', 'api.login_api', 'static']:
+            return None
+
+        user_id = session.get('usuario_id')
+        token_local = session.get('session_token')
+
+        if user_id:
+            agora = time.time()
+            ultima_checagem = session.get('ultimo_check_sessao', 0)
+
+            # Checa o banco a cada 5 segundos para garantir resposta rápida
+            if (agora - ultima_checagem) > 5:
+                user = Usuario.query.get(user_id)
+                if not user or not user.ativo or user.session_token != token_local:
+                    session.clear()
+                    if request.path.startswith('/api/'):
+                        return jsonify({
+                            'sucesso': False,
+                            'sessao_expirada': True,
+                            'mensagem': 'Sua sessão foi encerrada pois um novo login foi realizado em outro dispositivo.'
+                        }), 401
+                    return redirect(url_for('login_page'))
+                
+                session['ultimo_check_sessao'] = agora
+
     @app.route('/')
     def index():
         if 'usuario_id' not in session:
@@ -49,15 +79,25 @@ def create_app():
 
     @app.route('/logout')
     def logout():
+        user_id = session.get('usuario_id')
+        if user_id:
+            user = Usuario.query.get(user_id)
+            if user:
+                user.session_token = None
+                db.session.commit()
         session.clear()
         return redirect(url_for('login_page'))
 
     @app.route('/entregar-kit')
     def entregar_kit():
+        if 'usuario_id' not in session:
+            return redirect(url_for('login_page'))
         return render_template('cartao_retirada.html')
 
     @app.route('/historico')
     def historico():
+        if 'usuario_id' not in session:
+            return redirect(url_for('login_page'))
         return render_template('historico.html')
 
     @app.route('/gerar-acesso')
