@@ -20,7 +20,6 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        /* Barra Superior Fixa para o Usuário */
         .top-navbar {
             width: 100%;
             height: 54px;
@@ -44,7 +43,7 @@
             height: 58px;
             width: auto;
             object-fit: contain;
-            filter: brightness(0) invert(1); /* Deixa a logo toda branca para destacar no fundo escuro */
+            filter: brightness(0) invert(1);
             transition: transform 0.2s ease;
         }
 
@@ -118,7 +117,6 @@
             border: 1px solid rgba(56, 189, 248, 0.4);
         }
 
-        /* Viewport onde abre o iframe */
         .app-viewport {
             width: 100%;
             height: calc(100vh - 54px - 70px);
@@ -131,7 +129,6 @@
             border: none;
         }
 
-        /* Menu Inferior Adaptado */
         nav.menu {
             position: fixed;
             bottom: 10px;
@@ -190,7 +187,6 @@
             color: #f87171;
         }
 
-        /* RESPONSIVIDADE PARA SMARTPHONES */
         @media (max-width: 600px) {
             nav.menu {
                 bottom: 8px;
@@ -236,10 +232,8 @@
 </head>
 <body>
 
-    <!-- BARRA FIXA SUPERIOR COM LOGO E IDENTIFICAÇÃO DO USUÁRIO -->
     <header class="top-navbar">
         <div class="top-app-title">
-            <!-- APONTA DIRETAMENTE PARA 'img/Logo_funfarme.png' DENTRO DE VIEWS -->
             <img src="{{ url_for('static', filename='img/Logo_funfarme.png') }}" alt="Logo FUNFARME" class="logo-funfarme-header">
             <span class="brand-text">Kits Escolares</span>
         </div>
@@ -255,12 +249,10 @@
         </div>
     </header>
 
-    <!-- CONTAINER DA APLICAÇÃO -->
     <main class="app-viewport">
         <iframe id="main-frame" src="/entregar-kit?modo=manual" frameborder="0"></iframe>
     </main>
 
-    <!-- MENU FLUTUANTE INFERIOR -->
     <nav class="menu">
         <a href="javascript:void(0)" class="menu-link active" onclick="carregarTela('/entregar-kit?modo=manual', this)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -299,7 +291,6 @@
         </a>
 
         <a href="javascript:void(0)" class="menu-link" onclick="carregarTela('/estoque', this)">
-            <!-- Ícone SVG representativo de Estoque / Caixas (Box/Package) -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
@@ -319,7 +310,7 @@
         </a>
         {% endif %}
 
-        <a href="/logout" class="menu-link logout-link" title="Sair">
+        <a href="javascript:void(0)" class="menu-link logout-link" title="Sair" onclick="efetuarLogout()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
@@ -337,6 +328,26 @@
             });
             elemento.classList.add('active');
         }
+
+        async function efetuarLogout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.top.location.href = '/login';
+        }
+
+        // Interceptor Global de Fetch para expirar a sessão no Navegador caso outro dispositivo conecte
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const response = await originalFetch(...args);
+
+            if (response.status === 401) {
+                const data = await response.clone().json().catch(() => ({}));
+                if (data.sessao_expirada) {
+                    alert(data.mensagem || "Sua conta foi conectada em outro dispositivo!");
+                    window.top.location.href = "/login";
+                }
+            }
+            return response;
+        };
     </script>
 </body>
 </html>

@@ -1,27 +1,34 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 
 db = SQLAlchemy()
 
 
 class Usuario(db.Model):
-    """Tabela de Usuários do sistema com níveis de acesso."""
+    """Tabela de Usuários do sistema com níveis de acesso e controle de sessão única."""
     __tablename__ = 'usuarios'
 
     id_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nome = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     senha_hash = db.Column(db.String(255), nullable=False)
-    perfil = db.Column(db.String(20), nullable=False, default='OPERADOR')  # 'ADMIN' ou 'OPERADOR'
+    perfil = db.Column(db.String(20), nullable=False, default='OPERADOR')  
     ativo = db.Column(db.Boolean, default=True, nullable=False)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    session_token = db.Column(db.String(36), nullable=True, index=True)
+    data_criacao = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def set_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
 
     def checar_senha(self, senha):
         return check_password_hash(self.senha_hash, senha)
+
+    def gerar_novo_session_token(self):
+        """Gera e atribui um novo token único de sessão."""
+        self.session_token = str(uuid.uuid4())
+        return self.session_token
 
     def to_dict(self):
         return {
@@ -33,7 +40,7 @@ class Usuario(db.Model):
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
         }
 
-
+    
 class HistoricoBaixa(db.Model):
     """Tabela para registro e auditoria de cada baixa realizada."""
     __tablename__ = 'historico_baixas'

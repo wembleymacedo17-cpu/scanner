@@ -5,9 +5,59 @@ from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, H
 from app.services.estoque_service import recalibrar_estoque
 from io import StringIO
 import csv
+import time
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+
+# ==============================================================================
+# MIDDLEWARE ALTA PERFORMANCE DE SESSÃO ÚNICA (CACHE DE VALIDAÇÃO)
+# ==============================================================================
+@api_bp.before_app_request
+def verificar_sessao_unica():
+    """
+    Verifica se o token de sessão é válido.
+    Usa cache temporal (10s) na sessão do Flask para evitar queries repetitivas 
+    no banco de dados em cada chamada de API, eliminando a lentidão do sistema.
+    """
+    # Isenta a rota de login da verificação
+    if request.endpoint == 'api.login_api':
+        return None
+
+    user_id = session.get('usuario_id')
+    token_sessao_local = session.get('session_token')
+
+    if user_id and token_sessao_local:
+        agora = time.time()
+        ultima_checagem = session.get('ultimo_check_sessao', 0)
+
+        # Valida no banco de dados APENAS se tiver passado mais de 10 segundos da última checagem
+        if (agora - ultima_checagem) > 10:
+            user = Usuario.query.get(user_id)
+            
+            # Se o usuário não existe mais, foi inativado ou se logou em outro dispositivo
+            if not user or not user.ativo or user.session_token != token_sessao_local:
+                session.clear()
+                return jsonify({
+                    'sucesso': False,
+                    'sessao_expirada': True,
+                    'mensagem': 'Sua sessão foi encerrada pois sua conta foi conectada em outro dispositivo.'
+                }), 401
+
+            session['ultimo_check_sessao'] = agora
+
+
+@api_bp.route('/logout', methods=['POST', 'GET'])
+def logout_api():
+    """Invalida a sessão ativa do usuário no banco e limpa a sessão local."""
+    user_id = session.get('usuario_id')
+    if user_id:
+        user = Usuario.query.get(user_id)
+        if user:
+            user.session_token = None
+            db.session.commit()
+    session.clear()
+    return jsonify({'sucesso': True, 'mensagem': 'Sessão encerrada com sucesso.'}), 200
 
 def extrair_nomes_dependentes(resumo_str):
     """Auxiliar para extrair apenas os nomes dos dependentes para o autocomplete."""
@@ -49,10 +99,17 @@ def login_api():
     if not user or not user.checar_senha(senha):
         return jsonify({'sucesso': False, 'mensagem': 'E-mail ou senha incorretos.'}), 401
 
+    # GERA NOVO TOKEN E INVALIDA SESSÕES EM OUTROS DISPOSITIVOS
+    novo_token = user.gerar_novo_session_token()
+    db.session.commit()
+
+    # REGISTRA A SESSÃO ATUAL NO FLASK
     session['usuario_id'] = user.id_usuario
     session['usuario_nome'] = user.nome
     session['usuario_email'] = user.email
     session['usuario_perfil'] = user.perfil
+    session['session_token'] = novo_token
+    session['ultimo_check_sessao'] = time.time()  # Timestamp inicial
 
     return jsonify({
         'sucesso': True,
