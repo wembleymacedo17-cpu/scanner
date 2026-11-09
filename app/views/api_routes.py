@@ -6,6 +6,8 @@ from app.services.estoque_service import recalibrar_estoque
 from io import StringIO
 import csv
 import time
+from app.services.estoque_service import MODELOS_OFICIAIS
+import re
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -454,6 +456,19 @@ def editar_baixa_historico():
     if modelo_antigo == novo_modelo:
         return jsonify({'sucesso': True, 'mensagem': 'O modelo selecionado é idêntico ao atual.'}), 200
 
+    # 1. VALIDAÇÃO DE ESTOQUE PARA O NOVO MODELO ESCOLHIDO NA EDIÇÃO
+    item_novo = EstoqueKit.query.filter_by(codigo_kit=novo_modelo, ativo=True).first()
+    if not item_novo:
+        return jsonify({'sucesso': False, 'mensagem': f'O modelo "{novo_modelo}" não possui cadastro ativo no estoque.'}), 400
+
+    lote_total = item_novo.quantidade_disponivel or 0
+    saidas = item_novo.quantidade_baixada or 0
+    saldo_balcao = max(0, lote_total - saidas)
+
+    if saldo_balcao <= 0:
+        return jsonify({'sucesso': False, 'mensagem': f'Atenção! O modelo "{novo_modelo}" está esgotado no balcão (Saldo: 0 un).'}), 400
+
+    # 2. Localiza o registro de retirada associado para atualizar os detalhes JSON
     reg = RetiradaDependente.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
     if not reg:
         reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
@@ -465,6 +480,7 @@ def editar_baixa_historico():
             detalhes[chave_item]['modelo'] = novo_modelo
             reg.detalhes_entregas = detalhes
 
+    # 3. Estorna o estoque do modelo antigo
     item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
     if item_antigo:
         item_antigo.quantidade_baixada = max(0, (item_antigo.quantidade_baixada or 0) - 1)
@@ -473,28 +489,43 @@ def editar_baixa_historico():
             tipo_movimentacao='ESTORNO_CORRECAO',
             quantidade=1,
             codigo_retirada=log_baixa.codigo_retirada,
-            observacao=f"Estorno por correção de baixa do histórico (Admin: {session.get('usuario_nome')})"
+            observacao=f"Estorno por correção de histórico (Admin: {session.get('usuario_nome')})"
         )
         db.session.add(mov_estorno)
 
-    item_novo = EstoqueKit.query.filter_by(codigo_kit=novo_modelo).first()
-    if item_novo:
-        item_novo.quantidade_baixada = (item_novo.quantidade_baixada or 0) + 1
-        mov_saida = MovimentacaoEstoque(
-            id_estoque=item_novo.id_estoque,
-            tipo_movimentacao='SAIDA_CORRECAO',
-            quantidade=1,
-            codigo_retirada=log_baixa.codigo_retirada,
-            observacao=f"Saída por troca de kit no histórico de {modelo_antigo} para {novo_modelo}"
-        )
-        db.session.add(mov_saida)
+    # 4. Debita o estoque do novo modelo
+    item_novo.quantidade_baixada = (item_novo.quantidade_baixada or 0) + 1
+    mov_saida = MovimentacaoEstoque(
+        id_estoque=item_novo.id_estoque,
+        tipo_movimentacao='SAIDA_CORRECAO',
+        quantidade=1,
+        codigo_retirada=log_baixa.codigo_retirada,
+        observacao=f"Saída por alteração de kit no histórico de {modelo_antigo} para {novo_modelo}"
+    )
+    db.session.add(mov_saida)
+
+    # 5. RECALCULA A DIVERGÊNCIA CORRETAMENTE AO EDITAR
+    resumo_texto = str(getattr(reg, 'resumo_kits', '') or "") if reg else ""
+    modelo_esperado_encontrado = "---"
+    for m in MODELOS_OFICIAIS:
+        if re.search(r'\b' + re.escape(m) + r'\b', resumo_texto, re.IGNORECASE):
+            modelo_esperado_encontrado = m
+            break
 
     log_baixa.modelo_baixa = novo_modelo
+
+    if modelo_esperado_encontrado != "---" and modelo_esperado_encontrado.lower() != novo_modelo.lower():
+        log_baixa.divergencia_modelo = True
+        log_baixa.modelo_esperado = modelo_esperado_encontrado
+    else:
+        log_baixa.divergencia_modelo = False
+        log_baixa.modelo_esperado = None
+
     db.session.commit()
 
     return jsonify({
         'sucesso': True,
-        'mensagem': f'Modelo alterado com sucesso de "{modelo_antigo}" para "{novo_modelo}"!'
+        'mensagem': f'Modelo alterado com sucesso para "{novo_modelo}"! Estoque e auditoria recalculados.'
     }), 200
 
 

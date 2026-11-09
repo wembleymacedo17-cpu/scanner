@@ -354,14 +354,18 @@
                             <span class="dep-icon">${iconUserSVG}</span>
                             <span class="kit-dependente-nome">${item.nome_dependente}</span>
                         </div>
-                        <span class="cat-pill">${item.categoria_detectada}</span>
+                        <span class="cat-pill" id="cat-pill-${index}" data-esperado="${item.modelo_selecionado}">${item.categoria_detectada} (Esp: ${item.modelo_selecionado})</span>
                     </div>
 
                     <div class="kit-item-body">
                         <div class="select-container">
-                            <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''}>
+                            <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''} onchange="verificarDivergenciaBalcao(${index}, '${item.modelo_selecionado}')">
                                 ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada, item.eOrfao)}
                             </select>
+                        </div>
+                        <div id="aviso-divergencia-${index}" style="display: none; font-size: 0.78rem; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; margin-top: 8px; font-weight: 700; align-items: center; gap: 6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            Atenção: O modelo escolhido é diferente do esperado (<span id="txt-modelo-esperado-${index}">${item.modelo_selecionado}</span>)!
                         </div>
                     </div>
 
@@ -377,6 +381,24 @@
             });
 
             document.getElementById("cartao-retirada").classList.remove("hidden");
+        }
+
+        // Função para avisar em tempo real no balcão se o operador escolheu um kit fora do esperado
+        function verificarDivergenciaBalcao(indexItem, modeloEsperado) {
+            const select = document.getElementById(`select-modelo-${indexItem}`);
+            const avisoDiv = document.getElementById(`aviso-divergencia-${indexItem}`);
+            const spanEsp = document.getElementById(`txt-modelo-esperado-${indexItem}`);
+
+            if (!select || !avisoDiv) return;
+
+            const modeloEscolhido = select.value.trim();
+
+            if (modeloEsperado && modeloEsperado !== "---" && modeloEscolhido !== "---" && modeloEscolhido.toLowerCase() !== modeloEsperado.toLowerCase()) {
+                spanEsp.innerText = modeloEsperado;
+                avisoDiv.style.display = "flex";
+            } else {
+                avisoDiv.style.display = "none";
+            }
         }
 
         function parseResumoKits(resumoStr, detalhesEntregas, statusGeral) {
