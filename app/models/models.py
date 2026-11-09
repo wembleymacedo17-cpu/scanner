@@ -45,7 +45,6 @@ class HistoricoBaixa(db.Model):
     """Tabela para registro e auditoria de cada baixa realizada."""
     __tablename__ = 'historico_baixas'
 
-    # Definição dos índices compostos e otimizações de tabela
     __table_args__ = (
         db.Index('idx_historico_user_data', 'id_usuario', db.desc('data_baixa')),
         db.Index('idx_historico_data_baixa', db.desc('data_baixa')),
@@ -60,6 +59,8 @@ class HistoricoBaixa(db.Model):
     tipo_publico = db.Column(db.String(50), nullable=False)
     index_kit = db.Column(db.Integer, nullable=False)
     modelo_baixa = db.Column(db.String(100), nullable=False)
+    divergencia_modelo = db.Column(db.Boolean, default=False, nullable=False)
+    modelo_esperado = db.Column(db.String(100), nullable=True)
     data_baixa = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     def to_dict(self):
@@ -73,6 +74,8 @@ class HistoricoBaixa(db.Model):
             'tipo_publico': self.tipo_publico,
             'index_kit': self.index_kit,
             'modelo_baixa': self.modelo_baixa,
+            'divergencia_modelo': self.divergencia_modelo,
+            'modelo_esperado': self.modelo_esperado or "---",
             'data_baixa': self.data_baixa.strftime("%d/%m/%Y %H:%M:%S")
         }
         

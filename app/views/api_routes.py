@@ -316,7 +316,24 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # 4. Histórico da Baixa
+    # =========================================================================
+    # AUDITORIA DE DIVERGÊNCIA DE MODELO
+    # =========================================================================
+    resumo_texto = str(reg.resumo_kits or "")
+    modelo_esperado_encontrado = "---"
+    
+    from app.services.estoque_service import MODELOS_OFICIAIS
+    import re
+    for m in MODELOS_OFICIAIS:
+        if re.search(r'\b' + re.escape(m) + r'\b', resumo_texto, re.IGNORECASE):
+            modelo_esperado_encontrado = m
+            break
+
+    tem_divergencia = False
+    if modelo_esperado_encontrado != "---" and modelo_esperado_encontrado.lower() != modelo_baixa.lower():
+        tem_divergencia = True
+
+    # 4. Histórico da Baixa com Auditoria
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
@@ -333,7 +350,9 @@ def dar_baixa_item():
         nome_beneficiario=nome_completo_registro,
         tipo_publico=tipo_pub,
         index_kit=index_kit,
-        modelo_baixa=modelo_baixa
+        modelo_baixa=modelo_baixa,
+        divergencia_modelo=tem_divergencia,
+        modelo_esperado=modelo_esperado_encontrado if tem_divergencia else None
     )
     db.session.add(log_baixa)
     
@@ -379,7 +398,9 @@ def listar_historico():
         HistoricoBaixa.nome_beneficiario,
         HistoricoBaixa.id_colaborador,
         HistoricoBaixa.tipo_publico,
-        HistoricoBaixa.modelo_baixa
+        HistoricoBaixa.modelo_baixa,
+        HistoricoBaixa.divergencia_modelo,
+        HistoricoBaixa.modelo_esperado
     )
 
     if user_target_id:
@@ -401,7 +422,9 @@ def listar_historico():
             'nome_beneficiario': h.nome_beneficiario,
             'id_colaborador': h.id_colaborador,
             'tipo_publico': h.tipo_publico,
-            'modelo_baixa': h.modelo_baixa
+            'modelo_baixa': h.modelo_baixa,
+            'divergencia_modelo': getattr(h, 'divergencia_modelo', False),
+            'modelo_esperado': getattr(h, 'modelo_esperado', '---')
         })
 
     return jsonify({

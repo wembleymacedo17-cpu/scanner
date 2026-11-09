@@ -379,7 +379,7 @@
                             <th style="width: 130px;">Operador</th>
                             <th>Beneficiário (Titular & Filho)</th>
                             <th style="width: 110px;">Público</th>
-                            <th style="width: 120px;">Modelo Kit</th>
+                            <th style="width: 130px;">Modelo Kit</th>
                             <th id="th-acoes-admin" style="width: 190px; text-align: right;" class="hidden">Ações Admin</th>
                         </tr>
                     </thead>
@@ -444,7 +444,6 @@
             "EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12", "EM-13"
         ];
 
-        // Ícone SVG Vetorizado de Medalha/Insígnia
         function gerarSvgMedalha(corStroke, corFill) {
             return `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${corFill}" stroke="${corStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -458,7 +457,6 @@
             `;
         }
 
-        // Formata "WEMBLEY M DOS SANTOS" -> "Wembley M."
         function formatarNomeCurto(nomeCompleto) {
             if (!nomeCompleto) return "Usuário";
             const ignorar = ['de', 'da', 'do', 'dos', 'das', 'e'];
@@ -660,6 +658,19 @@
                     `;
                 }
 
+                // ADIÇÃO DO ALERTA VISUAL DE AUDITORIA DE DIVERGÊNCIA
+                let modeloExibicaoHtml = `<strong>${item.modelo_baixa}</strong>`;
+                if (item.divergencia_modelo) {
+                    modeloExibicaoHtml = `
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <strong>${item.modelo_baixa}</strong>
+                            <span style="font-size: 0.72rem; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 2px 6px; border-radius: 4px; font-weight: 700; width: fit-content;" title="Esperado: ${item.modelo_esperado}">
+                                ⚠️ Divergente (Esp: ${item.modelo_esperado})
+                            </span>
+                        </div>
+                    `;
+                }
+
                 let acaoAdminHtml = "";
                 if (perfilLogado === 'ADMIN') {
                     const idHist = item.id_historico;
@@ -684,7 +695,7 @@
                     <td><span class="badge-op">${formatarNomeCurto(item.nome_operador)}</span></td>
                     <td>${formatoNome}</td>
                     <td>${item.tipo_publico}</td>
-                    <td><strong>${item.modelo_baixa}</strong></td>
+                    <td>${modeloExibicaoHtml}</td>
                     ${acaoAdminHtml}
                 `;
                 tbody.appendChild(tr);
