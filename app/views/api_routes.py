@@ -955,3 +955,55 @@ def verificar_sessao_ativa():
         }), 401
 
     return jsonify({'sucesso': True, 'ativa': True}), 200
+
+
+@api_bp.route('/dashboard/metricas', methods=['GET'])
+def dashboard_metricas():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    # Conta status em RetiradaDependente
+    deps = db.session.query(RetiradaDependente.status, RetiradaDependente.qtd_kits, RetiradaDependente.detalhes_entregas).all()
+    # Conta status em RetiradaJovemAprendiz
+    jovens = db.session.query(RetiradaJovemAprendiz.status, RetiradaJovemAprendiz.qtd_kits, RetiradaJovemAprendiz.detalhes_entregas).all()
+
+    total_entregue_kits = 0
+    total_pendente_kits = 0
+    total_parcial_kits = 0
+
+    status_geral_contador = {'ENTREGUE': 0, 'PENDENTE': 0, 'ENTREGA PARCIAL': 0}
+
+    todos_registros = list(deps) + list(jovens)
+
+    for status, qtd_kits, detalhes in todos_registros:
+        st = (status or 'PENDENTE').upper()
+        if st in status_geral_contador:
+            status_geral_contador[st] += 1
+
+        det = detalhes or {}
+        for i in range(qtd_kits or 1):
+            chave = f"kit_{i}"
+            if det.get(chave, {}).get('entregue') is True:
+                total_entregue_kits += 1
+            else:
+                total_pendente_kits += 1 # Aproximação para os gráficos
+
+    # Distribuição por modelo baixado (Histórico)
+    modelos_db = db.session.query(
+        HistoricoBaixa.modelo_baixa,
+        func.count(HistoricoBaixa.id_historico)
+    ).group_by(HistoricoBaixa.modelo_baixa).all()
+
+    distribuicao_modelos = {m: q for m, q in modelos_db}
+
+    return jsonify({
+        'sucesso': True,
+        'cards': {
+            'total_cadastrados': len(todos_registros),
+            'entregues': status_geral_contador['ENTREGUE'],
+            'pendentes': status_geral_contador['PENDENTE'],
+            'parciais': status_geral_contador['ENTREGA PARCIAL'],
+            'kits_entregues_individual': total_entregue_kits
+        },
+        'modelos_ranking': distribuicao_modelos
+    }), 200
