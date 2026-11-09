@@ -127,6 +127,7 @@
             width: 100%;
             height: 100%;
             border: none;
+            transition: filter 0.3s ease;
         }
 
         nav.menu {
@@ -320,9 +321,9 @@
         </a>
     </nav>
 
-    <!-- MODAL DE ALERTA DE SEGURANÇA E EXPIRAÇÃO DE SESSÃO -->
-    <div id="modal-sessao-derrubada" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center;">
-        <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 16px; padding: 32px 24px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+    <!-- MODAL DE ALERTA DE SEGURANÇA E EXPIRAÇÃO DE SESSÃO COM CONTADOR DE 30S -->
+    <div id="modal-sessao-derrubada" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 16px; padding: 32px 24px; max-width: 430px; width: 92%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);">
             <div style="background: rgba(239, 68, 68, 0.15); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; border: 1px solid rgba(239, 68, 68, 0.3);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -330,18 +331,38 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </div>
-            <h3 style="color: #ffffff; font-size: 1.25rem; margin-bottom: 8px; font-weight: 700;" id="titulo-modal-sessao">Acesso Simultâneo Detectado</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;" id="msg-detalhe-sessao">
-                Sua conta foi conectada em outro dispositivo. Por motivos de segurança, esta sessão foi encerrada.
+            
+            <h3 style="color: #ffffff; font-size: 1.25rem; margin-bottom: 10px; font-weight: 700;" id="titulo-modal-sessao">
+                Acesso Simultâneo Detectado
+            </h3>
+            
+            <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.5; margin-bottom: 18px;" id="msg-detalhe-sessao">
+                Detectamos um novo login com o seu usuário em outro dispositivo. Por segurança, esta sessão será desconectada.
             </p>
-            <button onclick="window.top.location.href='/login'" style="width: 100%; padding: 12px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;">
+
+            <!-- Caixa de Contagem Regressiva de 30 Segundos -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 20px;">
+                <div style="color: #fca5a5; font-size: 0.82rem; font-weight: 600; margin-bottom: 8px;">
+                    Desconectando automaticamente em <strong id="contador-segundos" style="font-size: 1rem; color: #ffffff;">30</strong> segundos...
+                </div>
+                <div style="width: 100%; height: 6px; background: #334155; border-radius: 4px; overflow: hidden;">
+                    <div id="barra-progresso-sessao" style="width: 100%; height: 100%; background: #ef4444; transition: width 1s linear;"></div>
+                </div>
+            </div>
+
+            <button onclick="redirecionarLoginImediato()" style="width: 100%; padding: 12px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;">
                 Ir para o Login Agora
             </button>
         </div>
     </div>
 
     <script>
+        let sessaoJaDerrubada = false;
+        let intervaloContagem = null;
+        let intervaloHeartbeat = null;
+
         function carregarTela(url, elemento) {
+            if (sessaoJaDerrubada) return;
             document.getElementById('main-frame').src = url;
             document.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
@@ -350,35 +371,57 @@
         }
 
         async function efetuarLogout() {
+            clearInterval(intervaloHeartbeat);
             await fetch('/api/logout', { method: 'POST' });
             window.top.location.href = '/login';
         }
 
-        // ==============================================================================
-        // 1. INTERCEPTOR GLOBAL DE FETCH (MODAL DE ALERTA AO DERRUBAR SESSÃO)
-        // ==============================================================================
-        const originalFetch = window.fetch;
-        window.fetch = async function(...args) {
-            const response = await originalFetch(...args);
+        function redirecionarLoginImediato() {
+            clearInterval(intervaloContagem);
+            window.top.location.href = '/login';
+        }
 
-            if (response.status === 401) {
-                const data = await response.clone().json().catch(() => ({}));
-                if (data.sessao_expirada) {
-                    exibirModalSessao(
-                        "Acesso Simultâneo Detectado",
-                        data.mensagem || "Sua conta foi conectada em outro dispositivo. Por motivos de segurança, esta sessão foi encerrada."
-                    );
-                }
-            }
-            return response;
-        };
-
+        // ==============================================================================
+        // 1. FUNÇÃO DO MODAL COM CRONÔMETRO DE 30 SEGUNDOS
+        // ==============================================================================
         function exibirModalSessao(titulo, mensagem) {
+            if (sessaoJaDerrubada) return; // Garante que só dispara uma única vez
+            sessaoJaDerrubada = true;
+
+            clearInterval(intervaloHeartbeat);
+
+            // Desfoca e bloqueia interações no iframe ao fundo
+            const iframe = document.getElementById('main-frame');
+            if (iframe) {
+                iframe.style.pointerEvents = 'none';
+                iframe.style.filter = 'blur(4px)';
+            }
+
             const modal = document.getElementById("modal-sessao-derrubada");
+            const elContador = document.getElementById("contador-segundos");
+            const elBarra = document.getElementById("barra-progresso-sessao");
+
             if (modal) {
                 document.getElementById("titulo-modal-sessao").innerText = titulo;
                 document.getElementById("msg-detalhe-sessao").innerText = mensagem;
                 modal.style.display = "flex";
+
+                let tempoRestante = 30;
+                elContador.innerText = tempoRestante;
+                elBarra.style.width = "100%";
+
+                intervaloContagem = setInterval(() => {
+                    tempoRestante--;
+                    elContador.innerText = tempoRestante;
+                    
+                    const percentual = Math.max(0, (tempoRestante / 30) * 100);
+                    elBarra.style.width = percentual + "%";
+
+                    if (tempoRestante <= 0) {
+                        clearInterval(intervaloContagem);
+                        window.top.location.href = "/login";
+                    }
+                }, 1000);
             } else {
                 alert(mensagem);
                 window.top.location.href = "/login";
@@ -386,39 +429,85 @@
         }
 
         // ==============================================================================
-        // 2. CONTROLE DE INATIVIDADE INTELIGENTE (30 MINUTOS COM RESET AUTOMÁTICO)
+        // 2. INTERCEPTADOR DE FETCH (PARA A JANELA PRINCIPAL E PARA O IFRAME)
+        // ==============================================================================
+        function aplicarInterceptadorFetch(contextoWindow) {
+            if (!contextoWindow || contextoWindow._fetchInterceptado) return;
+
+            const fetchOriginal = contextoWindow.fetch;
+            contextoWindow.fetch = async function(...args) {
+                const response = await fetchOriginal.apply(this, args);
+
+                if (response.status === 401 && !sessaoJaDerrubada) {
+                    const data = await response.clone().json().catch(() => ({}));
+                    if (data.sessao_expirada) {
+                        exibirModalSessao(
+                            "Acesso Simultâneo Detectado",
+                            data.mensagem || "Detectamos que sua conta foi conectada em outro dispositivo. Esta sessão será desconectada."
+                        );
+                    }
+                }
+                return response;
+            };
+            contextoWindow._fetchInterceptado = true;
+        }
+
+        // Aplica na janela principal (index.html)
+        aplicarInterceptadorFetch(window);
+
+        // ==============================================================================
+        // 3. MONITORAMENTO ATIVO (HEARTBEAT A CADA 7 SEGUNDOS)
+        // ==============================================================================
+        async function checarSessaoAtiva() {
+            if (sessaoJaDerrubada) return;
+            try {
+                await fetch('/api/verificar-sessao', { method: 'GET', cache: 'no-store' });
+            } catch (e) {
+                // Ignora oscilações momentâneas de rede
+            }
+        }
+
+        intervaloHeartbeat = setInterval(checarSessaoAtiva, 7000);
+
+        // ==============================================================================
+        // 4. CONTROLE DE INATIVIDADE (30 MINUTOS) + VÍNCULO COM O IFRAME
         // ==============================================================================
         (function() {
-            const TEMPO_INATIVIDADE_MS = 30 * 60 * 1000; // 30 minutos em milissegundos
+            const TEMPO_INATIVIDADE_MS = 30 * 60 * 1000;
             let timerInatividade;
 
             function resetarTimerInatividade() {
+                if (sessaoJaDerrubada) return;
                 clearTimeout(timerInatividade);
                 timerInatividade = setTimeout(desconectarPorInatividade, TEMPO_INATIVIDADE_MS);
             }
 
             async function desconectarPorInatividade() {
+                if (sessaoJaDerrubada) return;
                 try {
                     await fetch('/api/logout', { method: 'POST' });
                 } catch (e) {}
 
                 exibirModalSessao(
                     "Sessão Expirada por Inatividade",
-                    "Sua sessão foi encerrada automaticamente após 30 minutos sem atividade no sistema por medida de segurança."
+                    "Sua sessão ficou inativa por 30 minutos sem atividade no sistema. Por medida de segurança, você será desconectado."
                 );
             }
 
-            // Ouve qualquer movimento, toque na tela, clique ou digitação no computador ou celular
             ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evento => {
                 window.addEventListener(evento, resetarTimerInatividade, true);
             });
 
-            // Ouve também as interações dentro do Iframe principal
             const iframe = document.getElementById('main-frame');
             if (iframe) {
                 iframe.addEventListener('load', () => {
                     try {
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const iframeWin = iframe.contentWindow;
+                        const iframeDoc = iframe.contentDocument || iframeWin.document;
+
+                        // Injeta o interceptador de fetch dentro da janela do iframe
+                        aplicarInterceptadorFetch(iframeWin);
+
                         ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evento => {
                             iframeDoc.addEventListener(evento, resetarTimerInatividade, true);
                         });
@@ -428,7 +517,6 @@
                 });
             }
 
-            // Inicia o temporizador
             resetarTimerInatividade();
         })();
     </script>

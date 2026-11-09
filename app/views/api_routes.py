@@ -936,3 +936,22 @@ def validar_senha_admin():
         return jsonify({'sucesso': False, 'mensagem': 'Senha de confirmação incorreta!'}), 401
 
     return jsonify({'sucesso': True, 'mensagem': 'Senha validada com sucesso!'}), 200
+
+
+@api_bp.route('/verificar-sessao', methods=['GET'])
+def verificar_sessao_ativa():
+    """
+    Endpoint de heartbeat para o frontend detectar desconexão 
+    simultânea em tempo real.
+    """
+    user_id = session.get('usuario_id')
+    token_local = session.get('session_token')
+
+    if not user_id or not token_local:
+        return jsonify({
+            'sucesso': False,
+            'sessao_expirada': True,
+            'mensagem': 'Sua sessão foi encerrada pois sua conta foi conectada em outro dispositivo.'
+        }), 401
+
+    return jsonify({'sucesso': True, 'ativa': True}), 200
