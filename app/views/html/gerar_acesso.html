@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
         .main-container {
-            max-width: 900px !important;
+            max-width: 960px !important;
             width: 95% !important;
-            margin: 20px auto !important;
+            margin: 15px auto !important;
+            padding-bottom: 90px !important;
         }
 
         .tabs-header {
@@ -22,43 +23,43 @@
         }
 
         .tab-btn {
-            background: #f1f5f9;
+            background: #f8fafc;
             border: 1px solid #cbd5e1;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            padding: 10px 18px;
+            font-size: 0.88rem;
+            font-weight: 700;
             color: #475569;
             cursor: pointer;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
             transition: all 0.2s ease;
         }
 
-        .tab-btn:hover { background: #e2e8f0; }
+        .tab-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
 
         .tab-btn.active {
             background: #0284c7;
             color: #ffffff;
             border-color: #0284c7;
-            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
         }
 
         .section-box {
             background: #ffffff;
             padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
             border: 1px solid #e2e8f0;
         }
 
         .hidden-tab { display: none !important; }
 
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
         .form-group input, .form-group select {
-            width: 100%; padding: 11px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-sizing: border-box;
+            width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-sizing: border-box; background: #ffffff; transition: all 0.2s ease;
         }
         .form-group input:focus, .form-group select:focus {
             border-color: #0284c7;
@@ -66,33 +67,76 @@
         }
 
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.5px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.9rem; }
+        th { padding: 8px 14px; text-align: left; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 14px; text-align: left; vertical-align: middle; background: #ffffff; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
 
-        .badge-perfil { padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; display: inline-block; }
+        .badge-perfil { padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.4px; display: inline-block; }
         .badge-ADMIN { background: #fee2e2; color: #991b1b; }
         .badge-OPERADOR { background: #e0f2fe; color: #0369a1; }
         
         .badge-protected {
-            background: #f1f5f9;
+            background: #f8fafc;
             color: #64748b;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 5px 12px;
+            border-radius: 8px;
             font-size: 0.78rem;
-            font-weight: 600;
+            font-weight: 700;
             border: 1px solid #cbd5e1;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
-        .btn-action { padding: 7px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: opacity 0.2s; }
-        .btn-action:hover { opacity: 0.85; }
-        .btn-edit { background: #f59e0b; color: #fff; }
-        .btn-delete { background: #ef4444; color: #fff; margin-left: 6px; }
+        /* BOTÕES DE AÇÃO COM SVG VETORIZADO (PADRÃO DO SITE) */
+        .action-btns-group {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            align-items: center;
+        }
 
-        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-acao-admin {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            text-decoration: none;
+        }
+        .btn-acao-admin svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+
+        .btn-edit-usuario {
+            background: #fffbeb;
+            color: #b45309;
+            border-color: #fde68a;
+        }
+        .btn-edit-usuario:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .btn-delete-usuario {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+        .btn-delete-usuario:hover {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .form-actions { display: flex; gap: 10px; margin-top: 24px; }
 
         /* MODAL DE CONFIRMAÇÃO DE SENHA COM NOTIFICAÇÃO INTERNA */
         .modal-overlay {
@@ -106,11 +150,12 @@
         .modal-box {
             background: #ffffff;
             padding: 24px;
-            border-radius: 12px;
+            border-radius: 14px;
             width: 90%;
             max-width: 420px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1);
             position: relative;
+            border: 1px solid #e2e8f0;
         }
         .modal-alert {
             padding: 8px 12px;
@@ -121,18 +166,18 @@
             display: none;
         }
         .modal-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .modal-alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
 
         .btn-voltar-modal {
-            background: #f1f5f9;
+            background: #f8fafc;
             border: 1px solid #cbd5e1;
             color: #334155;
-            padding: 8px 14px;
+            padding: 9px 14px;
             border-radius: 8px;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
         }
+        .btn-voltar-modal:hover { background: #f1f5f9; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -156,11 +201,11 @@
         <!-- Controle de Abas -->
         <div class="tabs-header">
             <button class="tab-btn active" id="btn-tab-exibir" onclick="alternarAba('aba-exibir')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 Exibir Usuários
             </button>
             <button class="tab-btn" id="btn-tab-adicionar" onclick="alternarAba('aba-adicionar')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 + Adicionar Usuário
             </button>
         </div>
@@ -169,7 +214,7 @@
 
         <!-- ABA 1: Tabela de Usuários -->
         <div id="aba-exibir" class="section-box">
-            <h3 style="margin-bottom: 12px; color: #1e293b;">Usuários Cadastrados</h3>
+            <h3 style="margin-bottom: 12px; color: #1e293b; font-size: 1.1rem;">Usuários Cadastrados</h3>
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -189,7 +234,7 @@
 
         <!-- ABA 2: Formulário de Cadastro/Edição -->
         <div id="aba-adicionar" class="section-box hidden-tab">
-            <h3 id="form-titulo" style="margin-bottom: 16px; color: #1e293b;">Novo Usuário</h3>
+            <h3 id="form-titulo" style="margin-bottom: 16px; color: #1e293b; font-size: 1.1rem;">Novo Usuário</h3>
             <form id="form-usuario">
                 <input type="hidden" id="edit-id" value="" />
 
@@ -214,8 +259,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" id="btn-salvar-user" class="btn btn-entregar" style="flex: 1;">Salvar Usuário</button>
-                    <button type="button" id="btn-cancelar-edit" class="btn btn-secondary hidden" onclick="resetarFormulario(); alternarAba('aba-exibir');">Cancelar</button>
+                    <button type="submit" id="btn-salvar-user" class="btn btn-entregar" style="flex: 1; padding: 11px;">Salvar Usuário</button>
+                    <button type="button" id="btn-cancelar-edit" class="btn btn-secondary hidden" style="padding: 11px;" onclick="resetarFormulario(); alternarAba('aba-exibir');">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -227,8 +272,7 @@
             <h3 style="color: #0f172a; margin-bottom: 6px;" id="senha-modal-titulo">Autenticação de Segurança</h3>
             <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 12px;" id="senha-modal-subtitulo">Confirme sua senha de Administrador para prosseguir com esta ação.</p>
             
-            <!-- Banner de Alerta Interno do Modal -->
-            <div id="modal-alert-msg" class="modal-alert"></div>
+            <div id="modal-alert-msg" class="modal-alert modal-alert-danger"></div>
 
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Senha do Usuário Logado</label>
@@ -237,7 +281,7 @@
 
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-voltar-modal" onclick="fecharModalSenha()">Cancelar</button>
-                <button type="button" class="btn-delete" style="padding: 8px 16px; font-size: 0.85rem;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
+                <button type="button" class="btn-acao-admin btn-delete-usuario" style="padding: 9px 16px;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
             </div>
         </div>
     </div>
@@ -249,20 +293,17 @@
         document.addEventListener("DOMContentLoaded", () => {
             carregarUsuarios();
 
-            // O cadastro simples não pede senha de confirmação do Admin, salva diretamente
             document.getElementById("form-usuario").addEventListener("submit", (e) => {
                 e.preventDefault();
                 const editId = document.getElementById("edit-id").value;
 
                 if (editId) {
-                    // Edição requer senha do Admin
                     abrirModalSenha(
                         "Confirmar Alteração de Usuário",
-                        "Digite sua senha de Administrador para aplicar as alterações neste usuário.",
+                        "Insira sua senha de Administrador para aplicar as alterações neste usuário.",
                         submeterFormularioUsuario
                     );
                 } else {
-                    // Cadastro novo envia direto
                     submeterFormularioUsuario();
                 }
             });
@@ -312,16 +353,26 @@
                         const isMaster = (u.email.toLowerCase() === EMAIL_MASTER.toLowerCase());
 
                         let acoesHtml = `
-                            <button class="btn-action btn-edit" onclick="prepararEdicao(${u.id_usuario}, '${u.nome}', '${u.email}', '${u.perfil}')">Alterar</button>
-                            <button class="btn-action btn-delete" onclick="solicitarExclusaoUsuario(${u.id_usuario})">Excluir</button>
+                            <div class="action-btns-group">
+                                <button class="btn-acao-admin btn-edit-usuario" onclick="prepararEdicao(${u.id_usuario}, '${u.nome}', '${u.email}', '${u.perfil}')" title="Alterar Usuário">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    Alterar
+                                </button>
+                                <button class="btn-acao-admin btn-delete-usuario" onclick="solicitarExclusaoUsuario(${u.id_usuario})" title="Excluir Usuário">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                    Excluir
+                                </button>
+                            </div>
                         `;
 
                         if (isMaster) {
                             acoesHtml = `
-                                <span class="badge-protected">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                    Protegido (Master)
-                                </span>
+                                <div style="text-align: right;">
+                                    <span class="badge-protected">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        Protegido (Master)
+                                    </span>
+                                </div>
                             `;
                         }
 
@@ -334,7 +385,7 @@
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = "<tr><td colspan='4'>Nenhum usuário cadastrado.</td></tr>";
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; padding: 20px; color: #64748b;'>Nenhum usuário cadastrado.</td></tr>";
                 }
             } catch (err) {
                 console.error("Erro ao carregar usuários:", err);
@@ -376,10 +427,9 @@
             acaoPendenteCallback = null;
         }
 
-        function exibirAlertaModal(msg, tipo = 'danger') {
+        function exibirAlertaModal(msg) {
             const box = document.getElementById("modal-alert-msg");
             box.innerText = msg;
-            box.className = `modal-alert modal-alert-${tipo}`;
             box.style.display = "block";
         }
 
@@ -392,7 +442,7 @@
         async function executarAcaoComSenha() {
             const senha = document.getElementById("modal-input-senha").value.trim();
             if (!senha) {
-                exibirAlertaModal("Por favor, digite sua senha de confirmação.", "danger");
+                exibirAlertaModal("Por favor, digite sua senha de confirmação.");
                 return;
             }
 
@@ -405,7 +455,7 @@
 
                 const data = await res.json();
                 if (!data.sucesso) {
-                    exibirAlertaModal(data.mensagem || "Senha incorreta!", "danger");
+                    exibirAlertaModal(data.mensagem || "Senha incorreta!");
                     return;
                 }
 
@@ -413,7 +463,7 @@
                 fecharModalSenha();
                 if (callback) await callback();
             } catch (err) {
-                exibirAlertaModal("Erro de conexão ao validar credenciais.", "danger");
+                exibirAlertaModal("Erro de conexão ao validar credenciais.");
             }
         }
 
@@ -452,13 +502,11 @@
             if (abaId === 'aba-exibir') {
                 boxExibir.classList.remove("hidden-tab");
                 boxAdicionar.classList.add("hidden-tab");
-
                 btnExibir.classList.add("active");
                 btnAdicionar.classList.remove("active");
             } else {
                 boxExibir.classList.add("hidden-tab");
                 boxAdicionar.classList.remove("hidden-tab");
-
                 btnAdicionar.classList.add("active");
                 btnExibir.classList.remove("active");
             }
