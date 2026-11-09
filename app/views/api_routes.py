@@ -278,20 +278,27 @@ def dar_baixa_item():
     resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
     is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
 
-    if is_orfeo:
+    modelo_esperado = "---"
+    for m in MODELOS_OFICIAIS:
+        if re.search(r'\b' + re.escape(m) + r'\b', resumo_beneficiario, re.IGNORECASE):
+            modelo_esperado = m
+            break
+
+    # Se não for órfão e escolheu o modelo reservado, verifica se há saldo no balcão
+    if not is_orfeo and modelo_esperado.lower() == modelo_baixa.lower():
+        if saldo_balcao <= 0:
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
+            }), 400
+    else:
+        # Se for órfão ou se for divergência, consome das sobras
         reserva = item_est.quantidade_reservada or 0
         sobra_atual = saldo_balcao - reserva
         if sobra_atual <= 0:
             return jsonify({
                 'sucesso': False, 
                 'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
-            }), 400
-    else:
-        # Trava para solicitações regulares: impede baixa se não houver saldo físico no balcão
-        if saldo_balcao <= 0:
-            return jsonify({
-                'sucesso': False, 
-                'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
             }), 400
 
     # 3. Atualiza o JSON de detalhes de entrega
@@ -318,24 +325,9 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # =========================================================================
-    # AUDITORIA DE DIVERGÊNCIA DE MODELO
-    # =========================================================================
-    resumo_texto = str(reg.resumo_kits or "")
-    modelo_esperado_encontrado = "---"
-    
-    from app.services.estoque_service import MODELOS_OFICIAIS
-    import re
-    for m in MODELOS_OFICIAIS:
-        if re.search(r'\b' + re.escape(m) + r'\b', resumo_texto, re.IGNORECASE):
-            modelo_esperado_encontrado = m
-            break
+    # 4. Histórico da Baixa e Auditoria
+    tem_divergencia = (modelo_esperado != "---" and modelo_esperado.lower() != modelo_baixa.lower() and not is_orfeo)
 
-    tem_divergencia = False
-    if modelo_esperado_encontrado != "---" and modelo_esperado_encontrado.lower() != modelo_baixa.lower():
-        tem_divergencia = True
-
-    # 4. Histórico da Baixa com Auditoria
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
     id_user = session.get('usuario_id')
     nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
@@ -354,7 +346,7 @@ def dar_baixa_item():
         index_kit=index_kit,
         modelo_baixa=modelo_baixa,
         divergencia_modelo=tem_divergencia,
-        modelo_esperado=modelo_esperado_encontrado if tem_divergencia else None
+        modelo_esperado=modelo_esperado if tem_divergencia else None
     )
     db.session.add(log_baixa)
     
@@ -372,6 +364,9 @@ def dar_baixa_item():
         db.session.add(mov)
 
     db.session.commit()
+
+    # RECALIBRAÇÃO DINÂMICA: Desconta a reserva original e aumenta a sobra automaticamente
+    recalibrar_estoque()
 
     return jsonify({
         'sucesso': True,
@@ -456,7 +451,7 @@ def editar_baixa_historico():
     if modelo_antigo == novo_modelo:
         return jsonify({'sucesso': True, 'mensagem': 'O modelo selecionado é idêntico ao atual.'}), 200
 
-    # 1. VALIDAÇÃO DE ESTOQUE PARA O NOVO MODELO ESCOLHIDO NA EDIÇÃO
+    # Validação de estoque para o novo modelo
     item_novo = EstoqueKit.query.filter_by(codigo_kit=novo_modelo, ativo=True).first()
     if not item_novo:
         return jsonify({'sucesso': False, 'mensagem': f'O modelo "{novo_modelo}" não possui cadastro ativo no estoque.'}), 400
@@ -468,7 +463,6 @@ def editar_baixa_historico():
     if saldo_balcao <= 0:
         return jsonify({'sucesso': False, 'mensagem': f'Atenção! O modelo "{novo_modelo}" está esgotado no balcão (Saldo: 0 un).'}), 400
 
-    # 2. Localiza o registro de retirada associado para atualizar os detalhes JSON
     reg = RetiradaDependente.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
     if not reg:
         reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
@@ -480,7 +474,23 @@ def editar_baixa_historico():
             detalhes[chave_item]['modelo'] = novo_modelo
             reg.detalhes_entregas = detalhes
 
-    # 3. Estorna o estoque do modelo antigo
+        # Atualiza a auditoria de divergência
+        resumo_texto = str(getattr(reg, 'resumo_kits', '') or "")
+        modelo_esperado = "---"
+        for m in MODELOS_OFICIAIS:
+            if re.search(r'\b' + re.escape(m) + r'\b', resumo_texto, re.IGNORECASE):
+                modelo_esperado = m
+                break
+
+        log_baixa.modelo_baixa = novo_modelo
+        if modelo_esperado != "---" and modelo_esperado.lower() != novo_modelo.lower():
+            log_baixa.divergencia_modelo = True
+            log_baixa.modelo_esperado = modelo_esperado
+        else:
+            log_baixa.divergencia_modelo = False
+            log_baixa.modelo_esperado = None
+
+    # Estorna saída do modelo anterior
     item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
     if item_antigo:
         item_antigo.quantidade_baixada = max(0, (item_antigo.quantidade_baixada or 0) - 1)
@@ -493,7 +503,7 @@ def editar_baixa_historico():
         )
         db.session.add(mov_estorno)
 
-    # 4. Debita o estoque do novo modelo
+    # Registra saída do novo modelo
     item_novo.quantidade_baixada = (item_novo.quantidade_baixada or 0) + 1
     mov_saida = MovimentacaoEstoque(
         id_estoque=item_novo.id_estoque,
@@ -504,28 +514,14 @@ def editar_baixa_historico():
     )
     db.session.add(mov_saida)
 
-    # 5. RECALCULA A DIVERGÊNCIA CORRETAMENTE AO EDITAR
-    resumo_texto = str(getattr(reg, 'resumo_kits', '') or "") if reg else ""
-    modelo_esperado_encontrado = "---"
-    for m in MODELOS_OFICIAIS:
-        if re.search(r'\b' + re.escape(m) + r'\b', resumo_texto, re.IGNORECASE):
-            modelo_esperado_encontrado = m
-            break
-
-    log_baixa.modelo_baixa = novo_modelo
-
-    if modelo_esperado_encontrado != "---" and modelo_esperado_encontrado.lower() != novo_modelo.lower():
-        log_baixa.divergencia_modelo = True
-        log_baixa.modelo_esperado = modelo_esperado_encontrado
-    else:
-        log_baixa.divergencia_modelo = False
-        log_baixa.modelo_esperado = None
-
     db.session.commit()
+
+    # Recalibra o estoque após edição
+    recalibrar_estoque()
 
     return jsonify({
         'sucesso': True,
-        'mensagem': f'Modelo alterado com sucesso para "{novo_modelo}"! Estoque e auditoria recalculados.'
+        'mensagem': f'Modelo alterado com sucesso de "{modelo_antigo}" para "{novo_modelo}"!'
     }), 200
 
 
@@ -592,6 +588,9 @@ def revogar_baixa_historico():
 
     db.session.delete(log_baixa)
     db.session.commit()
+
+    # Recalibra o estoque para devolver a reserva pendente se aplicável
+    recalibrar_estoque()
 
     return jsonify({
         'sucesso': True,
