@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
         .main-container {
-            max-width: 1100px !important;
+            max-width: 960px !important;
             width: 95% !important;
             margin: 15px auto !important;
             padding-bottom: 90px !important;
@@ -72,25 +72,184 @@
 
         .table-container {
             background: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-radius: 16px;
+            padding: 14px 18px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
             overflow-x: auto;
             border: 1px solid #e2e8f0;
             -webkit-overflow-scrolling: touch;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.5px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.9rem; }
+        th { padding: 8px 14px; text-align: left; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 14px; text-align: left; vertical-align: middle; background: #ffffff; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; transition: all 0.2s ease; }
 
-        .row-clicavel { cursor: pointer; transition: background 0.2s; }
-        .row-clicavel:hover { background: #f0f9ff; }
+        /* ESTILOS CORPORATIVOS DO LEADERBOARD / RANKING */
+        .rank-row {
+            cursor: pointer;
+        }
+        .rank-row td:first-child {
+            border-left: 1px solid #e2e8f0;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+        .rank-row td:last-child {
+            border-right: 1px solid #e2e8f0;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .rank-row:hover td {
+            background: #f8fafc !important;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        /* Indicadores laterais discretos para o Top 3 */
+        .rank-top-1 td:first-child { border-left: 4px solid #f59e0b; }
+        .rank-top-2 td:first-child { border-left: 4px solid #64748b; }
+        .rank-top-3 td:first-child { border-left: 4px solid #b45309; }
+
+        /* Emblema Vetorial de Posição */
+        .pos-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.88rem;
+            position: relative;
+        }
+        .pos-1 {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .pos-2 {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .pos-3 {
+            background: #fff7ed;
+            color: #b45309;
+            border: 1px solid #fed7aa;
+        }
+        .pos-default {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Bloco do Usuário no Ranking */
+        .user-rank-cell {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .user-rank-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f9ff;
+            color: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            border: 1.5px solid #bae6fd;
+        }
+        .rank-top-1 .user-rank-avatar {
+            background: #fffbeb;
+            color: #d97706;
+            border-color: #fde68a;
+        }
+        .rank-top-2 .user-rank-avatar {
+            background: #f8fafc;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+        .rank-top-3 .user-rank-avatar {
+            background: #fff7ed;
+            color: #b45309;
+            border-color: #fed7aa;
+        }
+
+        .user-rank-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            max-width: 320px;
+        }
+        .user-rank-name {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.2px;
+        }
+
+        /* Linha da Barra de Progresso + Porcentagem */
+        .rank-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+        .rank-progress-bg {
+            flex: 1;
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .rank-progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: #0284c7;
+            transition: width 0.5s ease;
+        }
+        .rank-top-1 .rank-progress-fill {
+            background: #0284c7;
+        }
+        .rank-percent-text {
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #475569;
+            min-width: 42px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Pontuação / Total Baixas */
+        .score-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            background: #0284c7;
+            color: #ffffff;
+        }
+        .score-zero {
+            background: #f1f5f9 !important;
+            color: #94a3b8 !important;
+        }
+
+        /* TABELA EXTRATO PADRÃO */
+        .table-extrato { border-collapse: collapse; border-spacing: 0; }
+        .table-extrato td { border-bottom: 1px solid #e2e8f0; border-top: none; }
 
         .badge-op { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
-        .badge-count { background: #0284c7; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-block; }
 
-        .badge-perfil-tag { padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; }
+        .badge-perfil-tag { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.4px; }
         .badge-ADMIN { background: #fee2e2; color: #991b1b; }
         .badge-OPERADOR { background: #e0f2fe; color: #0369a1; }
 
@@ -165,7 +324,10 @@
 
         @media (max-width: 600px) {
             .main-container { width: 98% !important; margin: 5px auto !important; }
-            th, td { padding: 8px 10px; font-size: 0.8rem; }
+            th, td { padding: 10px 8px; font-size: 0.82rem; }
+            .user-rank-avatar { width: 34px; height: 34px; font-size: 0.75rem; }
+            .user-rank-name { font-size: 0.9rem; }
+            .pos-badge { width: 32px; height: 32px; font-size: 0.8rem; }
             .search-wrapper { max-width: 100%; width: 100%; }
         }
     </style>
@@ -173,15 +335,19 @@
 <body>
     <div class="main-container">
         <header class="app-header">
-            <div class="header-icon">
+            <div class="header-icon" id="icone-header-historico">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                    <path d="M4 22h16"></path>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                 </svg>
             </div>
             <div>
-                <h2 id="titulo-pagina">Histórico de Entregas</h2>
-                <p id="subtitulo-pagina">Registro de baixas efetuadas no sistema</p>
+                <h2 id="titulo-pagina">Ranking de Entregas</h2>
+                <p id="subtitulo-pagina">Toque em um usuário para ver o extrato detalhado</p>
             </div>
         </header>
 
@@ -189,23 +355,18 @@
 
         <!-- SEÇÃO 1: RANKING DE OPERADORES (ADMIN) -->
         <div id="secao-ranking" class="hidden">
-            <div class="view-header">
-                <h3 style="color: #1e293b;">Ranking de Entregas por Usuário</h3>
-                <span style="font-size: 0.82rem; color: #64748b;">Clique no usuário para ver o extrato detalhado</span>
-            </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 70px;">Posição</th>
-                            <th>Operador / Usuário</th>
-                            <th style="width: 120px;">Perfil</th>
-                            <th style="width: 180px;">Última Baixa (Brasília)</th>
+                            <th style="width: 75px; text-align: center;">Posição</th>
+                            <th>Usuário</th>
+                            <th style="width: 120px; text-align: center;">Perfil</th>
                             <th style="text-align: right; width: 130px;">Total Baixas</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-ranking">
-                        <tr><td colspan="5">Carregando ranking...</td></tr>
+                        <tr><td colspan="4">Carregando ranking...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -217,7 +378,7 @@
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <button id="btn-voltar-ranking" class="btn-voltar hidden" onclick="carregarRanking()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                        Voltar
+                        Voltar ao Ranking
                     </button>
                     <span id="label-operador-filtro" style="font-size: 0.88rem; font-weight: 700; color: #0369a1;"></span>
                 </div>
@@ -229,7 +390,7 @@
             </div>
 
             <div class="table-container">
-                <table>
+                <table class="table-extrato">
                     <thead>
                         <tr>
                             <th style="width: 140px;">Data / Hora</th>
@@ -254,7 +415,6 @@
             <h3 style="color: #0f172a; margin-bottom: 6px;" id="senha-modal-titulo">Autenticação de Segurança</h3>
             <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 12px;" id="senha-modal-subtitulo">Confirme sua senha de Administrador para prosseguir com esta ação.</p>
             
-            <!-- Alerta Interno do Modal -->
             <div id="modal-hist-alert" class="modal-alert modal-alert-danger"></div>
 
             <div style="margin-bottom: 16px;">
@@ -301,6 +461,47 @@
             "EFII-1", "EFII-2", "EFII-3", "EFII-4", "EFII-5", "EFII-6", "EFII-7", "EFII-8", "EFII-9", "EFII-10", "EFII-11", "EFII-12", "EFII-13", "EFII-14", "EFII-15", "EFII-16",
             "EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12", "EM-13"
         ];
+
+        // Ícones SVG Vetorizados de Medalha/Insígnia (mesmo traço da interface)
+        function gerarSvgMedalha(corStroke, corFill) {
+            return `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${corFill}" stroke="${corStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"></path>
+                    <path d="M11 12 5.12 2.2"></path>
+                    <path d="m13 12 5.88-9.8"></path>
+                    <path d="M8 7h8"></path>
+                    <circle cx="12" cy="17" r="5"></circle>
+                    <path d="M12 18v-2h-.5"></path>
+                </svg>
+            `;
+        }
+
+        // Formata "WEMBLEY M DOS SANTOS" -> "Wembley M."
+        function formatarNomeCurto(nomeCompleto) {
+            if (!nomeCompleto) return "Usuário";
+            const ignorar = ['de', 'da', 'do', 'dos', 'das', 'e'];
+            const partes = nomeCompleto.trim().split(/\s+/).filter(p => !ignorar.includes(p.toLowerCase()));
+
+            if (partes.length === 0) return "Usuário";
+
+            const primeiroNome = partes[0].charAt(0).toUpperCase() + partes[0].slice(1).toLowerCase();
+
+            if (partes.length === 1) {
+                return primeiroNome;
+            }
+
+            const inicialSobrenome = partes[1].charAt(0).toUpperCase();
+            return `${primeiroNome} ${inicialSobrenome}.`;
+        }
+
+        // Extrai as duas iniciais para o avatar (Ex: "Wembley M." -> "WM")
+        function extrairIniciaisAvatar(nomeCurto) {
+            const pedacos = nomeCurto.replace('.', '').trim().split(/\s+/);
+            if (pedacos.length >= 2) {
+                return (pedacos[0][0] + pedacos[1][0]).toUpperCase();
+            }
+            return pedacos[0].substring(0, 2).toUpperCase();
+        }
 
         document.addEventListener("DOMContentLoaded", async () => {
             populacaoSelectModal();
@@ -349,7 +550,7 @@
             document.getElementById("secao-extrato").classList.add("hidden");
             document.getElementById("btn-voltar-ranking").classList.add("hidden");
             document.getElementById("titulo-pagina").innerText = "Ranking de Entregas";
-            document.getElementById("subtitulo-pagina").innerText = "Desempenho de baixas cadastradas por operador";
+            document.getElementById("subtitulo-pagina").innerText = "Toque em um usuário para ver o extrato detalhado";
 
             try {
                 const res = await fetch('/api/historico-ranking-operadores');
@@ -358,25 +559,68 @@
 
                 if (data.sucesso && data.ranking.length > 0) {
                     tbody.innerHTML = "";
+                    
+                    // Soma total de todas as baixas realizadas no sistema
+                    const somaTotalBaixas = data.ranking.reduce((acc, item) => acc + (item.total_baixas || 0), 0);
+
                     data.ranking.forEach((u, index) => {
+                        const pos = index + 1;
                         const tr = document.createElement("tr");
-                        tr.className = "row-clicavel";
-                        tr.onclick = () => carregarExtratoOperador(u.id_usuario, u.nome);
+                        
+                        const classePodio = pos <= 3 && u.total_baixas > 0 ? `rank-top-${pos}` : "";
+                        tr.className = `rank-row ${classePodio}`;
+
+                        const nomeFormatado = formatarNomeCurto(u.nome);
+                        const iniciais = extrairIniciaisAvatar(nomeFormatado);
+
+                        // Calcula a porcentagem que o operador representa sobre o total geral já baixado
+                        const pctReal = somaTotalBaixas > 0 ? ((u.total_baixas / somaTotalBaixas) * 100) : 0;
+                        const textoPorcentagem = pctReal === 0 ? "0%" : (Number.isInteger(pctReal) ? `${pctReal}%` : `${pctReal.toFixed(1)}%`);
+                        const larguraBarra = u.total_baixas > 0 ? Math.max(4, Math.round(pctReal)) : 0;
+
+                        tr.onclick = () => carregarExtratoOperador(u.id_usuario, nomeFormatado);
+
+                        // Define o ícone SVG vetorial da posição
+                        let badgePosicaoHtml = `<span class="pos-badge pos-default">${pos}º</span>`;
+                        if (pos === 1 && u.total_baixas > 0) {
+                            badgePosicaoHtml = `<span class="pos-badge pos-1" title="1º Lugar">${gerarSvgMedalha('#d97706', 'rgba(245, 158, 11, 0.18)')}</span>`;
+                        } else if (pos === 2 && u.total_baixas > 0) {
+                            badgePosicaoHtml = `<span class="pos-badge pos-2" title="2º Lugar">${gerarSvgMedalha('#475569', 'rgba(100, 116, 139, 0.15)')}</span>`;
+                        } else if (pos === 3 && u.total_baixas > 0) {
+                            badgePosicaoHtml = `<span class="pos-badge pos-3" title="3º Lugar">${gerarSvgMedalha('#b45309', 'rgba(180, 83, 9, 0.15)')}</span>`;
+                        }
+
+                        const classeScoreZero = u.total_baixas === 0 ? "score-zero" : "";
 
                         tr.innerHTML = `
-                            <td><strong>#${index + 1}</strong></td>
+                            <td style="text-align: center;">${badgePosicaoHtml}</td>
                             <td>
-                                <strong>${u.nome}</strong><br>
-                                <span style="font-size: 0.78rem; color: #64748b;">${u.email}</span>
+                                <div class="user-rank-cell">
+                                    <div class="user-rank-avatar">${iniciais}</div>
+                                    <div class="user-rank-info">
+                                        <span class="user-rank-name">${nomeFormatado}</span>
+                                        <div class="rank-progress-row">
+                                            <div class="rank-progress-bg">
+                                                <div class="rank-progress-fill" style="width: ${larguraBarra}%;"></div>
+                                            </div>
+                                            <span class="rank-percent-text">${textoPorcentagem}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-                            <td><span class="badge-perfil-tag badge-${u.perfil}">${u.perfil}</span></td>
-                            <td>${u.ultima_baixa}</td>
-                            <td style="text-align: right;"><span class="badge-count">${u.total_baixas}</span></td>
+                            <td style="text-align: center;">
+                                <span class="badge-perfil-tag badge-${u.perfil}">${u.perfil}</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <span class="score-pill ${classeScoreZero}">
+                                    ${u.total_baixas}
+                                </span>
+                            </td>
                         `;
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = "<tr><td colspan='5'>Nenhum registro encontrado.</td></tr>";
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum usuário encontrado.</td></tr>";
                 }
             } catch (err) {
                 console.error("Erro ao carregar ranking:", err);
@@ -393,7 +637,7 @@
                 document.getElementById("btn-voltar-ranking").classList.remove("hidden");
                 document.getElementById("titulo-pagina").innerText = "Extrato Detalhado";
                 document.getElementById("subtitulo-pagina").innerText = nomeUsuario ? `Baixas efetuadas por: ${nomeUsuario}` : "Histórico de baixas";
-                document.getElementById("label-operador-filtro").innerText = nomeUsuario ? `Filtrado por: ${nomeUsuario}` : "";
+                document.getElementById("label-operador-filtro").innerText = nomeUsuario ? `Usuário: ${nomeUsuario}` : "";
             } else {
                 document.getElementById("titulo-pagina").innerText = "Minhas Entregas";
                 document.getElementById("subtitulo-pagina").innerText = "Registro das suas baixas efetuadas";
@@ -419,7 +663,7 @@
             const colSpan = (perfilLogado === 'ADMIN') ? 6 : 5;
 
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan='${colSpan}'>Nenhum registro de baixa encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan='${colSpan}' style="text-align: center; padding: 20px; color: #64748b;">Nenhum registro de baixa encontrado para este usuário.</td></tr>`;
                 return;
             }
 
@@ -459,7 +703,7 @@
 
                 tr.innerHTML = `
                     <td>${item.data_baixa}</td>
-                    <td><span class="badge-op">${item.nome_operador}</span></td>
+                    <td><span class="badge-op">${formatarNomeCurto(item.nome_operador)}</span></td>
                     <td>${formatoNome}</td>
                     <td>${item.tipo_publico}</td>
                     <td><strong>${item.modelo_baixa}</strong></td>
