@@ -18,7 +18,7 @@
             align-items: center;
             justify-content: space-between;
             margin-top: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -32,13 +32,14 @@
 
         .search-wrapper input {
             width: 100%;
-            padding: 9px 12px 9px 36px;
-            border-radius: 8px;
+            padding: 10px 14px 10px 38px;
+            border-radius: 10px;
             border: 1px solid #cbd5e1;
             font-size: 0.88rem;
             outline: none;
             box-sizing: border-box;
             background: #ffffff;
+            transition: all 0.2s ease;
         }
 
         .search-wrapper input:focus {
@@ -48,27 +49,28 @@
 
         .search-wrapper svg {
             position: absolute;
-            left: 10px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: #94a3b8;
         }
 
         .btn-voltar {
-            background: #f1f5f9;
+            background: #f8fafc;
             border: 1px solid #cbd5e1;
             color: #334155;
-            padding: 8px 14px;
-            border-radius: 8px;
+            padding: 9px 14px;
+            border-radius: 10px;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
-        .btn-voltar:hover { background: #e2e8f0; }
+        .btn-voltar:hover { background: #f1f5f9; border-color: #94a3b8; }
 
         .table-container {
             background: #ffffff;
@@ -105,12 +107,10 @@
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
         }
 
-        /* Indicadores laterais discretos para o Top 3 */
         .rank-top-1 td:first-child { border-left: 4px solid #f59e0b; }
         .rank-top-2 td:first-child { border-left: 4px solid #64748b; }
         .rank-top-3 td:first-child { border-left: 4px solid #b45309; }
 
-        /* Emblema Vetorial de Posição */
         .pos-badge {
             width: 38px;
             height: 38px;
@@ -120,30 +120,12 @@
             justify-content: center;
             font-weight: 800;
             font-size: 0.88rem;
-            position: relative;
         }
-        .pos-1 {
-            background: #fffbeb;
-            color: #d97706;
-            border: 1px solid #fde68a;
-        }
-        .pos-2 {
-            background: #f8fafc;
-            color: #475569;
-            border: 1px solid #cbd5e1;
-        }
-        .pos-3 {
-            background: #fff7ed;
-            color: #b45309;
-            border: 1px solid #fed7aa;
-        }
-        .pos-default {
-            background: #f8fafc;
-            color: #64748b;
-            border: 1px solid #e2e8f0;
-        }
+        .pos-1 { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        .pos-2 { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+        .pos-3 { background: #fff7ed; color: #b45309; border: 1px solid #fed7aa; }
+        .pos-default { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
 
-        /* Bloco do Usuário no Ranking */
         .user-rank-cell {
             display: flex;
             align-items: center;
@@ -163,21 +145,9 @@
             flex-shrink: 0;
             border: 1.5px solid #bae6fd;
         }
-        .rank-top-1 .user-rank-avatar {
-            background: #fffbeb;
-            color: #d97706;
-            border-color: #fde68a;
-        }
-        .rank-top-2 .user-rank-avatar {
-            background: #f8fafc;
-            color: #475569;
-            border-color: #cbd5e1;
-        }
-        .rank-top-3 .user-rank-avatar {
-            background: #fff7ed;
-            color: #b45309;
-            border-color: #fed7aa;
-        }
+        .rank-top-1 .user-rank-avatar { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+        .rank-top-2 .user-rank-avatar { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+        .rank-top-3 .user-rank-avatar { background: #fff7ed; color: #b45309; border-color: #fed7aa; }
 
         .user-rank-info {
             display: flex;
@@ -193,7 +163,6 @@
             letter-spacing: -0.2px;
         }
 
-        /* Linha da Barra de Progresso + Porcentagem */
         .rank-progress-row {
             display: flex;
             align-items: center;
@@ -213,9 +182,6 @@
             background: #0284c7;
             transition: width 0.5s ease;
         }
-        .rank-top-1 .rank-progress-fill {
-            background: #0284c7;
-        }
         .rank-percent-text {
             font-size: 0.76rem;
             font-weight: 700;
@@ -225,7 +191,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Pontuação / Total Baixas */
         .score-pill {
             display: inline-flex;
             align-items: center;
@@ -238,16 +203,13 @@
             background: #0284c7;
             color: #ffffff;
         }
-        .score-zero {
-            background: #f1f5f9 !important;
-            color: #94a3b8 !important;
-        }
+        .score-zero { background: #f1f5f9 !important; color: #94a3b8 !important; }
 
-        /* TABELA EXTRATO PADRÃO */
+        /* TABELA EXTRATO PADRÃO & BOTÕES SVG VETORIZADOS */
         .table-extrato { border-collapse: collapse; border-spacing: 0; }
         .table-extrato td { border-bottom: 1px solid #e2e8f0; border-top: none; }
 
-        .badge-op { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
+        .badge-op { background: #e0f2fe; color: #0369a1; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; display: inline-block; }
 
         .badge-perfil-tag { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.4px; }
         .badge-ADMIN { background: #fee2e2; color: #991b1b; }
@@ -260,36 +222,49 @@
             display: flex;
             gap: 6px;
             justify-content: flex-end;
+            align-items: center;
+        }
+
+        /* NOVOS BOTÕES SVG VETORIZADOS PARA AÇÕES ADMIN */
+        .btn-acao-admin {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            text-decoration: none;
+        }
+        .btn-acao-admin svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
         }
 
         .btn-edit-baixa {
-            background: #f59e0b;
-            color: #ffffff;
-            border: none;
-            padding: 5px 9px;
-            border-radius: 6px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            background: #fffbeb;
+            color: #b45309;
+            border-color: #fde68a;
+        }
+        .btn-edit-baixa:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
         }
 
         .btn-revogar-baixa {
-            background: #ef4444;
-            color: #ffffff;
-            border: none;
-            padding: 5px 9px;
-            border-radius: 6px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fecaca;
         }
-        .btn-edit-baixa:hover, .btn-revogar-baixa:hover { opacity: 0.88; }
+        .btn-revogar-baixa:hover {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
 
         /* MODAIS E ALERTAS INTERNOS */
         .modal-overlay {
@@ -303,11 +278,12 @@
         .modal-box {
             background: #ffffff;
             padding: 24px;
-            border-radius: 12px;
+            border-radius: 14px;
             width: 90%;
             max-width: 420px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1);
             position: relative;
+            border: 1px solid #e2e8f0;
         }
 
         .modal-alert {
@@ -377,14 +353,20 @@
             <div class="view-header">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <button id="btn-voltar-ranking" class="btn-voltar hidden" onclick="carregarRanking()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
                         Voltar ao Ranking
                     </button>
-                    <span id="label-operador-filtro" style="font-size: 0.88rem; font-weight: 700; color: #0369a1;"></span>
+                    <span id="label-operador-filtro" style="font-size: 0.9rem; font-weight: 700; color: #0284c7;"></span>
                 </div>
 
                 <div class="search-wrapper">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
                     <input type="text" id="input-pesquisa-historico" placeholder="Pesquisar por Beneficiário, Filho, Modelo..." oninput="filtrarTabelaExtrato()" />
                 </div>
             </div>
@@ -398,7 +380,7 @@
                             <th>Beneficiário (Titular & Filho)</th>
                             <th style="width: 110px;">Público</th>
                             <th style="width: 120px;">Modelo Kit</th>
-                            <th id="th-acoes-admin" style="width: 170px; text-align: right;" class="hidden">Ações Admin</th>
+                            <th id="th-acoes-admin" style="width: 190px; text-align: right;" class="hidden">Ações Admin</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-extrato">
@@ -424,7 +406,7 @@
 
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-voltar" onclick="fecharModalSenha()">Cancelar</button>
-                <button type="button" class="btn-revogar-baixa" style="padding: 8px 16px; font-size: 0.85rem;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
+                <button type="button" class="btn-acao-admin btn-revogar-baixa" style="padding: 9px 16px;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
             </div>
         </div>
     </div>
@@ -439,12 +421,12 @@
             
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Novo Modelo Mochila</label>
-                <select id="modal-select-modelo" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none;"></select>
+                <select id="modal-select-modelo" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none; background: #fff;"></select>
             </div>
 
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-voltar" onclick="fecharModalEdicao()">Cancelar</button>
-                <button type="button" class="btn-edit-baixa" style="padding: 8px 16px; font-size: 0.85rem;" onclick="iniciarEdicaoComSenha()">Salvar Alteração</button>
+                <button type="button" class="btn-acao-admin btn-edit-baixa" style="padding: 9px 16px;" onclick="iniciarEdicaoComSenha()">Salvar Alteração</button>
             </div>
         </div>
     </div>
@@ -462,7 +444,7 @@
             "EM-1", "EM-2", "EM-3", "EM-4", "EM-5", "EM-6", "EM-7", "EM-8", "EM-9", "EM-10", "EM-11", "EM-12", "EM-13"
         ];
 
-        // Ícones SVG Vetorizados de Medalha/Insígnia (mesmo traço da interface)
+        // Ícone SVG Vetorizado de Medalha/Insígnia
         function gerarSvgMedalha(corStroke, corFill) {
             return `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${corFill}" stroke="${corStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -494,7 +476,6 @@
             return `${primeiroNome} ${inicialSobrenome}.`;
         }
 
-        // Extrai as duas iniciais para o avatar (Ex: "Wembley M." -> "WM")
         function extrairIniciaisAvatar(nomeCurto) {
             const pedacos = nomeCurto.replace('.', '').trim().split(/\s+/);
             if (pedacos.length >= 2) {
@@ -560,7 +541,6 @@
                 if (data.sucesso && data.ranking.length > 0) {
                     tbody.innerHTML = "";
                     
-                    // Soma total de todas as baixas realizadas no sistema
                     const somaTotalBaixas = data.ranking.reduce((acc, item) => acc + (item.total_baixas || 0), 0);
 
                     data.ranking.forEach((u, index) => {
@@ -573,14 +553,12 @@
                         const nomeFormatado = formatarNomeCurto(u.nome);
                         const iniciais = extrairIniciaisAvatar(nomeFormatado);
 
-                        // Calcula a porcentagem que o operador representa sobre o total geral já baixado
                         const pctReal = somaTotalBaixas > 0 ? ((u.total_baixas / somaTotalBaixas) * 100) : 0;
                         const textoPorcentagem = pctReal === 0 ? "0%" : (Number.isInteger(pctReal) ? `${pctReal}%` : `${pctReal.toFixed(1)}%`);
                         const larguraBarra = u.total_baixas > 0 ? Math.max(4, Math.round(pctReal)) : 0;
 
                         tr.onclick = () => carregarExtratoOperador(u.id_usuario, nomeFormatado);
 
-                        // Define o ícone SVG vetorial da posição
                         let badgePosicaoHtml = `<span class="pos-badge pos-default">${pos}º</span>`;
                         if (pos === 1 && u.total_baixas > 0) {
                             badgePosicaoHtml = `<span class="pos-badge pos-1" title="1º Lugar">${gerarSvgMedalha('#d97706', 'rgba(245, 158, 11, 0.18)')}</span>`;
@@ -688,12 +666,12 @@
                     acaoAdminHtml = `
                         <td style="text-align: right;">
                             <div class="action-btns-group">
-                                <button class="btn-edit-baixa" onclick="abrirModalEdicao(${idHist}, '${item.modelo_baixa}')" title="Alterar Modelo">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <button class="btn-acao-admin btn-edit-baixa" onclick="abrirModalEdicao(${idHist}, '${item.modelo_baixa}')" title="Alterar Modelo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     Editar
                                 </button>
-                                <button class="btn-revogar-baixa" onclick="solicitarRevogacao(${idHist}, '${item.modelo_baixa}')" title="Revogar Baixa e Devolver ao Estoque">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                <button class="btn-acao-admin btn-revogar-baixa" onclick="solicitarRevogacao(${idHist}, '${item.modelo_baixa}')" title="Revogar Baixa e Devolver ao Estoque">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                     Revogar
                                 </button>
                             </div>
