@@ -2,11 +2,10 @@ from flask import Blueprint, jsonify, request, session, Response
 from datetime import datetime, timedelta
 from sqlalchemy import or_, cast, String, func
 from app.models import db, RetiradaDependente, RetiradaJovemAprendiz, Usuario, HistoricoBaixa, MovimentacaoEstoque, EstoqueKit
-from app.services.estoque_service import recalibrar_estoque
+from app.services.estoque_service import recalibrar_estoque, MODELOS_OFICIAIS
 from io import StringIO
 import csv
 import time
-from app.services.estoque_service import MODELOS_OFICIAIS
 import re
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -22,7 +21,6 @@ def verificar_sessao_unica():
     Usa cache temporal (10s) na sessão do Flask para evitar queries repetitivas 
     no banco de dados em cada chamada de API, eliminando a lentidão do sistema.
     """
-    # Isenta a rota de login da verificação
     if request.endpoint == 'api.login_api':
         return None
 
@@ -33,11 +31,9 @@ def verificar_sessao_unica():
         agora = time.time()
         ultima_checagem = session.get('ultimo_check_sessao', 0)
 
-        # Valida no banco de dados APENAS se tiver passado mais de 10 segundos da última checagem
         if (agora - ultima_checagem) > 10:
             user = Usuario.query.get(user_id)
             
-            # Se o usuário não existe mais, foi inativado ou se logou em outro dispositivo
             if not user or not user.ativo or user.session_token != token_sessao_local:
                 session.clear()
                 return jsonify({
@@ -88,11 +84,10 @@ def extrair_nomes_dependentes(resumo_str):
     return nomes
 
 
-# Em api_routes.py, mantenha as rotas limpas:
 @api_bp.route('/login', methods=['POST'])
 def login_api():
     data = request.json or {}
-    email = data.get('email', '').strip()
+    email = data.get('email', '').strip().lower()
     senha = data.get('senha', '').strip()
 
     if not email or not senha:
@@ -102,11 +97,9 @@ def login_api():
     if not user or not user.checar_senha(senha):
         return jsonify({'sucesso': False, 'mensagem': 'E-mail ou senha incorretos.'}), 401
 
-    # GERA NOVO TOKEN E INVALIDA SESSÕES EM OUTROS DISPOSITIVOS
     novo_token = user.gerar_novo_session_token()
     db.session.commit()
 
-    # REGISTRA A SESSÃO ATUAL NO FLASK
     session['usuario_id'] = user.id_usuario
     session['usuario_nome'] = user.nome
     session['usuario_email'] = user.email
@@ -155,7 +148,12 @@ def autocompletar_nome():
     termo_like = f"%{query}%"
     sugestoes = []
 
-    deps = RetiradaDependente.query.filter(
+    deps = RetiradaDependente.query.with_entities(
+        RetiradaDependente.codigo_retirada,
+        RetiradaDependente.id_colaborador,
+        RetiradaDependente.nome_colaborador,
+        RetiradaDependente.resumo_kits
+    ).filter(
         or_(
             RetiradaDependente.nome_colaborador.ilike(termo_like),
             RetiradaDependente.resumo_kits.ilike(termo_like),
@@ -202,17 +200,20 @@ def buscar_retirada(termo_busca):
     
     apenas_numeros = "".join(filter(str.isdigit, termo))
     
+    # 1. Chave Indexada Única (QR Code / UUID)
     reg_dep = RetiradaDependente.query.filter_by(codigo_retirada=termo).first()
     reg_jovem = None
     if not reg_dep:
         reg_jovem = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=termo).first()
 
+    # 2. Busca por Crachá (ID numérico indexado)
     if not reg_dep and not reg_jovem and apenas_numeros.isdigit():
         id_num = int(apenas_numeros)
         reg_dep = RetiradaDependente.query.filter_by(id_colaborador=id_num).first()
         if not reg_dep:
             reg_jovem = RetiradaJovemAprendiz.query.filter_by(id_colaborador=id_num).first()
 
+    # 3. Busca por Nome
     if not reg_dep and not reg_jovem:
         termo_like = f"%{termo}%"
         reg_dep = RetiradaDependente.query.filter(
@@ -253,7 +254,7 @@ def dar_baixa_item():
     if modelo_baixa == '---' or not modelo_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
 
-    # 1. Busca o registro da retirada
+    # 1. Localização do registro
     reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
     tipo_pub = 'Dependente'
     if not reg:
@@ -263,7 +264,7 @@ def dar_baixa_item():
     if not reg:
         return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
 
-    # 2. VALIDAÇÃO GERAL DE ESTOQUE (Trava para Todos os Públicos e Órfãos)
+    # 2. Verificação de estoque físico do modelo entregue
     item_est = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa, ativo=True).first()
     if not item_est:
         return jsonify({
@@ -278,13 +279,22 @@ def dar_baixa_item():
     resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
     is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
 
+    # Identificação precisa do modelo esperado para este dependente
     modelo_esperado = "---"
-    for m in MODELOS_OFICIAIS:
-        if re.search(r'\b' + re.escape(m) + r'\b', resumo_beneficiario, re.IGNORECASE):
-            modelo_esperado = m
-            break
+    if not is_orfeo:
+        partes = resumo_beneficiario.split('|')
+        texto_item = partes[index_kit] if index_kit < len(partes) else resumo_beneficiario
+        for m in MODELOS_OFICIAIS:
+            if re.search(r'\b' + re.escape(m) + r'\b', texto_item, re.IGNORECASE):
+                modelo_esperado = m
+                break
+        if modelo_esperado == "---":
+            for m in MODELOS_OFICIAIS:
+                if re.search(r'\b' + re.escape(m) + r'\b', resumo_beneficiario, re.IGNORECASE):
+                    modelo_esperado = m
+                    break
 
-    # Se não for órfão e escolheu o modelo reservado, verifica se há saldo no balcão
+    # Validação de regras de reserva vs sobra
     if not is_orfeo and modelo_esperado.lower() == modelo_baixa.lower():
         if saldo_balcao <= 0:
             return jsonify({
@@ -292,7 +302,6 @@ def dar_baixa_item():
                 'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
             }), 400
     else:
-        # Se for órfão ou se for divergência, consome das sobras
         reserva = item_est.quantidade_reservada or 0
         sobra_atual = saldo_balcao - reserva
         if sobra_atual <= 0:
@@ -301,9 +310,10 @@ def dar_baixa_item():
                 'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
             }), 400
 
-    # 3. Atualiza o JSON de detalhes de entrega
+    # 3. Atualização dos detalhes da entrega
     detalhes = dict(reg.detalhes_entregas or {})
     chave_item = f"kit_{index_kit}"
+    ja_entregue_antes = detalhes.get(chave_item, {}).get('entregue') is True
 
     detalhes[chave_item] = {
         'entregue': True,
@@ -313,7 +323,7 @@ def dar_baixa_item():
     }
 
     total_kits = reg.qtd_kits
-    qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') == True)
+    qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') is True)
 
     if qtd_entregues >= total_kits:
         reg.status = 'ENTREGUE'
@@ -325,7 +335,7 @@ def dar_baixa_item():
     reg.detalhes_entregas = detalhes
     reg.data_entrega = datetime.now()
 
-    # 4. Histórico da Baixa e Auditoria
+    # 4. Auditoria de Divergência
     tem_divergencia = (modelo_esperado != "---" and modelo_esperado.lower() != modelo_baixa.lower() and not is_orfeo)
 
     nome_op = session.get('usuario_nome', 'Operador Desconhecido')
@@ -350,8 +360,9 @@ def dar_baixa_item():
     )
     db.session.add(log_baixa)
     
-    # 5. Decrementa o saldo físico incrementando as saídas
-    if item_est:
+    # 5. BALANÇO ATÔMICO INSTANTÂNEO DE ESTOQUE (< 5ms)
+    if not ja_entregue_antes:
+        # Registra saída física do modelo efetivamente entregue
         item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
 
         mov = MovimentacaoEstoque(
@@ -363,10 +374,16 @@ def dar_baixa_item():
         )
         db.session.add(mov)
 
-    db.session.commit()
+        # Liberação da reserva original do aluno (pois ele já retirou o kit)
+        if not is_orfeo and modelo_esperado != "---":
+            if modelo_esperado.lower() == modelo_baixa.lower():
+                item_est.quantidade_reservada = max(0, (item_est.quantidade_reservada or 0) - 1)
+            else:
+                item_esperado = EstoqueKit.query.filter_by(codigo_kit=modelo_esperado).first()
+                if item_esperado:
+                    item_esperado.quantidade_reservada = max(0, (item_esperado.quantidade_reservada or 0) - 1)
 
-    # RECALIBRAÇÃO DINÂMICA: Desconta a reserva original e aumenta a sobra automaticamente
-    recalibrar_estoque()
+    db.session.commit()
 
     return jsonify({
         'sucesso': True,
@@ -451,7 +468,6 @@ def editar_baixa_historico():
     if modelo_antigo == novo_modelo:
         return jsonify({'sucesso': True, 'mensagem': 'O modelo selecionado é idêntico ao atual.'}), 200
 
-    # Validação de estoque para o novo modelo
     item_novo = EstoqueKit.query.filter_by(codigo_kit=novo_modelo, ativo=True).first()
     if not item_novo:
         return jsonify({'sucesso': False, 'mensagem': f'O modelo "{novo_modelo}" não possui cadastro ativo no estoque.'}), 400
@@ -474,7 +490,6 @@ def editar_baixa_historico():
             detalhes[chave_item]['modelo'] = novo_modelo
             reg.detalhes_entregas = detalhes
 
-        # Atualiza a auditoria de divergência
         resumo_texto = str(getattr(reg, 'resumo_kits', '') or "")
         modelo_esperado = "---"
         for m in MODELOS_OFICIAIS:
@@ -490,7 +505,6 @@ def editar_baixa_historico():
             log_baixa.divergencia_modelo = False
             log_baixa.modelo_esperado = None
 
-    # Estorna saída do modelo anterior
     item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
     if item_antigo:
         item_antigo.quantidade_baixada = max(0, (item_antigo.quantidade_baixada or 0) - 1)
@@ -503,7 +517,6 @@ def editar_baixa_historico():
         )
         db.session.add(mov_estorno)
 
-    # Registra saída do novo modelo
     item_novo.quantidade_baixada = (item_novo.quantidade_baixada or 0) + 1
     mov_saida = MovimentacaoEstoque(
         id_estoque=item_novo.id_estoque,
@@ -515,8 +528,6 @@ def editar_baixa_historico():
     db.session.add(mov_saida)
 
     db.session.commit()
-
-    # Recalibra o estoque após edição
     recalibrar_estoque()
 
     return jsonify({
@@ -564,7 +575,7 @@ def revogar_baixa_historico():
 
     qtd_entregues_restantes = sum(
         1 for v in detalhes.values() 
-        if isinstance(v, dict) and v.get('entregue') == True
+        if isinstance(v, dict) and v.get('entregue') is True
     )
 
     if qtd_entregues_restantes == 0:
@@ -588,8 +599,6 @@ def revogar_baixa_historico():
 
     db.session.delete(log_baixa)
     db.session.commit()
-
-    # Recalibra o estoque para devolver a reserva pendente se aplicável
     recalibrar_estoque()
 
     return jsonify({
@@ -719,7 +728,6 @@ def listar_estoque():
         return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
 
     info_calibragem = recalibrar_estoque()
-    # REMOVIDO o filtro ativo=True para exibir TODOS os kits (ativos e inativos)
     itens = EstoqueKit.query.order_by(EstoqueKit.codigo_kit.asc()).all()
     
     return jsonify({
@@ -743,7 +751,6 @@ def alternar_status_estoque():
     if not item:
         return jsonify({'sucesso': False, 'mensagem': 'Modelo não encontrado no estoque.'}), 404
 
-    # Inverte o status atual (se True vira False, se False vira True)
     item.ativo = not item.ativo
     novo_status_str = "ativado" if item.ativo else "inativado"
 
@@ -884,7 +891,6 @@ def estoque_disponibilidade():
     return jsonify({'sucesso': True, 'disponibilidade': disponibilidade}), 200
 
 
-# ROTA EM FALTA QUE CARREGA OS REGISTOS DO MODAL DE ESTRATIFICAÇÃO
 @api_bp.route('/estoque/detalhes/<string:modelo_kit>', methods=['GET'])
 def estoque_detalhes_modelo(modelo_kit):
     if session.get('usuario_perfil') != 'ADMIN':
@@ -1039,7 +1045,7 @@ def dashboard_metricas():
             if det.get(chave, {}).get('entregue') is True:
                 total_entregue_kits += 1
             else:
-                total_pendente_kits += 1 # Aproximação para os gráficos
+                total_pendente_kits += 1
 
     # Distribuição por modelo baixado (Histórico)
     modelos_db = db.session.query(

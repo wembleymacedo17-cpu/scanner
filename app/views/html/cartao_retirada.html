@@ -513,7 +513,7 @@
                 if (selected) encontrado = true;
 
                 if (eOrfao && sobra <= 0 && !selected) {
-                    html += `<option value="${mod}" disabled style="color: #94a3b8; background-color: #f1f5f9;">🚫 ${mod} (Esgotado p/ Órfãos)</option>`;
+                    html += `<option value="${mod}" disabled style="color: #94a3b8; background-color: #f1f5f9;">🚫 ${mod} (Esgotado)</option>`;
                 } else {
                     const textoSobra = eOrfao ? ` (${sobra} un disponíveis)` : '';
                     html += `<option value="${mod}" ${selected ? 'selected' : ''}>${mod}${textoSobra}</option>`;
