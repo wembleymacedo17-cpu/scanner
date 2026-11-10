@@ -10,6 +10,25 @@
         .main-container {
             padding-bottom: 90px !important;
         }
+
+        /* Animação do Spinner Anti-Duplo Clique */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-loading {
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .btn-loading {
+            background-color: #0369a1 !important;
+            cursor: not-allowed !important;
+            opacity: 0.85 !important;
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +131,16 @@
             buscar: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>`,
+            spinner: `<svg class="spinner-loading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="6"></line>
+                        <line x1="12" y1="18" x2="12" y2="22"></line>
+                        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                        <line x1="2" y1="12" x2="6" y2="12"></line>
+                        <line x1="18" y1="12" x2="22" y2="12"></line>
+                        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
                     </svg>`
         };
 
@@ -304,7 +333,6 @@
             consultarRetirada(termo);
         }
 
-        // CONSULTA ULTRA RÁPIDA EM PARALELO
         async function consultarRetirada(termo) {
             try {
                 esconderAlerta();
@@ -348,24 +376,32 @@
                 const iconCheckSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
                 const iconBoxSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
 
+                // Avalia se o item já foi entregue com divergência face ao esperado originalmente
+                const temDivergencia = !item.eOrfao &&
+                    item.modelo_esperado && item.modelo_esperado !== "---" &&
+                    item.modelo_selecionado && item.modelo_selecionado !== "---" &&
+                    item.modelo_selecionado.toLowerCase() !== item.modelo_esperado.toLowerCase();
+
                 cardKit.innerHTML = `
                     <div class="kit-item-header">
                         <div class="kit-dependente-info">
                             <span class="dep-icon">${iconUserSVG}</span>
                             <span class="kit-dependente-nome">${item.nome_dependente}</span>
                         </div>
-                        <span class="cat-pill" id="cat-pill-${index}" data-esperado="${item.modelo_selecionado}">${item.categoria_detectada} (Esp: ${item.modelo_selecionado})</span>
+                        <span class="cat-pill" id="cat-pill-${index}" data-esperado="${item.modelo_esperado}">
+                            ${item.categoria_detectada} (Esp: ${item.modelo_esperado})
+                        </span>
                     </div>
 
                     <div class="kit-item-body">
                         <div class="select-container">
-                            <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''} onchange="verificarDivergenciaBalcao(${index}, '${item.modelo_selecionado}')">
+                            <select id="select-modelo-${index}" class="select-modelo" ${item.entregue ? 'disabled' : ''} onchange="verificarDivergenciaBalcao(${index}, '${item.modelo_esperado}')">
                                 ${gerarOptionsModelos(item.modelo_selecionado, item.categoria_detectada, item.eOrfao)}
                             </select>
                         </div>
-                        <div id="aviso-divergencia-${index}" style="display: none; font-size: 0.78rem; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; margin-top: 8px; font-weight: 700; align-items: center; gap: 6px;">
+                        <div id="aviso-divergencia-${index}" style="display: ${temDivergencia ? 'flex' : 'none'}; font-size: 0.78rem; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; margin-top: 8px; font-weight: 700; align-items: center; gap: 6px;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            Atenção: O modelo escolhido é diferente do esperado (<span id="txt-modelo-esperado-${index}">${item.modelo_selecionado}</span>)!
+                            Atenção: O modelo escolhido é diferente do esperado (<span id="txt-modelo-esperado-${index}">${item.modelo_esperado}</span>)!
                         </div>
                     </div>
 
@@ -482,6 +518,7 @@
                 return {
                     id_item: chaveItem,
                     nome_dependente: itemObj.nome,
+                    modelo_esperado: modeloDetectado,
                     modelo_selecionado: statusItem.modelo || modeloDetectado,
                     categoria_detectada: itemObj.categoria,
                     eOrfao: itemObj.eOrfao,
@@ -527,19 +564,32 @@
             return html;
         }
 
+        // ==============================================================================
+        // BLINDAGEM ANTI-DUPLO CLIQUE E TRATAMENTO DE CONCORRÊNCIA (FASE 5)
+        // ==============================================================================
         async function entregarKitIndividual(indexItem) {
             const selectModelo = document.getElementById(`select-modelo-${indexItem}`);
-            const modeloEscolhido = selectModelo ? selectModelo.value.trim() : "---";
+            const btnConfirmar = document.getElementById(`btn-entregar-${indexItem}`);
+            
+            if (!btnConfirmar || btnConfirmar.disabled) return;
 
+            const modeloEscolhido = selectModelo ? selectModelo.value.trim() : "---";
             const cardKit = selectModelo ? selectModelo.closest('.kit-item-card') : null;
             const elNomeDep = cardKit ? cardKit.querySelector('.kit-dependente-nome') : null;
             const nomeDependente = elNomeDep ? elNomeDep.innerText.trim() : "";
 
             if (modeloEscolhido === "---" || !modeloEscolhido) {
                 mostrarAlerta("Atenção: Selecione um modelo de kit válido antes de confirmar a entrega!", "danger");
-                selectModelo.focus();
+                if (selectModelo) selectModelo.focus();
                 return;
             }
+
+            // 1. BLOQUEIO IMEDIATO ANTI-DUPLO CLIQUE
+            const conteudoOriginalBtn = btnConfirmar.innerHTML;
+            btnConfirmar.disabled = true;
+            btnConfirmar.classList.add("btn-loading");
+            btnConfirmar.innerHTML = `${SVG_ICONS.spinner} Processando Entrega...`;
+            if (selectModelo) selectModelo.disabled = true;
 
             try {
                 esconderAlerta();
@@ -556,24 +606,57 @@
 
                 const result = await response.json();
 
+                // 2. TRATAMENTO DE SUCESSO (HTTP 200)
                 if (response.ok && result.sucesso) {
                     mostrarAlerta(result.mensagem, "success");
                     codigoAtualScan = result.dados.codigo_retirada;
                     
-                    carregarDisponibilidadeEstoque();
+                    await carregarDisponibilidadeEstoque();
                     renderizarCartao(result.dados);
 
                     if (result.dados.status === 'ENTREGUE') {
-                        mostrarAlerta("Todos os kits foram baixados! Reiniciando consulta em 3 segundos...", "success");
+                        mostrarAlerta("Todos os kits foram baixados com sucesso! Reiniciando em 3 segundos...", "success");
                         autoResetTimer = setTimeout(() => {
                             resetarConsulta();
                         }, 3000);
                     }
-                } else {
+                    return;
+                }
+
+                // 3. TRATAMENTO ESPECÍFICO DE CONCORRÊNCIA (HTTP 409)
+                if (response.status === 409) {
+                    mostrarAlerta(`⚠️ Concorrência no Balcão: ${result.mensagem}`, "danger");
+                    
+                    // Atualiza o saldo real no frontend para desativar itens esgotados no select
+                    await carregarDisponibilidadeEstoque();
+
+                    // Se a mensagem indicar que o kit já foi entregue por outro operador, sincroniza a tela
+                    if (result.mensagem && result.mensagem.includes("já consta como ENTREGUE")) {
+                        await consultarRetirada(codigoAtualScan);
+                        return;
+                    }
+                } 
+                // 4. TRATAMENTO DE SISTEMA OCUPADO / LOCK TIMEOUT (HTTP 503)
+                else if (response.status === 503) {
+                    mostrarAlerta("O sistema está ocupado processando este item no balcão. Por favor, tente novamente em instantes.", "danger");
+                } 
+                // OUTROS ERROS (400, 404, 500)
+                else {
                     mostrarAlerta(result.mensagem || "Erro ao efetuar baixa do kit.", "danger");
                 }
+
+                // Se não deu sucesso, restaura o botão para nova tentativa
+                btnConfirmar.disabled = false;
+                btnConfirmar.classList.remove("btn-loading");
+                btnConfirmar.innerHTML = conteudoOriginalBtn;
+                if (selectModelo) selectModelo.disabled = false;
+
             } catch (err) {
-                mostrarAlerta("Erro de conexão ao dar baixa.", "danger");
+                mostrarAlerta("Falha de conexão com o servidor. Verifique a rede e tente novamente.", "danger");
+                btnConfirmar.disabled = false;
+                btnConfirmar.classList.remove("btn-loading");
+                btnConfirmar.innerHTML = conteudoOriginalBtn;
+                if (selectModelo) selectModelo.disabled = false;
             }
         }
 
@@ -601,8 +684,6 @@
             box.innerText = msg;
             box.className = `alert-banner alert-${tipo}`;
             box.classList.remove("hidden");
-
-            // Rola a tela suavemente para o topo para o alerta ficar visível nos telemóveis
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 

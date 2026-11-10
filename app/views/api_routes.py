@@ -8,7 +8,8 @@ import csv
 import time
 import re
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
-
+import copy
+from sqlalchemy.orm.attributes import flag_modified
 
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -167,6 +168,35 @@ def autocompletar_nome():
     return jsonify({'sucesso': True, 'sugestoes': sugestoes}), 200
 
 
+
+def sincronizar_detalhes_com_historico(reg):
+    """
+    Garante que os modelos exibidos no cartão reflitam com precisão
+    o que está gravado no HistoricoBaixa oficial.
+    """
+    if not reg or not reg.codigo_retirada:
+        return
+
+    baixas = HistoricoBaixa.query.filter_by(codigo_retirada=reg.codigo_retirada).all()
+    if not baixas:
+        return
+
+    detalhes = copy.deepcopy(dict(reg.detalhes_entregas or {}))
+    precisa_salvar = False
+
+    for b in baixas:
+        chave = f"kit_{b.index_kit}"
+        if chave in detalhes and isinstance(detalhes[chave], dict):
+            if detalhes[chave].get('modelo') != b.modelo_baixa:
+                detalhes[chave]['modelo'] = b.modelo_baixa
+                detalhes[chave]['entregue'] = True
+                precisa_salvar = True
+
+    if precisa_salvar:
+        reg.detalhes_entregas = detalhes
+        flag_modified(reg, 'detalhes_entregas')
+        db.session.commit()
+
 @api_bp.route('/buscar/<string:termo_busca>', methods=['GET'])
 def buscar_retirada(termo_busca):
     termo = str(termo_busca).strip()
@@ -204,9 +234,11 @@ def buscar_retirada(termo_busca):
             ).first()
 
     if reg_dep:
+        sincronizar_detalhes_com_historico(reg_dep)
         return jsonify({'sucesso': True, 'dados': reg_dep.to_dict()}), 200
 
     if reg_jovem:
+        sincronizar_detalhes_com_historico(reg_jovem)
         return jsonify({'sucesso': True, 'dados': reg_jovem.to_dict()}), 200
 
     return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este termo.'}), 404
@@ -483,10 +515,21 @@ def editar_baixa_historico():
     if not log_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Registro de histórico não encontrado.'}), 404
 
+    reg = RetiradaDependente.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
+    if not reg:
+        reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
+
     modelo_antigo = log_baixa.modelo_baixa
-    if modelo_antigo == novo_modelo:
+
+    # Valida se o modelo já está alinhado tanto no histórico quanto no JSON do cartão
+    detalhes_atuais = reg.detalhes_entregas or {} if reg else {}
+    chave_item = f"kit_{log_baixa.index_kit}"
+    modelo_no_cartao = detalhes_atuais.get(chave_item, {}).get('modelo')
+
+    if modelo_antigo == novo_modelo and modelo_no_cartao == novo_modelo:
         return jsonify({'sucesso': True, 'mensagem': 'O modelo selecionado é idêntico ao atual.'}), 200
 
+    # 1. Validação de estoque para o novo modelo
     item_novo = EstoqueKit.query.filter_by(codigo_kit=novo_modelo, ativo=True).first()
     if not item_novo:
         return jsonify({'sucesso': False, 'mensagem': f'O modelo "{novo_modelo}" não possui cadastro ativo no estoque.'}), 400
@@ -495,19 +538,17 @@ def editar_baixa_historico():
     saidas = item_novo.quantidade_baixada or 0
     saldo_balcao = max(0, lote_total - saidas)
 
-    if saldo_balcao <= 0:
+    if modelo_antigo != novo_modelo and saldo_balcao <= 0:
         return jsonify({'sucesso': False, 'mensagem': f'Atenção! O modelo "{novo_modelo}" está esgotado no balcão (Saldo: 0 un).'}), 400
 
-    reg = RetiradaDependente.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
-    if not reg:
-        reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=log_baixa.codigo_retirada).first()
-
+    # 2. Atualização forçada do JSON em retiradas_dependentes / retiradas_jovens_aprendizes
     if reg:
-        detalhes = dict(reg.detalhes_entregas or {})
-        chave_item = f"kit_{log_baixa.index_kit}"
+        detalhes = copy.deepcopy(dict(reg.detalhes_entregas or {}))
         if chave_item in detalhes and isinstance(detalhes[chave_item], dict):
             detalhes[chave_item]['modelo'] = novo_modelo
+            detalhes[chave_item]['entregue'] = True
             reg.detalhes_entregas = detalhes
+            flag_modified(reg, 'detalhes_entregas')
 
         resumo_texto = str(getattr(reg, 'resumo_kits', '') or "")
         modelo_esperado = "---"
@@ -524,34 +565,36 @@ def editar_baixa_historico():
             log_baixa.divergencia_modelo = False
             log_baixa.modelo_esperado = None
 
-    item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
-    if item_antigo:
-        item_antigo.quantidade_baixada = max(0, (item_antigo.quantidade_baixada or 0) - 1)
-        mov_estorno = MovimentacaoEstoque(
-            id_estoque=item_antigo.id_estoque,
-            tipo_movimentacao='ESTORNO_CORRECAO',
+    # 3. Estorno e nova dedução de estoque apenas se o modelo físico foi alterado
+    if modelo_antigo != novo_modelo:
+        item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
+        if item_antigo:
+            item_antigo.quantidade_baixada = max(0, (item_antigo.quantidade_baixada or 0) - 1)
+            mov_estorno = MovimentacaoEstoque(
+                id_estoque=item_antigo.id_estoque,
+                tipo_movimentacao='ESTORNO_CORRECAO',
+                quantidade=1,
+                codigo_retirada=log_baixa.codigo_retirada,
+                observacao=f"Estorno por correção de histórico (Admin: {session.get('usuario_nome')})"
+            )
+            db.session.add(mov_estorno)
+
+        item_novo.quantidade_baixada = (item_novo.quantidade_baixada or 0) + 1
+        mov_saida = MovimentacaoEstoque(
+            id_estoque=item_novo.id_estoque,
+            tipo_movimentacao='SAIDA_CORRECAO',
             quantidade=1,
             codigo_retirada=log_baixa.codigo_retirada,
-            observacao=f"Estorno por correção de histórico (Admin: {session.get('usuario_nome')})"
+            observacao=f"Saída por alteração de kit no histórico de {modelo_antigo} para {novo_modelo}"
         )
-        db.session.add(mov_estorno)
-
-    item_novo.quantidade_baixada = (item_novo.quantidade_baixada or 0) + 1
-    mov_saida = MovimentacaoEstoque(
-        id_estoque=item_novo.id_estoque,
-        tipo_movimentacao='SAIDA_CORRECAO',
-        quantidade=1,
-        codigo_retirada=log_baixa.codigo_retirada,
-        observacao=f"Saída por alteração de kit no histórico de {modelo_antigo} para {novo_modelo}"
-    )
-    db.session.add(mov_saida)
+        db.session.add(mov_saida)
 
     db.session.commit()
     recalibrar_estoque()
 
     return jsonify({
         'sucesso': True,
-        'mensagem': f'Modelo alterado com sucesso de "{modelo_antigo}" para "{novo_modelo}"!'
+        'mensagem': f'Modelo alterado com sucesso para "{novo_modelo}"!'
     }), 200
 
 
