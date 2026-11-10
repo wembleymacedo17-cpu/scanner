@@ -35,13 +35,29 @@ def create_app():
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_size': 10,
-        'max_overflow': 20,
+
+    # Configuração Dinâmica e Adaptativa do Pool de Conexões (Supabase / AWS RDS)
+    pool_size = int(os.getenv('DB_POOL_SIZE', 5))
+    max_overflow = int(os.getenv('DB_MAX_OVERFLOW', 5))
+    pool_timeout = int(os.getenv('DB_POOL_TIMEOUT', 10))
+    lock_timeout_ms = int(os.getenv('DB_LOCK_TIMEOUT_MS', 4000))
+    statement_timeout_ms = int(os.getenv('DB_STATEMENT_TIMEOUT_MS', 10000))
+
+    engine_options = {
+        'pool_size': pool_size,
+        'max_overflow': max_overflow,
         'pool_recycle': 300,
         'pool_pre_ping': True,
-        'pool_timeout': 10
+        'pool_timeout': pool_timeout
     }
+
+    # Injeta timeouts de trava e execução em conexões PostgreSQL
+    if "postgresql" in database_url:
+        engine_options['connect_args'] = {
+            'options': f'-c lock_timeout={lock_timeout_ms}ms -c statement_timeout={statement_timeout_ms}ms'
+        }
+
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
     db.init_app(app)
 
