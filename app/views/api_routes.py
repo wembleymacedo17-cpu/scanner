@@ -20,15 +20,23 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/logout', methods=['POST', 'GET'])
 def logout_api():
-    """Invalida a sessão ativa do usuário no banco e limpa a sessão local."""
+    """
+    Invalida a sessão ativa do usuário no banco APENAS se o token no banco
+    ainda pertencer a esta sessão (evitando apagar o login de outro dispositivo).
+    """
     user_id = session.get('usuario_id')
-    if user_id:
+    token_local = session.get('session_token')
+
+    if user_id and token_local:
         user = Usuario.query.get(user_id)
-        if user:
+        # Só zera o token no banco se ele ainda for o token deste dispositivo!
+        if user and user.session_token == token_local:
             user.session_token = None
             db.session.commit()
+
     session.clear()
     return jsonify({'sucesso': True, 'mensagem': 'Sessão encerrada com sucesso.'}), 200
+
 
 def extrair_nomes_dependentes(resumo_str):
     """Auxiliar para extrair apenas os nomes dos dependentes para o autocomplete."""
@@ -1061,6 +1069,9 @@ def validar_senha_admin():
 
 @api_bp.route('/verificar-sessao', methods=['GET'])
 def verificar_sessao_ativa():
+    """
+    Heartbeat em tempo real: verifica se outro dispositivo assumiu a conta.
+    """
     user_id = session.get('usuario_id')
     token_local = session.get('session_token')
 
@@ -1072,9 +1083,10 @@ def verificar_sessao_ativa():
         }), 401
 
     user = Usuario.query.get(user_id)
-    # Só desconecta se o usuário existir e o token no banco for comprovadamente diferente
-    if user and user.ativo and user.session_token and user.session_token != token_local:
-        session.clear()
+    
+    # Se o token no banco existe e é DIFERENTE do meu token local, outro login ocorreu
+    if user and user.session_token and user.session_token != token_local:
+        session.clear()  # Limpa apenas a sessão local, NUNCA mexe no banco!
         return jsonify({
             'sucesso': False,
             'sessao_expirada': True,

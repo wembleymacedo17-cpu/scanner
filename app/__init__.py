@@ -78,11 +78,11 @@ def create_app():
             agora = time.time()
             ultima_checagem = session.get('ultimo_check_sessao', 0)
 
-            # Checa no banco com intervalo de 5 segundos
+            # Checa o banco com intervalo mínimo de 5 segundos
             if (agora - ultima_checagem) > 5:
                 user = Usuario.query.get(user_id)
-                # Só derruba se o usuário existe, está ativo e o token no banco realmente divergiu
-                if user and user.ativo and user.session_token and user.session_token != token_local:
+                # Se o token no banco mudou, apenas limpa a sessão local sem alterar o banco
+                if user and user.session_token and user.session_token != token_local:
                     session.clear()
                     if request.path.startswith('/api/'):
                         return jsonify({
@@ -107,11 +107,15 @@ def create_app():
     @app.route('/logout')
     def logout():
         user_id = session.get('usuario_id')
-        if user_id:
+        token_local = session.get('session_token')
+
+        if user_id and token_local:
             user = Usuario.query.get(user_id)
-            if user:
+            # Só limpa o banco se o token for o do próprio dispositivo saindo
+            if user and user.session_token == token_local:
                 user.session_token = None
                 db.session.commit()
+
         session.clear()
         return redirect(url_for('login_page'))
 
