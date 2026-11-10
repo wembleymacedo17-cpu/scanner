@@ -5,21 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Retirada de Kits Escolares</title>
     <script>
-        // Trava Anti-Iframe Inteligente: Se a página de login tentar carregar dentro do iframe
-        // (ex: sessão derrubada ao clicar num menu), dispara o modal de 30s da janela principal.
+        // Se a página de login cair dentro do iframe, redireciona a janela inteira limpa
         if (window.top !== window.self) {
-            try {
-                if (typeof window.top.exibirModalSessao === 'function') {
-                    window.top.exibirModalSessao(
-                        "Acesso Simultâneo Detectado",
-                        "Sua conta foi conectada em outro dispositivo. Por segurança, esta sessão será encerrada."
-                    );
-                } else {
-                    window.top.location.href = window.location.href;
-                }
-            } catch (e) {
-                window.top.location.href = window.location.href;
-            }
+            window.top.location.href = window.location.href;
         }
     </script>
     <style>

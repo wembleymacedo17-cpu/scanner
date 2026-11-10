@@ -1061,22 +1061,19 @@ def validar_senha_admin():
 
 @api_bp.route('/verificar-sessao', methods=['GET'])
 def verificar_sessao_ativa():
-    """
-    Heartbeat em tempo real: consulta o banco para derrubar 
-    imediatamente caso outro dispositivo tenha logado.
-    """
     user_id = session.get('usuario_id')
     token_local = session.get('session_token')
 
     if not user_id or not token_local:
         return jsonify({
             'sucesso': False,
-            'sessao_expirada': True,
-            'mensagem': 'Sua conta foi desconectada.'
+            'sessao_expirada': False,
+            'mensagem': 'Sessão não identificada.'
         }), 401
 
     user = Usuario.query.get(user_id)
-    if not user or not user.ativo or user.session_token != token_local:
+    # Só desconecta se o usuário existir e o token no banco for comprovadamente diferente
+    if user and user.ativo and user.session_token and user.session_token != token_local:
         session.clear()
         return jsonify({
             'sucesso': False,
