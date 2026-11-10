@@ -116,18 +116,19 @@ def main():
     print(f"   Cartão 1: {cod1}")
     print(f"   Cartão 2: {cod2}")
 
+    # No teste_concorrencia.py, aponte os dois payloads para o MESMO CARTÃO:
     payload_op1 = {
-        "codigo_retirada": cod1,
+        "codigo_retirada": cod1,  # Mesmo código
         "index_kit": 0,
-        "modelo_baixa": MODELO_TESTE,
-        "nome_dependente": "Filho Operador A"
+        "modelo_baixa": "Borboleta",
+        "nome_dependente": "Filho A"
     }
 
     payload_op2 = {
-        "codigo_retirada": cod2,
+        "codigo_retirada": cod1,  # Mesmo código!
         "index_kit": 0,
-        "modelo_baixa": MODELO_TESTE,
-        "nome_dependente": "Filho Operador B"
+        "modelo_baixa": "Borboleta",
+        "nome_dependente": "Filho B"
     }
 
     print(f"\n5. Disparando baixas concorrentes simultâneas para '{MODELO_TESTE}'...")

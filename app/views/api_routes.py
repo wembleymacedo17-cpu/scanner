@@ -7,6 +7,9 @@ from io import StringIO
 import csv
 import time
 import re
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
+
+
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -239,6 +242,8 @@ def buscar_retirada(termo_busca):
 
 
 
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
+
 @api_bp.route('/dar-baixa-item', methods=['POST'])
 def dar_baixa_item():
     data = request.json or {}
@@ -256,171 +261,185 @@ def dar_baixa_item():
     if modelo_baixa == '---' or not modelo_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
 
-    # 1. Localização com BLOQUEIO PESSIMISTA no registro do beneficiário
-    # Garante que dois celulares lendo o mesmo QR Code fiquem em fila e não dupliquem a entrega
-    reg = (
-        RetiradaDependente.query
-        .filter_by(codigo_retirada=codigo_str)
-        .with_for_update()
-        .first()
-    )
-    tipo_pub = 'Dependente'
-    if not reg:
+    try:
+        # 1. Localização com BLOQUEIO PESSIMISTA no registro do beneficiário
         reg = (
-            RetiradaJovemAprendiz.query
+            RetiradaDependente.query
             .filter_by(codigo_retirada=codigo_str)
             .with_for_update()
             .first()
         )
-        tipo_pub = 'Jovem Aprendiz'
-
-    if not reg:
-        db.session.rollback()
-        return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
-
-    # Validação antecipada de duplicidade no mesmo cartão
-    chave_item = f"kit_{index_kit}"
-    detalhes = dict(reg.detalhes_entregas or {})
-    if detalhes.get(chave_item, {}).get('entregue') is True:
-        db.session.rollback()
-        return jsonify({
-            'sucesso': False, 
-            'mensagem': f'Atenção! Este kit ({index_kit + 1}) já consta como ENTREGUE no sistema.'
-        }), 409
-
-    # 2. Verificação de estoque físico com BLOQUEIO PESSIMISTA (SELECT ... FOR UPDATE)
-    item_est = (
-        EstoqueKit.query
-        .filter_by(codigo_kit=modelo_baixa, ativo=True)
-        .with_for_update()
-        .first()
-    )
-
-    if not item_est:
-        db.session.rollback()
-        return jsonify({
-            'sucesso': False, 
-            'mensagem': f'O modelo "{modelo_baixa}" ainda não possui entrada cadastrada no estoque!'
-        }), 400
-
-    lote_total = item_est.quantidade_disponivel or 0
-    saidas = item_est.quantidade_baixada or 0
-    saldo_balcao = max(0, lote_total - saidas)
-
-    resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
-    is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
-
-    # Identificação do modelo esperado para este dependente
-    modelo_esperado = "---"
-    if not is_orfeo:
-        partes = resumo_beneficiario.split('|')
-        texto_item = partes[index_kit] if index_kit < len(partes) else resumo_beneficiario
-        for m in MODELOS_OFICIAIS:
-            if re.search(r'\b' + re.escape(m) + r'\b', texto_item, re.IGNORECASE):
-                modelo_esperado = m
-                break
-        if modelo_esperado == "---":
-            for m in MODELOS_OFICIAIS:
-                if re.search(r'\b' + re.escape(m) + r'\b', resumo_beneficiario, re.IGNORECASE):
-                    modelo_esperado = m
-                    break
-
-    # Validação de regras de reserva vs sobra com liberação imediata (rollback) em caso de saldo zerado
-    if not is_orfeo and modelo_esperado.lower() == modelo_baixa.lower():
-        if saldo_balcao <= 0:
-            db.session.rollback()
-            return jsonify({
-                'sucesso': False, 
-                'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
-            }), 409
-    else:
-        reserva = item_est.quantidade_reservada or 0
-        sobra_atual = saldo_balcao - reserva
-        if sobra_atual <= 0:
-            db.session.rollback()
-            return jsonify({
-                'sucesso': False, 
-                'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
-            }), 409
-
-    # 3. Atualização dos detalhes da entrega
-    detalhes[chave_item] = {
-        'entregue': True,
-        'modelo': modelo_baixa,
-        'nome_dependente': nome_dependente,
-        'data_entrega': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-
-    total_kits = reg.qtd_kits
-    qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') is True)
-
-    if qtd_entregues >= total_kits:
-        reg.status = 'ENTREGUE'
-    elif qtd_entregues > 0:
-        reg.status = 'ENTREGA PARCIAL'
-    else:
-        reg.status = 'PENDENTE'
-
-    reg.detalhes_entregas = detalhes
-    reg.data_entrega = datetime.now()
-
-    # 4. Auditoria de Divergência
-    tem_divergencia = (modelo_esperado != "---" and modelo_esperado.lower() != modelo_baixa.lower() and not is_orfeo)
-
-    nome_op = session.get('usuario_nome', 'Operador Desconhecido')
-    id_user = session.get('usuario_id')
-    nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
-
-    nome_completo_registro = nome_titular
-    if nome_dependente and nome_dependente != nome_titular:
-        nome_completo_registro = f"{nome_titular} — Filho: {nome_dependente}"
-
-    log_baixa = HistoricoBaixa(
-        id_usuario=id_user,
-        nome_operador=nome_op,
-        codigo_retirada=reg.codigo_retirada,
-        id_colaborador=reg.id_colaborador,
-        nome_beneficiario=nome_completo_registro,
-        tipo_publico=tipo_pub,
-        index_kit=index_kit,
-        modelo_baixa=modelo_baixa,
-        divergencia_modelo=tem_divergencia,
-        modelo_esperado=modelo_esperado if tem_divergencia else None
-    )
-    db.session.add(log_baixa)
-    
-    # 5. Balanço de estoque e liberação atômica de reservas
-    item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
-
-    mov = MovimentacaoEstoque(
-        id_estoque=item_est.id_estoque,
-        tipo_movimentacao='SAIDA_BAIXA',
-        quantidade=1,
-        codigo_retirada=reg.codigo_retirada,
-        observacao=f"Baixa presencial ({tipo_pub}) - Beneficiário: {nome_completo_registro}"
-    )
-    db.session.add(mov)
-
-    if not is_orfeo and modelo_esperado != "---":
-        if modelo_esperado.lower() == modelo_baixa.lower():
-            item_est.quantidade_reservada = max(0, (item_est.quantidade_reservada or 0) - 1)
-        else:
-            item_esperado = (
-                EstoqueKit.query
-                .filter_by(codigo_kit=modelo_esperado)
+        tipo_pub = 'Dependente'
+        if not reg:
+            reg = (
+                RetiradaJovemAprendiz.query
+                .filter_by(codigo_retirada=codigo_str)
                 .with_for_update()
                 .first()
             )
-            if item_esperado:
-                item_esperado.quantidade_reservada = max(0, (item_esperado.quantidade_reservada or 0) - 1)
+            tipo_pub = 'Jovem Aprendiz'
 
-    db.session.commit()
+        if not reg:
+            db.session.rollback()
+            return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
 
-    return jsonify({
-        'sucesso': True,
-        'mensagem': f'Kit {index_kit + 1} baixado com sucesso! (Modelo: {modelo_baixa})',
-        'dados': reg.to_dict()
-    }), 200   
+        # Validação antecipada de duplicidade no mesmo cartão
+        chave_item = f"kit_{index_kit}"
+        detalhes = dict(reg.detalhes_entregas or {})
+        if detalhes.get(chave_item, {}).get('entregue') is True:
+            db.session.rollback()
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'Atenção! Este kit ({index_kit + 1}) já consta como ENTREGUE no sistema.'
+            }), 409
+
+        # 2. Verificação de estoque físico com BLOQUEIO PESSIMISTA (SELECT ... FOR UPDATE)
+        item_est = (
+            EstoqueKit.query
+            .filter_by(codigo_kit=modelo_baixa, ativo=True)
+            .with_for_update()
+            .first()
+        )
+
+        if not item_est:
+            db.session.rollback()
+            return jsonify({
+                'sucesso': False, 
+                'mensagem': f'O modelo "{modelo_baixa}" ainda não possui entrada cadastrada no estoque!'
+            }), 400
+
+        lote_total = item_est.quantidade_disponivel or 0
+        saidas = item_est.quantidade_baixada or 0
+        saldo_balcao = max(0, lote_total - saidas)
+
+        resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
+        is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
+
+        # Identificação do modelo esperado para este dependente
+        modelo_esperado = "---"
+        if not is_orfeo:
+            partes = resumo_beneficiario.split('|')
+            texto_item = partes[index_kit] if index_kit < len(partes) else resumo_beneficiario
+            for m in MODELOS_OFICIAIS:
+                if re.search(r'\b' + re.escape(m) + r'\b', texto_item, re.IGNORECASE):
+                    modelo_esperado = m
+                    break
+            if modelo_esperado == "---":
+                for m in MODELOS_OFICIAIS:
+                    if re.search(r'\b' + re.escape(m) + r'\b', resumo_beneficiario, re.IGNORECASE):
+                        modelo_esperado = m
+                        break
+
+        # Validação de regras de reserva vs sobra com liberação imediata (rollback) em caso de saldo zerado
+        if not is_orfeo and modelo_esperado.lower() == modelo_baixa.lower():
+            if saldo_balcao <= 0:
+                db.session.rollback()
+                return jsonify({
+                    'sucesso': False, 
+                    'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
+                }), 409
+        else:
+            reserva = item_est.quantidade_reservada or 0
+            sobra_atual = saldo_balcao - reserva
+            if sobra_atual <= 0:
+                db.session.rollback()
+                return jsonify({
+                    'sucesso': False, 
+                    'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
+                }), 409
+
+        # 3. Atualização dos detalhes da entrega
+        detalhes[chave_item] = {
+            'entregue': True,
+            'modelo': modelo_baixa,
+            'nome_dependente': nome_dependente,
+            'data_entrega': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        total_kits = reg.qtd_kits
+        qtd_entregues = sum(1 for v in detalhes.values() if isinstance(v, dict) and v.get('entregue') is True)
+
+        if qtd_entregues >= total_kits:
+            reg.status = 'ENTREGUE'
+        elif qtd_entregues > 0:
+            reg.status = 'ENTREGA PARCIAL'
+        else:
+            reg.status = 'PENDENTE'
+
+        reg.detalhes_entregas = detalhes
+        reg.data_entrega = datetime.now()
+
+        # 4. Auditoria de Divergência
+        tem_divergencia = (modelo_esperado != "---" and modelo_esperado.lower() != modelo_baixa.lower() and not is_orfeo)
+
+        nome_op = session.get('usuario_nome', 'Operador Desconhecido')
+        id_user = session.get('usuario_id')
+        nome_titular = getattr(reg, 'nome_colaborador', None) or (reg.extrair_nome_jovem() if hasattr(reg, 'extrair_nome_jovem') else 'Beneficiário')
+
+        nome_completo_registro = nome_titular
+        if nome_dependente and nome_dependente != nome_titular:
+            nome_completo_registro = f"{nome_titular} — Filho: {nome_dependente}"
+
+        log_baixa = HistoricoBaixa(
+            id_usuario=id_user,
+            nome_operador=nome_op,
+            codigo_retirada=reg.codigo_retirada,
+            id_colaborador=reg.id_colaborador,
+            nome_beneficiario=nome_completo_registro,
+            tipo_publico=tipo_pub,
+            index_kit=index_kit,
+            modelo_baixa=modelo_baixa,
+            divergencia_modelo=tem_divergencia,
+            modelo_esperado=modelo_esperado if tem_divergencia else None
+        )
+        db.session.add(log_baixa)
+        
+        # 5. Balanço de estoque e liberação atômica de reservas
+        item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
+
+        mov = MovimentacaoEstoque(
+            id_estoque=item_est.id_estoque,
+            tipo_movimentacao='SAIDA_BAIXA',
+            quantidade=1,
+            codigo_retirada=reg.codigo_retirada,
+            observacao=f"Baixa presencial ({tipo_pub}) - Beneficiário: {nome_completo_registro}"
+        )
+        db.session.add(mov)
+
+        if not is_orfeo and modelo_esperado != "---":
+            if modelo_esperado.lower() == modelo_baixa.lower():
+                item_est.quantidade_reservada = max(0, (item_est.quantidade_reservada or 0) - 1)
+            else:
+                item_esperado = (
+                    EstoqueKit.query
+                    .filter_by(codigo_kit=modelo_esperado)
+                    .with_for_update()
+                    .first()
+                )
+                if item_esperado:
+                    item_esperado.quantidade_reservada = max(0, (item_esperado.quantidade_reservada or 0) - 1)
+
+        db.session.commit()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': f'Kit {index_kit + 1} baixado com sucesso! (Modelo: {modelo_baixa})',
+            'dados': reg.to_dict()
+        }), 200
+
+    except OperationalError:
+        db.session.rollback()
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'O sistema está ocupado processando este item no balcão. Por favor, tente novamente em instantes.'
+        }), 503
+
+    except SQLAlchemyError as err:
+        db.session.rollback()
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Ocorreu uma inconsistência no banco de dados. A operação foi cancelada com segurança.'
+        }), 500
 
 
 @api_bp.route('/historico-baixas', methods=['GET'])

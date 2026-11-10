@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import timedelta
 from flask import Flask, render_template, session, redirect, url_for, request, jsonify
 from dotenv import load_dotenv
 from app.models import db, Usuario
@@ -20,6 +21,11 @@ def create_app():
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.secret_key = os.getenv('SECRET_KEY', 'chave_secreta_funfarme_2026')
     
+    # Configurações de Segurança de Cookies de Sessão (Mitigação de XSS e CSRF)
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+    
     database_url = os.getenv('DATABASE_URL')
     if not database_url:
         raise ValueError(f"DATABASE_URL não configurada em: {env_path}")
@@ -33,7 +39,8 @@ def create_app():
         'pool_size': 10,
         'max_overflow': 20,
         'pool_recycle': 300,
-        'pool_pre_ping': True
+        'pool_pre_ping': True,
+        'pool_timeout': 10
     }
 
     db.init_app(app)
@@ -41,7 +48,7 @@ def create_app():
     # MIDDLEWARE GLOBAL (VALIDA SESSÃO ÚNICA EM ROTAS HTML E API)
     @app.before_request
     def verificar_sessao_global():
-        # Ignora arquivos estáticos e rotas públicas
+        # Ignora ficheiros estáticos e rotas públicas
         if request.endpoint in ['login_page', 'api.login_api', 'static']:
             return None
 
@@ -52,7 +59,7 @@ def create_app():
             agora = time.time()
             ultima_checagem = session.get('ultimo_check_sessao', 0)
 
-            # Checa o banco a cada 5 segundos para garantir resposta rápida
+            # Checa a base de dados a cada 5 segundos para garantir resposta rápida
             if (agora - ultima_checagem) > 5:
                 user = Usuario.query.get(user_id)
                 if not user or not user.ativo or user.session_token != token_local:
