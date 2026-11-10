@@ -14,38 +14,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
-# ==============================================================================
-# MIDDLEWARE ALTA PERFORMANCE DE SESSÃO ÚNICA (CACHE DE VALIDAÇÃO)
-# ==============================================================================
-@api_bp.before_app_request
-def verificar_sessao_unica():
-    """
-    Verifica se o token de sessão é válido.
-    Usa cache temporal (10s) na sessão do Flask para evitar queries repetitivas 
-    no banco de dados em cada chamada de API, eliminando a lentidão do sistema.
-    """
-    if request.endpoint == 'api.login_api':
-        return None
 
-    user_id = session.get('usuario_id')
-    token_sessao_local = session.get('session_token')
-
-    if user_id and token_sessao_local:
-        agora = time.time()
-        ultima_checagem = session.get('ultimo_check_sessao', 0)
-
-        if (agora - ultima_checagem) > 10:
-            user = Usuario.query.get(user_id)
-            
-            if not user or not user.ativo or user.session_token != token_sessao_local:
-                session.clear()
-                return jsonify({
-                    'sucesso': False,
-                    'sessao_expirada': True,
-                    'mensagem': 'Sua sessão foi encerrada pois sua conta foi conectada em outro dispositivo.'
-                }), 401
-
-            session['ultimo_check_sessao'] = agora
 
 
 @api_bp.route('/logout', methods=['POST', 'GET'])
@@ -102,6 +71,9 @@ def login_api():
 
     novo_token = user.gerar_novo_session_token()
     db.session.commit()
+
+    # ATIVA A DURAÇÃO DEFINIDA NO PERMANENT_SESSION_LIFETIME (8 HORAS)
+    session.permanent = True
 
     session['usuario_id'] = user.id_usuario
     session['usuario_nome'] = user.nome
@@ -240,9 +212,6 @@ def buscar_retirada(termo_busca):
     return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este termo.'}), 404
 
 
-
-
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 @api_bp.route('/dar-baixa-item', methods=['POST'])
 def dar_baixa_item():
@@ -1050,8 +1019,8 @@ def validar_senha_admin():
 @api_bp.route('/verificar-sessao', methods=['GET'])
 def verificar_sessao_ativa():
     """
-    Endpoint de heartbeat para o frontend detectar desconexão 
-    simultânea em tempo real.
+    Heartbeat em tempo real: consulta o banco para derrubar 
+    imediatamente caso outro dispositivo tenha logado.
     """
     user_id = session.get('usuario_id')
     token_local = session.get('session_token')
@@ -1060,7 +1029,16 @@ def verificar_sessao_ativa():
         return jsonify({
             'sucesso': False,
             'sessao_expirada': True,
-            'mensagem': 'Sua sessão foi encerrada pois sua conta foi conectada em outro dispositivo.'
+            'mensagem': 'Sua conta foi desconectada.'
+        }), 401
+
+    user = Usuario.query.get(user_id)
+    if not user or not user.ativo or user.session_token != token_local:
+        session.clear()
+        return jsonify({
+            'sucesso': False,
+            'sessao_expirada': True,
+            'mensagem': 'Sua sessão foi encerrada pois um novo login foi realizado em outro dispositivo.'
         }), 401
 
     return jsonify({'sucesso': True, 'ativa': True}), 200
