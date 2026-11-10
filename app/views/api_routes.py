@@ -237,6 +237,8 @@ def buscar_retirada(termo_busca):
     return jsonify({'sucesso': False, 'mensagem': 'Nenhum registro encontrado para este termo.'}), 404
 
 
+
+
 @api_bp.route('/dar-baixa-item', methods=['POST'])
 def dar_baixa_item():
     data = request.json or {}
@@ -254,19 +256,48 @@ def dar_baixa_item():
     if modelo_baixa == '---' or not modelo_baixa:
         return jsonify({'sucesso': False, 'mensagem': 'Selecione um modelo de kit válido antes de confirmar a entrega.'}), 400
 
-    # 1. Localização do registro
-    reg = RetiradaDependente.query.filter_by(codigo_retirada=codigo_str).first()
+    # 1. Localização com BLOQUEIO PESSIMISTA no registro do beneficiário
+    # Garante que dois celulares lendo o mesmo QR Code fiquem em fila e não dupliquem a entrega
+    reg = (
+        RetiradaDependente.query
+        .filter_by(codigo_retirada=codigo_str)
+        .with_for_update()
+        .first()
+    )
     tipo_pub = 'Dependente'
     if not reg:
-        reg = RetiradaJovemAprendiz.query.filter_by(codigo_retirada=codigo_str).first()
+        reg = (
+            RetiradaJovemAprendiz.query
+            .filter_by(codigo_retirada=codigo_str)
+            .with_for_update()
+            .first()
+        )
         tipo_pub = 'Jovem Aprendiz'
 
     if not reg:
+        db.session.rollback()
         return jsonify({'sucesso': False, 'mensagem': 'Registro de retirada não encontrado.'}), 404
 
-    # 2. Verificação de estoque físico do modelo entregue
-    item_est = EstoqueKit.query.filter_by(codigo_kit=modelo_baixa, ativo=True).first()
+    # Validação antecipada de duplicidade no mesmo cartão
+    chave_item = f"kit_{index_kit}"
+    detalhes = dict(reg.detalhes_entregas or {})
+    if detalhes.get(chave_item, {}).get('entregue') is True:
+        db.session.rollback()
+        return jsonify({
+            'sucesso': False, 
+            'mensagem': f'Atenção! Este kit ({index_kit + 1}) já consta como ENTREGUE no sistema.'
+        }), 409
+
+    # 2. Verificação de estoque físico com BLOQUEIO PESSIMISTA (SELECT ... FOR UPDATE)
+    item_est = (
+        EstoqueKit.query
+        .filter_by(codigo_kit=modelo_baixa, ativo=True)
+        .with_for_update()
+        .first()
+    )
+
     if not item_est:
+        db.session.rollback()
         return jsonify({
             'sucesso': False, 
             'mensagem': f'O modelo "{modelo_baixa}" ainda não possui entrada cadastrada no estoque!'
@@ -279,7 +310,7 @@ def dar_baixa_item():
     resumo_beneficiario = str(getattr(reg, 'resumo_kits', '') or "")
     is_orfeo = any(term in resumo_beneficiario.upper() for term in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
 
-    # Identificação precisa do modelo esperado para este dependente
+    # Identificação do modelo esperado para este dependente
     modelo_esperado = "---"
     if not is_orfeo:
         partes = resumo_beneficiario.split('|')
@@ -294,27 +325,25 @@ def dar_baixa_item():
                     modelo_esperado = m
                     break
 
-    # Validação de regras de reserva vs sobra
+    # Validação de regras de reserva vs sobra com liberação imediata (rollback) em caso de saldo zerado
     if not is_orfeo and modelo_esperado.lower() == modelo_baixa.lower():
         if saldo_balcao <= 0:
+            db.session.rollback()
             return jsonify({
                 'sucesso': False, 
                 'mensagem': f'Atenção! Não há mochilas do modelo "{modelo_baixa}" em estoque no balcão (Saldo: 0 un).'
-            }), 400
+            }), 409
     else:
         reserva = item_est.quantidade_reservada or 0
         sobra_atual = saldo_balcao - reserva
         if sobra_atual <= 0:
+            db.session.rollback()
             return jsonify({
                 'sucesso': False, 
                 'mensagem': f'Atenção! O modelo "{modelo_baixa}" está ESGOTADO para escolha presencial (Sobra: 0 un).'
-            }), 400
+            }), 409
 
     # 3. Atualização dos detalhes da entrega
-    detalhes = dict(reg.detalhes_entregas or {})
-    chave_item = f"kit_{index_kit}"
-    ja_entregue_antes = detalhes.get(chave_item, {}).get('entregue') is True
-
     detalhes[chave_item] = {
         'entregue': True,
         'modelo': modelo_baixa,
@@ -360,28 +389,30 @@ def dar_baixa_item():
     )
     db.session.add(log_baixa)
     
-    # 5. BALANÇO ATÔMICO INSTANTÂNEO DE ESTOQUE (< 5ms)
-    if not ja_entregue_antes:
-        # Registra saída física do modelo efetivamente entregue
-        item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
+    # 5. Balanço de estoque e liberação atômica de reservas
+    item_est.quantidade_baixada = (item_est.quantidade_baixada or 0) + 1
 
-        mov = MovimentacaoEstoque(
-            id_estoque=item_est.id_estoque,
-            tipo_movimentacao='SAIDA_BAIXA',
-            quantidade=1,
-            codigo_retirada=reg.codigo_retirada,
-            observacao=f"Baixa presencial ({tipo_pub}) - Beneficiário: {nome_completo_registro}"
-        )
-        db.session.add(mov)
+    mov = MovimentacaoEstoque(
+        id_estoque=item_est.id_estoque,
+        tipo_movimentacao='SAIDA_BAIXA',
+        quantidade=1,
+        codigo_retirada=reg.codigo_retirada,
+        observacao=f"Baixa presencial ({tipo_pub}) - Beneficiário: {nome_completo_registro}"
+    )
+    db.session.add(mov)
 
-        # Liberação da reserva original do aluno (pois ele já retirou o kit)
-        if not is_orfeo and modelo_esperado != "---":
-            if modelo_esperado.lower() == modelo_baixa.lower():
-                item_est.quantidade_reservada = max(0, (item_est.quantidade_reservada or 0) - 1)
-            else:
-                item_esperado = EstoqueKit.query.filter_by(codigo_kit=modelo_esperado).first()
-                if item_esperado:
-                    item_esperado.quantidade_reservada = max(0, (item_esperado.quantidade_reservada or 0) - 1)
+    if not is_orfeo and modelo_esperado != "---":
+        if modelo_esperado.lower() == modelo_baixa.lower():
+            item_est.quantidade_reservada = max(0, (item_est.quantidade_reservada or 0) - 1)
+        else:
+            item_esperado = (
+                EstoqueKit.query
+                .filter_by(codigo_kit=modelo_esperado)
+                .with_for_update()
+                .first()
+            )
+            if item_esperado:
+                item_esperado.quantidade_reservada = max(0, (item_esperado.quantidade_reservada or 0) - 1)
 
     db.session.commit()
 
@@ -389,7 +420,7 @@ def dar_baixa_item():
         'sucesso': True,
         'mensagem': f'Kit {index_kit + 1} baixado com sucesso! (Modelo: {modelo_baixa})',
         'dados': reg.to_dict()
-    }), 200
+    }), 200   
 
 
 @api_bp.route('/historico-baixas', methods=['GET'])
