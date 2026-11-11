@@ -163,7 +163,7 @@
             100% { transform: translateX(100%); }
         }
 
-        /* BOTÃO DE EXPORTAÇÃO NOVO - PADRÃO SVG CORPORATIVO */
+        /* BOTÃO DE EXPORTAÇÃO PADRÃO SVG CORPORATIVO */
         .btn-export-svg {
             background: #ffffff;
             color: #334155;
@@ -236,6 +236,7 @@
         .tr-clicavel { cursor: pointer; transition: background 0.15s ease-in-out; }
         .tr-clicavel:hover { background-color: #f0f9ff !important; }
 
+        /* BADGES DE OPERAÇÃO E ESTOQUE */
         .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-block; }
         .badge-saida:hover { background: #bae6fd; }
         
@@ -243,6 +244,45 @@
         .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-inativo { background: #cbd5e1; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        
+        /* DESTAQUE EM VERMELHO PARA REVOGACAO_ADMIN */
+        .badge-revogacao-admin {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fecaca;
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.76rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* SEPARADOR VISUAL DE DIAS NO RELATÓRIO */
+        .tr-data-divider {
+            background: #f1f5f9 !important;
+            border-top: 2px solid #cbd5e1;
+            border-bottom: 2px solid #cbd5e1;
+        }
+        .tr-data-divider td {
+            padding: 8px 14px !important;
+            font-size: 0.8rem !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-divider-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: #0f172a;
+        }
 
         .cell-modelo-link { display: inline-flex; align-items: center; gap: 6px; }
         .cell-modelo-link svg { color: #64748b; transition: color 0.2s; }
@@ -271,7 +311,7 @@
         }
 
         .modal-estratificado-card {
-            max-width: 880px !important;
+            max-width: 920px !important;
             max-height: 88vh;
             display: flex;
             flex-direction: column;
@@ -305,7 +345,7 @@
 
         .modal-body-scroll {
             overflow-y: auto;
-            max-height: 50vh;
+            max-height: 54vh;
         }
 
         .modal-actions {
@@ -453,7 +493,7 @@
         </div>
     </div>
 
-    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA VIA EXCEL (COM BARRA DE PROGRESSO DINÂMICA) -->
+    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA VIA EXCEL -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-auto">
         <div class="custom-modal-card">
             <div class="modal-header-estrat">
@@ -467,7 +507,6 @@
             <form id="form-entrada-auto" onsubmit="processarEntradaAutomatica(event)">
                 <input type="file" id="input-excel-file" accept=".xlsx, .xls" style="display: none;" onchange="atualizarNomeArquivoUpload(this)" />
                 
-                <!-- Área de Seleção de Arquivo -->
                 <div id="dropzone-area" class="upload-dropzone" onclick="document.getElementById('input-excel-file').click()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -478,11 +517,10 @@
                     <p style="font-size: 0.78rem; color: #64748b;">A planilha deve conter as colunas: <strong>Nome</strong> e <strong>Quantidade</strong></p>
                 </div>
 
-                <!-- Painel da Barra de Progresso (Oculto inicialmente) -->
+                <!-- Painel da Barra de Progresso Dinâmica -->
                 <div id="container-progresso-auto" class="progress-box-auto hidden">
                     <div class="progress-header">
                         <span id="txt-progresso-status" class="progress-status-text">
-                            <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
                             Iniciando processamento...
                         </span>
                         <span id="txt-progresso-pct" class="progress-percent">0%</span>
@@ -503,24 +541,24 @@
         </div>
     </div>
 
-    <!-- 3. MODAL DE RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE -->
+    <!-- 3. MODAL DE RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE (COM AGRUPAMENTO DE DIAS E FILTRO COMPLETO) -->
     <div class="custom-modal-overlay hidden" id="modal-relatorio-movimentacoes">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
                 <div>
                     <h3 style="font-size: 1.15rem; color: #0f172a;">Relatório de Movimentações de Estoque</h3>
-                    <p style="font-size: 0.8rem; color: #64748b;">Registro auditado de entradas, saídas, estornos e ajustes</p>
+                    <p style="font-size: 0.8rem; color: #64748b;">Registro auditado por linha cronológica de dias</p>
                 </div>
                 <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalRelatorio()">✕</span>
             </div>
 
             <div class="modal-filter-bar">
-                <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Filtrar por modelo, tipo de movimentação ou observação..." oninput="filtrarTabelaMovimentacoes()" />
+                <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Pesquisar por data (ex: 11/11), modelo, tipo ou observação..." oninput="filtrarTabelaMovimentacoes()" />
                 <a id="btn-export-csv-movi" href="/api/estoque/exportar-movimentacoes" target="_blank" class="btn-export-svg">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     Exportar Relatório
                 </a>
@@ -530,10 +568,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Data / Hora</th>
-                            <th>Modelo Kit</th>
-                            <th>Tipo de Operação</th>
-                            <th style="text-align: center;">Quantidade</th>
+                            <th style="width: 95px;">Hora</th>
+                            <th style="width: 140px;">Modelo Kit</th>
+                            <th style="width: 170px;">Tipo de Operação</th>
+                            <th style="text-align: center; width: 110px;">Quantidade</th>
                             <th>Observação / Responsável</th>
                         </tr>
                     </thead>
@@ -566,7 +604,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     Exportar Extrato
                 </a>
@@ -827,7 +865,7 @@
 
                     for (let e of etapas) {
                         if (pct <= e.limite) {
-                            txtStatus.innerHTML = `<svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> ${e.texto}`;
+                            txtStatus.innerHTML = `${e.texto}`;
                             break;
                         }
                     }
@@ -866,7 +904,7 @@
                     barFill.style.width = "100%";
                     txtPct.innerText = "100%";
                     barFill.style.background = "#22c55e";
-                    txtStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Estoque atualizado com sucesso!`;
+                    txtStatus.innerHTML = `Estoque atualizado com sucesso!`;
 
                     setTimeout(async () => {
                         mostrarToast(data.mensagem, "success");
@@ -918,6 +956,7 @@
             }
         }
 
+        /* 4. RENDERIZAÇÃO COM DIVISÃO VISUAL POR DIA E SINAIS (+ / -) CORRETOS */
         function renderizarTabelaMovimentacoes(lista) {
             const tbody = document.getElementById("tabela-movi-body");
             tbody.innerHTML = "";
@@ -927,25 +966,76 @@
                 return;
             }
 
+            let diaAnterior = null;
+
             lista.forEach(m => {
+                const dataHoraRaw = m.data_movimentacao || '';
+                const partes = dataHoraRaw.split(' ');
+                const dataApenas = partes[0] || 'Sem Data';
+                const horaApenas = partes[1] || dataHoraRaw;
+
+                // Divisor de dia com cabeçalho visual timeline
+                if (dataApenas !== diaAnterior) {
+                    diaAnterior = dataApenas;
+                    const trDivider = document.createElement("tr");
+                    trDivider.className = "tr-data-divider";
+                    trDivider.innerHTML = `
+                        <td colspan="5">
+                            <span class="data-divider-badge">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                Movimentações de ${dataApenas}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(trDivider);
+                }
+
                 const tr = document.createElement("tr");
 
-                let badgeTipo = "badge-saida";
-                if (m.tipo_movimentacao === 'ENTRADA' || m.tipo_movimentacao === 'ENTRADA_AUTO') badgeTipo = "badge-sobra";
-                else if (m.tipo_movimentacao === 'ESTORNO_CORRECAO' || m.tipo_movimentacao === 'REVOGACAO_ADMIN') badgeTipo = "badge-reserva";
-                else if (m.tipo_movimentacao === 'INATIVACAO') badgeTipo = "badge-esgotado";
+                // 1 & 3: Lógica dos sinais matemáticos (+ para entrada, - para saídas) e badges
+                let badgeClass = "badge-saida";
+                let sinalQtd = "+";
+                let corQtd = "#16a34a"; // verde positivo
+
+                const tipoUpper = (m.tipo_movimentacao || '').toUpperCase();
+
+                if (tipoUpper === 'REVOGACAO_ADMIN') {
+                    badgeClass = "badge-revogacao-admin";
+                    sinalQtd = "+";
+                    corQtd = "#16a34a";
+                } else if (tipoUpper === 'SAIDA_BAIXA' || tipoUpper === 'SAIDA_CORRECAO') {
+                    badgeClass = "badge-saida";
+                    sinalQtd = "-";
+                    corQtd = "#dc2626"; // vermelho negativo
+                } else if (tipoUpper === 'ENTRADA' || tipoUpper === 'ENTRADA_AUTO') {
+                    badgeClass = "badge-sobra";
+                    sinalQtd = "+";
+                    corQtd = "#16a34a";
+                } else if (tipoUpper === 'ESTORNO_CORRECAO') {
+                    badgeClass = "badge-reserva";
+                    sinalQtd = "+";
+                    corQtd = "#16a34a";
+                } else if (tipoUpper === 'INATIVACAO') {
+                    badgeClass = "badge-esgotado";
+                    sinalQtd = "";
+                    corQtd = "#64748b";
+                }
+
+                const valorAbs = Math.abs(m.quantidade || 0);
+                const qtdTexto = sinalQtd ? `${sinalQtd}${valorAbs} und` : `${valorAbs} und`;
 
                 tr.innerHTML = `
-                    <td><small>${m.data_movimentacao || '---'}</small></td>
+                    <td><small style="font-weight: 600; color: #475569;">${horaApenas}</small></td>
                     <td><strong>${m.codigo_kit || '---'}</strong></td>
-                    <td><span class="${badgeTipo}">${m.tipo_movimentacao}</span></td>
-                    <td style="text-align: center;"><strong>${m.quantidade > 0 ? '+' + m.quantidade : m.quantidade} und</strong></td>
-                    <td>${m.observacao || '---'}</td>
+                    <td><span class="${badgeClass}">${m.tipo_movimentacao}</span></td>
+                    <td style="text-align: center;"><strong style="color: ${corQtd};">${qtdTexto}</strong></td>
+                    <td style="font-size: 0.82rem; color: #334155;">${m.observacao || '---'}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        /* 4. FILTRAGEM POR DATA (ex: 11/11), MODELO, TIPO OU OBSERVAÇÃO */
         function filtrarTabelaMovimentacoes() {
             const termo = document.getElementById("input-filtro-movi").value.toLowerCase().trim();
             if (!termo) {
@@ -954,10 +1044,12 @@
             }
 
             const filtrados = dadosMovimentacoesAtuais.filter(m => {
+                const dataHora = (m.data_movimentacao || "").toLowerCase();
                 const mod = (m.codigo_kit || "").toLowerCase();
                 const tipo = (m.tipo_movimentacao || "").toLowerCase();
                 const obs = (m.observacao || "").toLowerCase();
-                return mod.includes(termo) || tipo.includes(termo) || obs.includes(termo);
+
+                return dataHora.includes(termo) || mod.includes(termo) || tipo.includes(termo) || obs.includes(termo);
             });
 
             renderizarTabelaMovimentacoes(filtrados);

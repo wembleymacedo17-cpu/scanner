@@ -587,7 +587,11 @@ def editar_baixa_historico():
     if modelo_antigo != novo_modelo and saldo_balcao <= 0:
         return jsonify({'sucesso': False, 'mensagem': f'Atenção! O modelo "{novo_modelo}" está esgotado no balcão (Saldo: 0 un).'}), 400
 
-    # 2. Atualização forçada do JSON em retiradas_dependentes / retiradas_jovens_aprendizes
+    # 2. Identificação do usuário e perfil da sessão ativa
+    nome_admin = session.get('usuario_nome', 'Administrador')
+    perfil_admin = session.get('usuario_perfil', 'ADMIN')
+
+    # 3. Atualização forçada do JSON em retiradas
     if reg:
         detalhes = copy.deepcopy(dict(reg.detalhes_entregas or {}))
         if chave_item in detalhes and isinstance(detalhes[chave_item], dict):
@@ -611,7 +615,7 @@ def editar_baixa_historico():
             log_baixa.divergencia_modelo = False
             log_baixa.modelo_esperado = None
 
-    # 3. Estorno e nova dedução de estoque apenas se o modelo físico foi alterado
+    # 4. Estorno e nova dedução auditada no estoque
     if modelo_antigo != novo_modelo:
         item_antigo = EstoqueKit.query.filter_by(codigo_kit=modelo_antigo).first()
         if item_antigo:
@@ -621,7 +625,7 @@ def editar_baixa_historico():
                 tipo_movimentacao='ESTORNO_CORRECAO',
                 quantidade=1,
                 codigo_retirada=log_baixa.codigo_retirada,
-                observacao=f"Estorno por correção de histórico (Admin: {session.get('usuario_nome')})"
+                observacao=f"Estorno por correção de histórico ({perfil_admin}: {nome_admin})"
             )
             db.session.add(mov_estorno)
 
@@ -631,7 +635,7 @@ def editar_baixa_historico():
             tipo_movimentacao='SAIDA_CORRECAO',
             quantidade=1,
             codigo_retirada=log_baixa.codigo_retirada,
-            observacao=f"Saída por alteração de kit no histórico de {modelo_antigo} para {novo_modelo}"
+            observacao=f"Saída por alteração de kit no histórico de {modelo_antigo} para {novo_modelo} ({perfil_admin}: {nome_admin})"
         )
         db.session.add(mov_saida)
 
@@ -642,7 +646,6 @@ def editar_baixa_historico():
         'sucesso': True,
         'mensagem': f'Modelo alterado com sucesso para "{novo_modelo}"!'
     }), 200
-
 
 @api_bp.route('/revogar-baixa-historico', methods=['POST'])
 def revogar_baixa_historico():
