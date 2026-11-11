@@ -11,15 +11,69 @@
         .card-stat { background: #ffffff; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
         .card-stat h4 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.3px; }
         .card-stat .value { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
-        
-        .form-entrada-box { background: #ffffff; border-radius: 12px; padding: 18px 20px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
-        .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-        .form-group-item { flex: 1; min-width: 160px; }
-        .form-group-item label { display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px; }
-        .form-group-item input, .form-group-item select { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none; }
-        
-        .btn-add-estoque { background: #0284c7; color: #ffffff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-add-estoque:hover { background: #0369a1; }
+
+        /* MENU INTERNO DE OPERAÇÕES DO ESTOQUE (BOTÕES VETORIZADOS) */
+        .estoque-menu-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-menu-estoque {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 10px 18px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        }
+
+        .btn-menu-estoque svg {
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+            stroke-width: 2.2;
+        }
+
+        .btn-menu-estoque:hover {
+            background: #f8fafc;
+            border-color: #0284c7;
+            color: #0284c7;
+            transform: translateY(-1px);
+        }
+
+        .form-group-item {
+            margin-bottom: 14px;
+        }
+        .form-group-item label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        .form-group-item input, .form-group-item select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            outline: none;
+            box-sizing: border-box;
+            background: #ffffff;
+        }
+        .form-group-item input:focus, .form-group-item select:focus {
+            border-color: #0284c7;
+        }
 
         /* BOTÕES COMPACTOS APENAS COM ÍCONE */
         .btn-icon-only {
@@ -46,7 +100,7 @@
 
         .tr-inativo { background-color: #f8fafc !important; opacity: 0.65; }
 
-        /* OTIMIZAÇÃO DA TABELA PARA NÃO GERAR ROLAGEM HORIZONTAL EM DESKTOP */
+        /* TABELA DE ESTOQUE */
         .table-container { 
             background: #ffffff; 
             border-radius: 12px; 
@@ -93,13 +147,13 @@
             border-radius: 16px;
             padding: 24px;
             width: 90%;
-            max-width: 400px;
+            max-width: 440px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             position: relative;
         }
 
         .modal-estratificado-card {
-            max-width: 850px !important;
+            max-width: 880px !important;
             max-height: 88vh;
             display: flex;
             flex-direction: column;
@@ -166,21 +220,26 @@
             background: #f1f5f9;
             color: #475569;
             border: 1px solid #cbd5e1;
-            padding: 8px 14px;
+            padding: 9px 16px;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
         }
+        .btn-modal-cancel:hover, .btn-voltar-modal:hover { background: #e2e8f0; }
 
         .btn-modal-confirm, .btn-confirm-action {
             background: #0284c7;
             color: #ffffff;
             border: none;
-            padding: 8px 16px;
+            padding: 9px 18px;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
+        .btn-modal-confirm:hover, .btn-confirm-action:hover { background: #0369a1; }
 
         .modal-alert {
             padding: 8px 12px;
@@ -194,7 +253,7 @@
 
         .hidden { display: none !important; }
 
-        /* TOAST */
+        /* TOAST NOTIFICAÇÃO */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
         .toast-card { background: #0f172a; color: #ffffff; padding: 14px 18px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-left: 4px solid #0284c7; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
         .toast-card.success { border-left-color: #22c55e; }
@@ -204,7 +263,109 @@
 <body>
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS -->
+    <!-- 1. MODAL DE ENTRADA MANUAL -->
+    <div class="custom-modal-overlay hidden" id="modal-entrada-manual">
+        <div class="custom-modal-card">
+            <div class="modal-header-estrat">
+                <div>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;">Entrada Manual de Lote</h3>
+                    <p style="font-size: 0.8rem; color: #64748b;">Dê entrada física de mochilas por modelo</p>
+                </div>
+                <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalEntradaManual()">✕</span>
+            </div>
+
+            <form id="form-entrada" onsubmit="adicionarEntradaEstoque(event)">
+                <div class="form-group-item">
+                    <label>Modelo do Kit</label>
+                    <select id="select-modelo-kit" required></select>
+                </div>
+
+                <div class="form-group-item">
+                    <label>Quantidade Recebida</label>
+                    <input type="number" id="input-qtd" min="1" placeholder="Ex: 300" required />
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-cancel" onclick="fecharModalEntradaManual()">Cancelar</button>
+                    <button type="submit" id="btn-submit-entrada" class="btn-modal-confirm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Dar Entrada
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA -->
+    <div class="custom-modal-overlay hidden" id="modal-entrada-auto">
+        <div class="custom-modal-card">
+            <div class="modal-header-estrat">
+                <div>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;">Entrada Automática de Lote</h3>
+                    <p style="font-size: 0.8rem; color: #64748b;">Carga automática ou importação em lote</p>
+                </div>
+                <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalEntradaAuto()">✕</span>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; margin: 10px 0 16px 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Módulo de Entrada Automática</p>
+                <p style="font-size: 0.8rem; color: #64748b;">Pronto para receber o arquivo de importação ou execução em massa.</p>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalEntradaAuto()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MODAL DE RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE -->
+    <div class="custom-modal-overlay hidden" id="modal-relatorio-movimentacoes">
+        <div class="custom-modal-card modal-estratificado-card">
+            <div class="modal-header-estrat">
+                <div>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;">Relatório de Movimentações de Estoque</h3>
+                    <p style="font-size: 0.8rem; color: #64748b;">Registro auditado de entradas, saídas, estornos e ajustes</p>
+                </div>
+                <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalRelatorio()">✕</span>
+            </div>
+
+            <div class="modal-filter-bar">
+                <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Filtrar por modelo, tipo de movimentação ou observação..." oninput="filtrarTabelaMovimentacoes()" />
+                <a id="btn-export-csv-movi" href="/api/estoque/exportar-movimentacoes" target="_blank" class="btn-export-excel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Exportar Relatório
+                </a>
+            </div>
+
+            <div class="modal-body-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data / Hora</th>
+                            <th>Modelo Kit</th>
+                            <th>Tipo de Operação</th>
+                            <th style="text-align: center;">Quantidade</th>
+                            <th>Observação / Responsável</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-movi-body">
+                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #64748b;">Carregando histórico de movimentações...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalRelatorio()">Fechar Relatório</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS (AO CLICAR NA LINHA DA TABELA) -->
     <div class="custom-modal-overlay hidden" id="modal-estratificado">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
@@ -245,7 +406,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE AJUSTE DE ESTOQUE -->
+    <!-- MODAL DE AJUSTE MANUAL DE SALDO -->
     <div class="custom-modal-overlay hidden" id="modal-ajuste">
         <div class="custom-modal-card">
             <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Saldo Físico (Balcão)</h3>
@@ -316,27 +477,35 @@
             </div>
         </div>
 
-        <!-- FORMULÁRIO ENTRADA -->
-        <div class="form-entrada-box">
-            <h3 style="font-size: 1rem; color: #1e293b; margin-bottom: 14px;">Dar Entrada de Lote / Mochilas</h3>
-            <form id="form-entrada" onsubmit="adicionarEntradaEstoque(event)">
-                <div class="form-row">
-                    <div class="form-group-item">
-                        <label>Modelo do Kit</label>
-                        <select id="select-modelo-kit" required></select>
-                    </div>
+        <!-- MENU SUPERIOR DO ESTOQUE (INICIA SEM NENHUM SELECIONADO) -->
+        <div class="estoque-menu-bar">
+            <button type="button" class="btn-menu-estoque" onclick="abrirModalEntradaManual()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                + Entrada Manual
+            </button>
 
-                    <div class="form-group-item">
-                        <label>Quantidade Recebida</label>
-                        <input type="number" id="input-qtd" min="1" placeholder="Ex: 300" required />
-                    </div>
+            <button type="button" class="btn-menu-estoque" onclick="abrirModalEntradaAuto()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                + Entrada Auto
+            </button>
 
-                    <button type="submit" id="btn-submit-entrada" class="btn-add-estoque">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Dar Entrada
-                    </button>
-                </div>
-            </form>
+            <button type="button" class="btn-menu-estoque" onclick="abrirModalRelatorio()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Relatorio Movi Estoque
+            </button>
         </div>
 
         <!-- TABELA ESTOQUE -->
@@ -376,11 +545,106 @@
         };
 
         let dadosEstratificadosAtuais = [];
+        let dadosMovimentacoesAtuais = [];
         let acaoPendenteCallback = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             carregarEstoque();
         });
+
+        /* FUNÇÕES DE ACIONAMENTO DOS MODAIS DO MENU */
+        function abrirModalEntradaManual() {
+            document.getElementById("input-qtd").value = "";
+            document.getElementById("modal-entrada-manual").classList.remove("hidden");
+        }
+
+        function fecharModalEntradaManual() {
+            document.getElementById("modal-entrada-manual").classList.add("hidden");
+        }
+
+        function abrirModalEntradaAuto() {
+            document.getElementById("modal-entrada-auto").classList.remove("hidden");
+        }
+
+        function fecharModalEntradaAuto() {
+            document.getElementById("modal-entrada-auto").classList.add("hidden");
+        }
+
+        async function abrirModalRelatorio() {
+            document.getElementById("input-filtro-movi").value = "";
+            document.getElementById("modal-relatorio-movimentacoes").classList.remove("hidden");
+            carregarRelatorioMovimentacoes();
+        }
+
+        function fecharModalRelatorio() {
+            document.getElementById("modal-relatorio-movimentacoes").classList.add("hidden");
+        }
+
+        async function carregarRelatorioMovimentacoes() {
+            const tbody = document.getElementById("tabela-movi-body");
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Carregando movimentações do estoque...</td></tr>";
+
+            try {
+                const res = await fetch('/api/estoque/movimentacoes');
+                const data = await res.json();
+
+                if (data.sucesso && data.movimentacoes && data.movimentacoes.length > 0) {
+                    dadosMovimentacoesAtuais = data.movimentacoes;
+                    renderizarTabelaMovimentacoes(dadosMovimentacoesAtuais);
+                } else {
+                    dadosMovimentacoesAtuais = [];
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Nenhuma movimentação de estoque registrada ainda.</td></tr>";
+                }
+            } catch (err) {
+                dadosMovimentacoesAtuais = [];
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Nenhuma movimentação de estoque registrada ainda.</td></tr>";
+            }
+        }
+
+        function renderizarTabelaMovimentacoes(lista) {
+            const tbody = document.getElementById("tabela-movi-body");
+            tbody.innerHTML = "";
+
+            if (lista.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 16px; color: #64748b;'>Nenhuma movimentação encontrada para este filtro.</td></tr>";
+                return;
+            }
+
+            lista.forEach(m => {
+                const tr = document.createElement("tr");
+
+                let badgeTipo = "badge-saida";
+                if (m.tipo_movimentacao === 'ENTRADA') badgeTipo = "badge-sobra";
+                else if (m.tipo_movimentacao === 'ESTORNO_CORRECAO' || m.tipo_movimentacao === 'REVOGACAO_ADMIN') badgeTipo = "badge-reserva";
+                else if (m.tipo_movimentacao === 'INATIVACAO') badgeTipo = "badge-esgotado";
+
+                tr.innerHTML = `
+                    <td><small>${m.data_movimentacao || '---'}</small></td>
+                    <td><strong>${m.codigo_kit || '---'}</strong></td>
+                    <td><span class="${badgeTipo}">${m.tipo_movimentacao}</span></td>
+                    <td style="text-align: center;"><strong>${m.quantidade > 0 ? '+' + m.quantidade : m.quantidade} und</strong></td>
+                    <td>${m.observacao || '---'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filtrarTabelaMovimentacoes() {
+            const termo = document.getElementById("input-filtro-movi").value.toLowerCase().trim();
+            if (!termo) {
+                renderizarTabelaMovimentacoes(dadosMovimentacoesAtuais);
+                return;
+            }
+
+            const filtrados = dadosMovimentacoesAtuais.filter(m => {
+                const mod = (m.codigo_kit || "").toLowerCase();
+                const tipo = (m.tipo_movimentacao || "").toLowerCase();
+                const obs = (m.observacao || "").toLowerCase();
+                return mod.includes(termo) || tipo.includes(termo) || obs.includes(termo);
+            });
+
+            renderizarTabelaMovimentacoes(filtrados);
+        }
 
         function mostrarToast(mensagem, tipo = 'success') {
             const container = document.getElementById("toast-container");
@@ -458,7 +722,6 @@
                     ? `<button class="btn-icon-only btn-icon-bloquear" title="Bloquear / Inativar Modelo" onclick="event.stopPropagation(); solicitarAlternarStatus('${item.codigo_kit}', true)">${SVG_ICONS.block}</button>`
                     : `<button class="btn-icon-only btn-icon-ativar" title="Ativar / Reativar Modelo" onclick="event.stopPropagation(); solicitarAlternarStatus('${item.codigo_kit}', false)">${SVG_ICONS.check}</button>`;
 
-                // SE INATIVO: BOTÃO AJUSTAR FICA DISABLED (INCLICÁVEL)
                 const btnEditarHtml = isAtivo
                     ? `<button class="btn-icon-only btn-icon-editar" title="Ajustar Saldo do Balcão" onclick="event.stopPropagation(); abrirModalAjuste('${item.codigo_kit}', ${saldoBalcao})">${SVG_ICONS.edit}</button>`
                     : `<button class="btn-icon-only btn-icon-editar" title="Modelo inativado. Reative para ajustar." disabled>${SVG_ICONS.edit}</button>`;
@@ -715,6 +978,7 @@
                 if (data.sucesso) {
                     mostrarToast(data.mensagem, 'success');
                     document.getElementById("input-qtd").value = "";
+                    fecharModalEntradaManual();
                     await carregarEstoque();
                 } else {
                     mostrarToast(data.mensagem, 'error');
