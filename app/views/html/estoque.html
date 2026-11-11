@@ -95,7 +95,75 @@
             margin-bottom: 8px;
         }
 
-        /* BOTÃO DE EXPORTAÇÃO NOVO - PADRÃO SVG CORPORATIVO (SUBSTITUI O VERDE SÓLIDO) */
+        /* BARRA DE PROGRESSO DINÂMICA DA ENTRADA AUTOMÁTICA */
+        .progress-box-auto {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 14px 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-status-text {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .progress-percent {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #0284c7;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            border-radius: 20px;
+            transition: width 0.25s ease-out;
+            position: relative;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.4) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: progressShimmer 1.5s infinite;
+        }
+
+        @keyframes progressShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* BOTÃO DE EXPORTAÇÃO NOVO - PADRÃO SVG CORPORATIVO */
         .btn-export-svg {
             background: #ffffff;
             color: #334155;
@@ -385,7 +453,7 @@
         </div>
     </div>
 
-    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA VIA EXCEL -->
+    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA VIA EXCEL (COM BARRA DE PROGRESSO DINÂMICA) -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-auto">
         <div class="custom-modal-card">
             <div class="modal-header-estrat">
@@ -399,7 +467,8 @@
             <form id="form-entrada-auto" onsubmit="processarEntradaAutomatica(event)">
                 <input type="file" id="input-excel-file" accept=".xlsx, .xls" style="display: none;" onchange="atualizarNomeArquivoUpload(this)" />
                 
-                <div class="upload-dropzone" onclick="document.getElementById('input-excel-file').click()">
+                <!-- Área de Seleção de Arquivo -->
+                <div id="dropzone-area" class="upload-dropzone" onclick="document.getElementById('input-excel-file').click()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
@@ -409,8 +478,22 @@
                     <p style="font-size: 0.78rem; color: #64748b;">A planilha deve conter as colunas: <strong>Nome</strong> e <strong>Quantidade</strong></p>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="button" class="btn-modal-cancel" onclick="fecharModalEntradaAuto()">Cancelar</button>
+                <!-- Painel da Barra de Progresso (Oculto inicialmente) -->
+                <div id="container-progresso-auto" class="progress-box-auto hidden">
+                    <div class="progress-header">
+                        <span id="txt-progresso-status" class="progress-status-text">
+                            <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+                            Iniciando processamento...
+                        </span>
+                        <span id="txt-progresso-pct" class="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div id="bar-progresso-fill" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div class="modal-actions" id="modal-actions-auto">
+                    <button type="button" id="btn-cancelar-auto" class="btn-modal-cancel" onclick="fecharModalEntradaAuto()">Cancelar</button>
                     <button type="submit" id="btn-submit-auto" class="btn-modal-confirm" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                         Processar Entrada
@@ -433,7 +516,6 @@
 
             <div class="modal-filter-bar">
                 <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Filtrar por modelo, tipo de movimentação ou observação..." oninput="filtrarTabelaMovimentacoes()" />
-                <!-- BOTÃO DE EXPORTAÇÃO REFORMULADO NO PADRÃO SVG -->
                 <a id="btn-export-csv-movi" href="/api/estoque/exportar-movimentacoes" target="_blank" class="btn-export-svg">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -480,7 +562,6 @@
 
             <div class="modal-filter-bar">
                 <input type="text" id="input-filtro-estrat" class="input-filtro-modal" placeholder="Filtrar por nome de beneficiário, dependente ou operador..." oninput="filtrarTabelaEstratificada()" />
-                <!-- BOTÃO DE EXPORTAÇÃO REFORMULADO NO PADRÃO SVG -->
                 <a id="btn-download-csv" href="#" target="_blank" class="btn-export-svg">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -654,6 +735,7 @@
         let dadosEstratificadosAtuais = [];
         let dadosMovimentacoesAtuais = [];
         let acaoPendenteCallback = null;
+        let progressoInterval = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             carregarEstoque();
@@ -670,14 +752,27 @@
         }
 
         function abrirModalEntradaAuto() {
-            document.getElementById("input-excel-file").value = "";
-            document.getElementById("label-dropzone-arquivo").innerText = "Clique para selecionar o arquivo Excel (.xlsx)";
-            document.getElementById("btn-submit-auto").disabled = true;
+            resetarModalEntradaAuto();
             document.getElementById("modal-entrada-auto").classList.remove("hidden");
         }
 
         function fecharModalEntradaAuto() {
+            if (progressoInterval) clearInterval(progressoInterval);
             document.getElementById("modal-entrada-auto").classList.add("hidden");
+            resetarModalEntradaAuto();
+        }
+
+        function resetarModalEntradaAuto() {
+            document.getElementById("input-excel-file").value = "";
+            document.getElementById("label-dropzone-arquivo").innerText = "Clique para selecionar o arquivo Excel (.xlsx)";
+            document.getElementById("btn-submit-auto").disabled = true;
+            document.getElementById("btn-submit-auto").innerText = "Processar Entrada";
+            document.getElementById("btn-cancelar-auto").disabled = false;
+            document.getElementById("dropzone-area").style.pointerEvents = "auto";
+            document.getElementById("dropzone-area").style.opacity = "1";
+            document.getElementById("container-progresso-auto").classList.add("hidden");
+            document.getElementById("bar-progresso-fill").style.width = "0%";
+            document.getElementById("txt-progresso-pct").innerText = "0%";
         }
 
         function atualizarNomeArquivoUpload(input) {
@@ -694,10 +789,55 @@
             }
         }
 
+        /* ANIMAÇÃO DINÂMICA DA BARRA DE PROGRESSO */
+        function iniciarAnimacaoProgresso() {
+            const boxProgresso = document.getElementById("container-progresso-auto");
+            const barFill = document.getElementById("bar-progresso-fill");
+            const txtPct = document.getElementById("txt-progresso-pct");
+            const txtStatus = document.getElementById("txt-progresso-status");
+            const dropzone = document.getElementById("dropzone-area");
+            const btnSubmit = document.getElementById("btn-submit-auto");
+            const btnCancelar = document.getElementById("btn-cancelar-auto");
+
+            boxProgresso.classList.remove("hidden");
+            dropzone.style.pointerEvents = "none";
+            dropzone.style.opacity = "0.45";
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Processando...";
+            btnCancelar.disabled = true;
+
+            let pct = 0;
+            barFill.style.width = "0%";
+            txtPct.innerText = "0%";
+
+            const etapas = [
+                { limite: 20, texto: "Lendo e validando estrutura do Excel..." },
+                { limite: 55, texto: "Registrando lotes e gerando movimentações..." },
+                { limite: 80, texto: "Recalibrando cotas e reservas de kits..." },
+                { limite: 94, texto: "Consolidando saldos físicos do balcão..." }
+            ];
+
+            progressoInterval = setInterval(() => {
+                if (pct < 94) {
+                    pct += Math.floor(Math.random() * 4) + 2;
+                    if (pct > 94) pct = 94;
+
+                    barFill.style.width = pct + "%";
+                    txtPct.innerText = pct + "%";
+
+                    for (let e of etapas) {
+                        if (pct <= e.limite) {
+                            txtStatus.innerHTML = `<svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> ${e.texto}`;
+                            break;
+                        }
+                    }
+                }
+            }, 180);
+        }
+
         async function processarEntradaAutomatica(e) {
             e.preventDefault();
             const inputFile = document.getElementById("input-excel-file");
-            const btnSubmit = document.getElementById("btn-submit-auto");
 
             if (!inputFile.files || inputFile.files.length === 0) {
                 mostrarToast("Selecione um arquivo Excel antes de prosseguir.", "error");
@@ -707,8 +847,7 @@
             const formData = new FormData();
             formData.append("arquivo", inputFile.files[0]);
 
-            btnSubmit.disabled = true;
-            btnSubmit.innerText = "Processando Planilha...";
+            iniciarAnimacaoProgresso();
 
             try {
                 const res = await fetch('/api/estoque/entrada-auto', {
@@ -717,20 +856,34 @@
                 });
 
                 const data = await res.json();
+                if (progressoInterval) clearInterval(progressoInterval);
 
                 if (data.sucesso) {
-                    mostrarToast(data.mensagem, "success");
-                    fecharModalEntradaAuto();
-                    await carregarEstoque();
+                    const barFill = document.getElementById("bar-progresso-fill");
+                    const txtPct = document.getElementById("txt-progresso-pct");
+                    const txtStatus = document.getElementById("txt-progresso-status");
+
+                    barFill.style.width = "100%";
+                    txtPct.innerText = "100%";
+                    barFill.style.background = "#22c55e";
+                    txtStatus.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Estoque atualizado com sucesso!`;
+
+                    setTimeout(async () => {
+                        mostrarToast(data.mensagem, "success");
+                        fecharModalEntradaAuto();
+                        await carregarEstoque();
+                    }, 650);
+
                 } else {
                     mostrarToast(data.mensagem || "Erro ao processar planilha.", "error");
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerText = "Processar Entrada";
+                    resetarModalEntradaAuto();
+                    document.getElementById("btn-submit-auto").disabled = false;
                 }
             } catch (err) {
+                if (progressoInterval) clearInterval(progressoInterval);
                 mostrarToast("Erro de comunicação ao enviar arquivo Excel.", "error");
-                btnSubmit.disabled = false;
-                btnSubmit.innerText = "Processar Entrada";
+                resetarModalEntradaAuto();
+                document.getElementById("btn-submit-auto").disabled = false;
             }
         }
 
