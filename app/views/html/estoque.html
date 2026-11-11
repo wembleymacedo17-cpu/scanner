@@ -6,22 +6,22 @@
     <title>Gestão de Estoque - Kits</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
-        .main-container { max-width: 1200px !important; width: 96% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
+        .main-container { max-width: 1240px !important; width: 96% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
         
-        /* NOVO DESIGN: CARDS EXECUTIVOS MODERNOS */
+        /* RESUMO DE MÉTRICAS (ENXUTO E DIRETO) */
         .cards-summary {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
         }
 
         .card-stat-modern {
             background: #ffffff;
-            border-radius: 14px;
-            padding: 18px 20px;
+            border-radius: 12px;
+            padding: 16px 18px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -31,19 +31,17 @@
 
         .card-stat-modern:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
         }
 
         .card-stat-modern::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
+            top: 0; left: 0; right: 0;
+            height: 3px;
         }
 
-        .stat-lote::before { background: #475569; }
+        .stat-lote::before { background: #64748b; }
         .stat-saidas::before { background: #0284c7; }
         .stat-balcao::before { background: #16a34a; }
         .stat-reservas::before { background: #d97706; }
@@ -53,11 +51,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .stat-label {
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
@@ -65,46 +63,39 @@
         }
 
         .stat-icon-wrapper {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .stat-icon-wrapper svg {
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             stroke-width: 2.2;
         }
 
-        .stat-lote .stat-icon-wrapper { background: #f1f5f9; color: #475569; }
+        .stat-lote .stat-icon-wrapper { background: #f1f5f9; color: #64748b; }
         .stat-saidas .stat-icon-wrapper { background: #e0f2fe; color: #0284c7; }
         .stat-balcao .stat-icon-wrapper { background: #dcfce7; color: #16a34a; }
         .stat-reservas .stat-icon-wrapper { background: #fef3c7; color: #d97706; }
         .stat-orfaos .stat-icon-wrapper { background: #ede9fe; color: #6366f1; }
 
         .stat-value {
-            font-size: 1.85rem;
+            font-size: 1.8rem;
             font-weight: 800;
             line-height: 1.1;
             color: #0f172a;
             font-variant-numeric: tabular-nums;
-            margin-bottom: 4px;
         }
 
-        .stat-caption {
-            font-size: 0.72rem;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        /* MENU INTERNO DE OPERAÇÕES DO ESTOQUE (BOTÕES VETORIZADOS) */
+        /* MENU DE AÇÕES SUPERIOR */
         .estoque-menu-bar {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 18px;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -112,22 +103,22 @@
         .btn-menu-estoque {
             background: #ffffff;
             border: 1px solid #cbd5e1;
-            padding: 10px 18px;
-            font-size: 0.86rem;
+            padding: 9px 16px;
+            font-size: 0.84rem;
             font-weight: 700;
             color: #334155;
             cursor: pointer;
-            border-radius: 10px;
+            border-radius: 9px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
         }
 
         .btn-menu-estoque svg {
-            width: 17px;
-            height: 17px;
+            width: 16px;
+            height: 16px;
             flex-shrink: 0;
             stroke-width: 2.2;
         }
@@ -139,119 +130,297 @@
             transform: translateY(-1px);
         }
 
-        .form-group-item {
-            margin-bottom: 14px;
-        }
-        .form-group-item label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #475569;
-            margin-bottom: 6px;
-        }
-        .form-group-item input, .form-group-item select {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.9rem;
-            outline: none;
-            box-sizing: border-box;
-            background: #ffffff;
-        }
-        .form-group-item input:focus, .form-group-item select:focus {
-            border-color: #0284c7;
-        }
-
-        /* ÁREA DE UPLOAD DO EXCEL (ENTRADA AUTO) */
-        .upload-dropzone {
-            border: 2px dashed #94a3b8;
-            border-radius: 12px;
-            padding: 26px 20px;
-            text-align: center;
-            background: #f8fafc;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin: 14px 0;
-        }
-        .upload-dropzone:hover {
-            border-color: #0284c7;
-            background: #f0f9ff;
-        }
-        .upload-dropzone svg {
-            color: #0284c7;
-            margin-bottom: 8px;
-        }
-
-        /* BARRA DE PROGRESSO DINÂMICA DA ENTRADA AUTOMÁTICA */
-        .progress-box-auto {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px;
-            margin: 14px 0;
-        }
-
-        .progress-header {
+        /* BARRA DE PESQUISA DA TABELA */
+        .saas-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            gap: 14px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
         }
 
-        .progress-status-text {
-            font-size: 0.83rem;
+        .saas-search-box {
+            position: relative;
+            flex: 1;
+            max-width: 360px;
+        }
+
+        .saas-search-box svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #94a3b8;
+        }
+
+        .saas-search-input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.86rem;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .saas-search-input:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+        }
+
+        .saas-counter {
+            font-size: 0.8rem;
             font-weight: 700;
-            color: #1e293b;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* TABELA COMPACTA E MODERNA */
+        .saas-table-container {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 4px 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03);
+            overflow-x: auto;
+        }
+
+        .table-saas {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .table-saas th {
+            background: transparent;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            padding: 12px 10px;
+            border-bottom: 2px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        .table-saas td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .tr-saas {
+            transition: background 0.15s ease;
+        }
+
+        .tr-saas:hover {
+            background: #f8fafc;
+        }
+
+        .tr-saas-inativo {
+            background: #f8fafc;
+            opacity: 0.55;
+        }
+
+        /* COLUNA KIT */
+        .cell-kit-info {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 9px;
+            cursor: pointer;
         }
 
-        .progress-percent {
-            font-size: 0.88rem;
-            font-weight: 800;
+        .kit-icon-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: #f1f5f9;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .cell-kit-info:hover .kit-icon-badge {
+            background: #e0f2fe;
             color: #0284c7;
+        }
+
+        .kit-icon-badge svg {
+            width: 14px;
+            height: 14px;
+            stroke-width: 2.2;
+        }
+
+        .kit-nome-texto {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: block;
+        }
+
+        .kit-lote-sub {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* COLUNA STATUS */
+        .badge-saas-status {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .status-normal { background: #dcfce7; color: #15803d; }
+        .status-atencao { background: #fef3c7; color: #b45309; }
+        .status-critico { background: #fee2e2; color: #b91c1c; }
+        .status-bloqueado { background: #f1f5f9; color: #64748b; }
+
+        /* COLUNA BALCÃO */
+        .saas-saldo-main {
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1;
             font-variant-numeric: tabular-nums;
         }
 
-        .progress-bar-track {
+        .saas-saldo-unit {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* NOVO DESIGN DA BARRA DE DISTRIBUIÇÃO */
+        .saas-dist-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 220px;
+            max-width: 320px;
+        }
+
+        .saas-multi-bar {
             width: 100%;
-            height: 10px;
+            height: 7px;
             background: #e2e8f0;
-            border-radius: 20px;
+            border-radius: 999px;
             overflow: hidden;
-            position: relative;
+            display: flex;
+            gap: 2px;
         }
 
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #0284c7, #38bdf8);
-            border-radius: 20px;
-            transition: width 0.25s ease-out;
-            position: relative;
+        .saas-seg-saidas { 
+            background: #94a3b8; 
+            border-radius: 999px 0 0 999px;
+            transition: width 0.3s ease; 
         }
 
-        .progress-bar-fill::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.4) 50%,
-                rgba(255, 255, 255, 0) 100%
-            );
-            animation: progressShimmer 1.5s infinite;
+        .saas-seg-reservas { 
+            background: #f59e0b; 
+            transition: width 0.3s ease; 
         }
 
-        @keyframes progressShimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        .saas-seg-sobra { 
+            background: #10b981; 
+            border-radius: 0 999px 999px 0;
+            transition: width 0.3s ease; 
         }
 
-        /* BOTÃO DE EXPORTAÇÃO NOVO - PADRÃO SVG CORPORATIVO */
+        .saas-dist-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.72rem;
+            color: #64748b;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .dot-saida { background: #94a3b8; }
+        .dot-reserva { background: #f59e0b; }
+        .dot-sobra { background: #10b981; }
+        .dot-esgotado { background: #ef4444; }
+
+        /* AÇÕES */
+        .cell-saas-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .btn-saas-extrato {
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 6px 9px;
+            border-radius: 7px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-saas-extrato:hover {
+            background: #e0f2fe;
+            color: #0284c7;
+            border-color: #0284c7;
+        }
+
+        .btn-saas-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-saas-editar { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+        .btn-saas-editar:hover:not(:disabled) { background: #e2e8f0; color: #0284c7; border-color: #0284c7; }
+        .btn-saas-editar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-saas-bloquear { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .btn-saas-bloquear:hover { background: #ef4444; color: #ffffff; }
+
+        .btn-saas-ativar { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .btn-saas-ativar:hover { background: #22c55e; color: #ffffff; }
+
         .btn-export-svg {
             background: #ffffff;
             color: #334155;
@@ -281,102 +450,33 @@
             color: #0284c7;
         }
 
-        /* BOTÕES COMPACTOS APENAS COM ÍCONE */
-        .btn-icon-only {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            border: 1px solid transparent;
+        /* UPLOAD & PROGRESS */
+        .upload-dropzone {
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            background: #f8fafc;
             cursor: pointer;
             transition: all 0.2s ease;
+            margin: 14px 0;
         }
+        .upload-dropzone:hover { border-color: #0284c7; background: #f0f9ff; }
+        .upload-dropzone svg { color: #0284c7; margin-bottom: 8px; }
 
-        .btn-icon-editar { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
-        .btn-icon-editar:hover:not(:disabled) { background: #e2e8f0; color: #0284c7; border-color: #0284c7; }
-        .btn-icon-editar:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; opacity: 0.45; }
+        .progress-box-auto { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 14px 0; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .progress-status-text { font-size: 0.82rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px; }
+        .progress-percent { font-size: 0.88rem; font-weight: 800; color: #0284c7; font-variant-numeric: tabular-nums; }
+        .progress-bar-track { width: 100%; height: 8px; background: #e2e8f0; border-radius: 20px; overflow: hidden; position: relative; }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #0284c7, #38bdf8); border-radius: 20px; transition: width 0.25s ease-out; }
 
-        .btn-icon-bloquear { background: #fee2e2; color: #991b1b; border-color: #fca5a5; margin-left: 4px; }
-        .btn-icon-bloquear:hover { background: #ef4444; color: #ffffff; border-color: #ef4444; }
+        /* FORMULÁRIOS E MODAIS */
+        .form-group-item { margin-bottom: 14px; }
+        .form-group-item label { display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; }
+        .form-group-item input, .form-group-item select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none; box-sizing: border-box; background: #ffffff; }
+        .form-group-item input:focus, .form-group-item select:focus { border-color: #0284c7; }
 
-        .btn-icon-ativar { background: #dcfce7; color: #166534; border-color: #86efac; margin-left: 4px; }
-        .btn-icon-ativar:hover { background: #22c55e; color: #ffffff; border-color: #22c55e; }
-
-        .tr-inativo { background-color: #f8fafc !important; opacity: 0.65; }
-
-        /* TABELA DE ESTOQUE */
-        .table-container { 
-            background: #ffffff; 
-            border-radius: 12px; 
-            padding: 12px 16px; 
-            border: 1px solid #e2e8f0; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            width: 100%;
-            overflow-x: auto; 
-        }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 10px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.72rem; white-space: nowrap; letter-spacing: 0.3px; }
-        
-        .tr-clicavel { cursor: pointer; transition: background 0.15s ease-in-out; }
-        .tr-clicavel:hover { background-color: #f0f9ff !important; }
-
-        /* BADGES DE OPERAÇÃO E ESTOQUE */
-        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-block; }
-        .badge-saida:hover { background: #bae6fd; }
-        
-        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-inativo { background: #cbd5e1; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-
-        /* DESTAQUE EM VERMELHO PARA REVOGACAO_ADMIN */
-        .badge-revogacao-admin {
-            background: #fee2e2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca;
-            padding: 4px 9px;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 0.76rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* SEPARADOR VISUAL DE DIAS NO RELATÓRIO */
-        .tr-data-divider {
-            background: #f1f5f9 !important;
-            border-top: 2px solid #cbd5e1;
-            border-bottom: 2px solid #cbd5e1;
-        }
-        .tr-data-divider td {
-            padding: 8px 14px !important;
-            font-size: 0.8rem !important;
-            font-weight: 800 !important;
-            color: #1e293b !important;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .data-divider-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 3px 10px;
-            border-radius: 20px;
-            color: #0f172a;
-        }
-
-        .cell-modelo-link { display: inline-flex; align-items: center; gap: 6px; }
-        .cell-modelo-link svg { color: #64748b; transition: color 0.2s; }
-        .tr-clicavel:hover .cell-modelo-link svg { color: #0284c7; }
-
-        /* MODAIS CUSTOMIZADOS */
         .custom-modal-overlay, .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -398,175 +498,62 @@
             position: relative;
         }
 
-        .modal-estratificado-card {
-            max-width: 920px !important;
-            max-height: 88vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-header-estrat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 14px;
-        }
-
-        .modal-filter-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-            align-items: center;
-        }
-
-        .input-filtro-modal {
-            flex: 1;
-            padding: 9px 12px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.85rem;
-            outline: none;
-        }
+        .modal-estratificado-card { max-width: 920px !important; max-height: 88vh; display: flex; flex-direction: column; }
+        .modal-header-estrat { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 14px; }
+        .modal-filter-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+        .input-filtro-modal { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none; }
         .input-filtro-modal:focus { border-color: #0284c7; }
-
-        .modal-body-scroll {
-            overflow-y: auto;
-            max-height: 54vh;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 18px;
-            justify-content: flex-end;
-        }
-
-        .btn-modal-cancel, .btn-voltar-modal {
-            background: #f1f5f9;
-            color: #475569;
-            border: 1px solid #cbd5e1;
-            padding: 9px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn-modal-cancel:hover, .btn-voltar-modal:hover { background: #e2e8f0; }
-
-        .btn-modal-confirm, .btn-confirm-action {
-            background: #0284c7;
-            color: #ffffff;
-            border: none;
-            padding: 9px 18px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-modal-confirm:hover, .btn-confirm-action:hover { background: #0369a1; }
+        .modal-body-scroll { overflow-y: auto; max-height: 54vh; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+        .btn-modal-cancel, .btn-voltar-modal { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-modal-confirm, .btn-confirm-action { background: #0284c7; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .btn-modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .modal-alert {
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: none;
-        }
+        .modal-alert { padding: 8px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; display: none; }
         .modal-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        .tr-data-divider { background: #f1f5f9 !important; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; }
+        .tr-data-divider td { padding: 8px 14px !important; font-size: 0.8rem !important; font-weight: 800 !important; color: #1e293b !important; text-transform: uppercase; }
+        .data-divider-badge { display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 20px; color: #0f172a; }
+
+        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-revogacao-admin { background: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca; padding: 4px 9px; border-radius: 6px; font-weight: 800; font-size: 0.76rem; }
 
         .hidden { display: none !important; }
 
-        /* NOTIFICAÇÃO TOAST CENTRALIZADA NO TOPO */
-        .toast-container { 
-            position: fixed; 
-            top: 24px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            z-index: 1000000; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            align-items: center;
-            pointer-events: none;
-            width: 90%;
-            max-width: 520px;
-        }
-
-        .toast-card { 
-            pointer-events: auto;
-            width: 100%;
-            background: #0f172a; 
-            color: #ffffff; 
-            padding: 14px 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1); 
-            font-size: 0.9rem; 
-            font-weight: 600;
-            display: flex; 
-            align-items: center; 
-            gap: 12px;
-            animation: toastSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes toastSlideDown {
-            0% {
-                opacity: 0;
-                transform: translateY(-25px) scale(0.96);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .toast-card.success { 
-            border-left: 6px solid #22c55e;
-            background: #064e3b;
-            color: #f0fdf4;
-            box-shadow: 0 15px 30px rgba(34, 197, 94, 0.25), 0 0 0 1px #22c55e;
-        }
-
-        .toast-card.error { 
-            border-left: 6px solid #ef4444;
-            background: #450a0a;
-            color: #fef2f2;
-            box-shadow: 0 15px 30px rgba(239, 68, 68, 0.25), 0 0 0 1px #ef4444;
-        }
-
-        .toast-icon {
-            width: 22px;
-            height: 22px;
-            flex-shrink: 0;
-        }
+        /* TOAST CENTRALIZADO */
+        .toast-container { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 1000000; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; width: 90%; max-width: 520px; }
+        .toast-card { pointer-events: auto; width: 100%; background: #0f172a; color: #ffffff; padding: 14px 20px; border-radius: 12px; box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.4); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 12px; animation: toastSlideDown 0.35s forwards; }
+        @keyframes toastSlideDown { 0% { opacity: 0; transform: translateY(-25px); } 100% { opacity: 1; transform: translateY(0); } }
+        .toast-card.success { border-left: 6px solid #22c55e; background: #064e3b; color: #f0fdf4; }
+        .toast-card.error { border-left: 6px solid #ef4444; background: #450a0a; color: #fef2f2; }
+        .toast-icon { width: 22px; height: 22px; flex-shrink: 0; }
     </style>
 </head>
 <body>
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- 1. MODAL DE ENTRADA MANUAL -->
+    <!-- 1. MODAL ENTRADA MANUAL -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-manual">
         <div class="custom-modal-card">
             <div class="modal-header-estrat">
                 <div>
                     <h3 style="font-size: 1.15rem; color: #0f172a;">Entrada Manual de Lote</h3>
-                    <p style="font-size: 0.8rem; color: #64748b;">Dê entrada física de mochilas por modelo</p>
+                    <p style="font-size: 0.8rem; color: #64748b;">Adicionar unidades físicas por modelo</p>
                 </div>
                 <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalEntradaManual()">✕</span>
             </div>
 
             <form id="form-entrada" onsubmit="adicionarEntradaEstoque(event)">
                 <div class="form-group-item">
-                    <label>Modelo do Kit</label>
+                    <label>Modelo</label>
                     <select id="select-modelo-kit" required></select>
                 </div>
 
                 <div class="form-group-item">
-                    <label>Quantidade Recebida</label>
+                    <label>Quantidade</label>
                     <input type="number" id="input-qtd" min="1" placeholder="Ex: 300" required />
                 </div>
 
@@ -581,13 +568,13 @@
         </div>
     </div>
 
-    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA VIA EXCEL -->
+    <!-- 2. MODAL ENTRADA AUTO VIA EXCEL -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-auto">
         <div class="custom-modal-card">
             <div class="modal-header-estrat">
                 <div>
                     <h3 style="font-size: 1.15rem; color: #0f172a;">Entrada Automática (Excel)</h3>
-                    <p style="font-size: 0.8rem; color: #64748b;">Carga automática de estoque em lote</p>
+                    <p style="font-size: 0.8rem; color: #64748b;">Carga de estoque em lote</p>
                 </div>
                 <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalEntradaAuto()">✕</span>
             </div>
@@ -596,21 +583,18 @@
                 <input type="file" id="input-excel-file" accept=".xlsx, .xls" style="display: none;" onchange="atualizarNomeArquivoUpload(this)" />
                 
                 <div id="dropzone-area" class="upload-dropzone" onclick="document.getElementById('input-excel-file').click()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
-                    <p id="label-dropzone-arquivo" style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Clique para selecionar o arquivo Excel (.xlsx)</p>
-                    <p style="font-size: 0.78rem; color: #64748b;">A planilha deve conter as colunas: <strong>Nome</strong> e <strong>Quantidade</strong></p>
+                    <p id="label-dropzone-arquivo" style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 3px;">Selecionar arquivo Excel (.xlsx)</p>
+                    <p style="font-size: 0.76rem; color: #64748b;">Colunas obrigatórias: <strong>Nome</strong> e <strong>Quantidade</strong></p>
                 </div>
 
-                <!-- Painel da Barra de Progresso Dinâmica -->
                 <div id="container-progresso-auto" class="progress-box-auto hidden">
                     <div class="progress-header">
-                        <span id="txt-progresso-status" class="progress-status-text">
-                            Iniciando processamento...
-                        </span>
+                        <span id="txt-progresso-status" class="progress-status-text">Processando...</span>
                         <span id="txt-progresso-pct" class="progress-percent">0%</span>
                     </div>
                     <div class="progress-bar-track">
@@ -629,26 +613,26 @@
         </div>
     </div>
 
-    <!-- 3. MODAL DE RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE -->
+    <!-- 3. MODAL RELATÓRIO DE MOVIMENTAÇÃO -->
     <div class="custom-modal-overlay hidden" id="modal-relatorio-movimentacoes">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
                 <div>
-                    <h3 style="font-size: 1.15rem; color: #0f172a;">Relatório de Movimentações de Estoque</h3>
-                    <p style="font-size: 0.8rem; color: #64748b;">Registro auditado por linha cronológica de dias</p>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;">Relatório de Movimentações</h3>
+                    <p style="font-size: 0.8rem; color: #64748b;">Auditoria cronológica por dia</p>
                 </div>
                 <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalRelatorio()">✕</span>
             </div>
 
             <div class="modal-filter-bar">
-                <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Pesquisar por data (ex: 11/11), modelo, tipo ou observação..." oninput="filtrarTabelaMovimentacoes()" />
+                <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Filtrar por data, modelo, tipo..." oninput="filtrarTabelaMovimentacoes()" />
                 <a id="btn-export-csv-movi" href="/api/estoque/exportar-movimentacoes" target="_blank" class="btn-export-svg">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Exportar Relatório
+                    Exportar
                 </a>
             </div>
 
@@ -656,45 +640,45 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 95px;">Hora</th>
-                            <th style="width: 140px;">Modelo Kit</th>
-                            <th style="width: 170px;">Tipo de Operação</th>
-                            <th style="text-align: center; width: 110px;">Quantidade</th>
+                            <th style="width: 90px;">Hora</th>
+                            <th style="width: 130px;">Modelo</th>
+                            <th style="width: 160px;">Operação</th>
+                            <th style="text-align: center; width: 100px;">Qtd</th>
                             <th>Observação / Responsável</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-movi-body">
-                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #64748b;">Carregando histórico de movimentações...</td></tr>
+                        <tr><td colspan="5" style="text-align:center; padding: 20px; color: #64748b;">Carregando histórico...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="modal-actions">
-                <button type="button" class="btn-modal-cancel" onclick="fecharModalRelatorio()">Fechar Relatório</button>
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalRelatorio()">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS (AO CLICAR NA LINHA DA TABELA) -->
+    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS -->
     <div class="custom-modal-overlay hidden" id="modal-estratificado">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
                 <div>
-                    <h3 style="font-size: 1.15rem; color: #0f172a;">Extrato de Entregas — <span id="estrat-nome-kit" style="color: #0284c7;">Abelha</span></h3>
-                    <p style="font-size: 0.8rem; color: #64748b;">Relação de beneficiários e quem despachou no balcão</p>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;">Extrato — <span id="estrat-nome-kit" style="color: #0284c7;">Kit</span></h3>
+                    <p style="font-size: 0.8rem; color: #64748b;">Relação de entregas presenciais</p>
                 </div>
                 <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalEstratificado()">✕</span>
             </div>
 
             <div class="modal-filter-bar">
-                <input type="text" id="input-filtro-estrat" class="input-filtro-modal" placeholder="Filtrar por nome de beneficiário, dependente ou operador..." oninput="filtrarTabelaEstratificada()" />
+                <input type="text" id="input-filtro-estrat" class="input-filtro-modal" placeholder="Filtrar beneficiário ou operador..." oninput="filtrarTabelaEstratificada()" />
                 <a id="btn-download-csv" href="#" target="_blank" class="btn-export-svg">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Exportar Extrato
+                    Exportar
                 </a>
             </div>
 
@@ -703,19 +687,19 @@
                     <thead>
                         <tr>
                             <th>Data / Hora</th>
-                            <th>Beneficiário (Colaborador / Dependente)</th>
+                            <th>Beneficiário</th>
                             <th>Público</th>
-                            <th>Quem Despachou (Operador)</th>
+                            <th>Despachado Por</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-estratificada-body">
-                        <tr><td colspan="4">Carregando detalhes...</td></tr>
+                        <tr><td colspan="4">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="modal-actions">
-                <button type="button" class="btn-modal-cancel" onclick="fecharModalEstratificado()">Fechar Extrato</button>
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalEstratificado()">Fechar</button>
             </div>
         </div>
     </div>
@@ -723,114 +707,103 @@
     <!-- MODAL DE AJUSTE MANUAL DE SALDO -->
     <div class="custom-modal-overlay hidden" id="modal-ajuste">
         <div class="custom-modal-card">
-            <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Saldo Físico (Balcão)</h3>
-            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">Altere o saldo atual no balcão para o modelo <strong id="modal-nome-kit">---</strong></p>
+            <h3 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 6px;">Ajustar Saldo Balcão</h3>
+            <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 16px;">Redefinir saldo de <strong id="modal-nome-kit">---</strong></p>
             
             <input type="hidden" id="modal-codigo-kit" />
             <div class="form-group-item">
-                <label>Novo Saldo no Balcão</label>
+                <label>Novo Saldo Físico</label>
                 <input type="number" id="modal-input-qtd" min="0" required />
             </div>
 
             <div class="modal-actions">
                 <button type="button" class="btn-modal-cancel" onclick="fecharModalAjuste()">Cancelar</button>
-                <button type="button" id="btn-confirm-ajuste" class="btn-modal-confirm" onclick="confirmarAjusteEstoque()">Salvar Alteração</button>
+                <button type="button" id="btn-confirm-ajuste" class="btn-modal-confirm" onclick="confirmarAjusteEstoque()">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO DE SENHA DO ADMIN -->
+    <!-- MODAL DE SENHA DE ADMIN -->
     <div id="modal-confirmar-senha" class="modal-overlay hidden">
         <div class="modal-box">
-            <h3 style="color: #0f172a; margin-bottom: 6px;" id="senha-modal-titulo">Autenticação de Segurança</h3>
-            <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 12px;" id="senha-modal-subtitulo">Confirme sua senha de Administrador para prosseguir com esta ação.</p>
+            <h3 style="color: #0f172a; margin-bottom: 6px;" id="senha-modal-titulo">Autenticação</h3>
+            <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 12px;" id="senha-modal-subtitulo">Confirme sua senha para continuar.</p>
             
             <div id="modal-alert-msg" class="modal-alert modal-alert-danger"></div>
 
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Senha do Usuário Logado</label>
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Senha</label>
                 <input type="password" id="modal-input-senha" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9rem; outline: none; box-sizing: border-box;" placeholder="••••••••" onkeydown="if(event.key==='Enter') executarAcaoComSenha();" />
             </div>
 
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-voltar-modal" onclick="fecharModalSenha()">Cancelar</button>
-                <button type="button" id="btn-submit-senha-modal" class="btn-confirm-action" style="padding: 8px 16px; font-size: 0.85rem;" onclick="executarAcaoComSenha()">Confirmar Ação</button>
+                <button type="button" id="btn-submit-senha-modal" class="btn-confirm-action" style="padding: 8px 16px; font-size: 0.85rem;" onclick="executarAcaoComSenha()">Confirmar</button>
             </div>
         </div>
     </div>
 
     <div class="main-container">
-        <header class="app-header" style="margin-bottom: 20px;">
+        <header class="app-header" style="margin-bottom: 18px;">
             <div>
-                <h2>Controle e Calibragem de Estoque</h2>
-                <p>Clique em qualquer linha para filtrar beneficiários, buscar operadores e exportar relatórios</p>
+                <h2>Controle de Estoque</h2>
             </div>
         </header>
 
-        <!-- NOVO RESUMO DE ESTOQUE: CARDS EXECUTIVOS MODERNOS -->
+        <!-- RESUMO DE MÉTRICAS -->
         <div class="cards-summary">
-            <!-- 1. Lote Físico -->
             <div class="card-stat-modern stat-lote">
                 <div class="stat-top">
-                    <span class="stat-label">Lote Físico</span>
+                    <span class="stat-label">Lote Total</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                     </div>
                 </div>
                 <div class="stat-value" id="stat-lote-total">0</div>
-                <span class="stat-caption">Total cadastrado em fábrica</span>
             </div>
 
-            <!-- 2. Saídas Presenciais -->
             <div class="card-stat-modern stat-saidas">
                 <div class="stat-top">
-                    <span class="stat-label">Saídas Presenciais</span>
+                    <span class="stat-label">Saídas</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                     </div>
                 </div>
                 <div class="stat-value" style="color: #0284c7;" id="stat-total-saidas">0</div>
-                <span class="stat-caption">Entregas confirmadas balcão</span>
             </div>
 
-            <!-- 3. Saldo Físico Balcão -->
             <div class="card-stat-modern stat-balcao">
                 <div class="stat-top">
-                    <span class="stat-label">Saldo em Balcão</span>
+                    <span class="stat-label">Saldo Balcão</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                     </div>
                 </div>
                 <div class="stat-value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
-                <span class="stat-caption">Mochilas prontas p/ entrega</span>
             </div>
 
-            <!-- 4. Reservas Garantidas -->
             <div class="card-stat-modern stat-reservas">
                 <div class="stat-top">
-                    <span class="stat-label">Reservas Garantidas</span>
+                    <span class="stat-label">Reservas</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     </div>
                 </div>
                 <div class="stat-value" style="color: #d97706;" id="stat-total-reservado">0</div>
-                <span class="stat-caption">Cota titular pré-destinada</span>
             </div>
 
-            <!-- 5. Disponível Órfãos -->
             <div class="card-stat-modern stat-orfaos">
                 <div class="stat-top">
-                    <span class="stat-label">Disponível Órfãos</span>
+                    <span class="stat-label">Sobra (Órfãos)</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4-4-4 4"></path><path d="M12 16V8"></path></svg>
                     </div>
                 </div>
                 <div class="stat-value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
-                <span class="stat-caption">Livre para escolha e sobra</span>
             </div>
         </div>
 
-        <!-- MENU SUPERIOR DO ESTOQUE (INICIA SEM NENHUM SELECIONADO) -->
+        <!-- MENU SUPERIOR -->
         <div class="estoque-menu-bar">
             <button type="button" class="btn-menu-estoque" onclick="abrirModalEntradaManual()">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -857,26 +830,33 @@
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                     <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
-                Relatorio Movi Estoque
+                Relatório de Movimentações
             </button>
         </div>
 
-        <!-- TABELA ESTOQUE -->
-        <div class="table-container">
-            <table>
+        <!-- BARRA DE PESQUISA -->
+        <div class="saas-toolbar">
+            <div class="saas-search-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="input-busca-kit" class="saas-search-input" placeholder="Buscar kit..." oninput="filtrarTabelaEstoque()">
+            </div>
+            <span class="saas-counter" id="contador-kits-visiveis">Carregando...</span>
+        </div>
+
+        <!-- TABELA DE KITS -->
+        <div class="saas-table-container">
+            <table class="table-saas">
                 <thead>
                     <tr>
-                        <th>Modelo Kit</th>
-                        <th>Lote Fisico</th>
-                        <th>Saídas Presenciais</th>
-                        <th>Saldo Balcão</th>
-                        <th>Reservas</th>
-                        <th>Sobra</th>
-                        <th style="text-align: right;">Ações</th>
+                        <th style="min-width: 150px;">Kit</th>
+                        <th style="min-width: 110px;">Status</th>
+                        <th style="min-width: 110px;">Balcão</th>
+                        <th style="min-width: 260px;">Distribuição</th>
+                        <th style="text-align: right; min-width: 140px;">Ações</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-estoque">
-                    <tr><td colspan="7">Carregando estoque...</td></tr>
+                <tbody id="tabela-estoque-saas">
+                    <tr><td colspan="5" style="text-align: center; padding: 25px; color: #64748b;">Carregando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -891,12 +871,14 @@
         ];
 
         const SVG_ICONS = {
-            search: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
-            edit: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
-            block: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`,
-            check: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+            search: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+            edit: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
+            block: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`,
+            check: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+            backpack: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10z"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path><path d="M8 21v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5"></path><line x1="8" y1="10" x2="16" y2="10"></line></svg>`
         };
 
+        let dadosEstoqueGlobal = [];
         let dadosEstratificadosAtuais = [];
         let dadosMovimentacoesAtuais = [];
         let acaoPendenteCallback = null;
@@ -906,7 +888,6 @@
             carregarEstoque();
         });
 
-        /* FUNÇÕES DE ACIONAMENTO DOS MODAIS DO MENU */
         function abrirModalEntradaManual() {
             document.getElementById("input-qtd").value = "";
             document.getElementById("modal-entrada-manual").classList.remove("hidden");
@@ -929,7 +910,7 @@
 
         function resetarModalEntradaAuto() {
             document.getElementById("input-excel-file").value = "";
-            document.getElementById("label-dropzone-arquivo").innerText = "Clique para selecionar o arquivo Excel (.xlsx)";
+            document.getElementById("label-dropzone-arquivo").innerText = "Selecionar arquivo Excel (.xlsx)";
             document.getElementById("btn-submit-auto").disabled = true;
             document.getElementById("btn-submit-auto").innerText = "Processar Entrada";
             document.getElementById("btn-cancelar-auto").disabled = false;
@@ -946,15 +927,14 @@
 
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
-                label.innerHTML = `Arquivo Selecionado: <strong style="color: #0284c7;">${file.name}</strong>`;
+                label.innerHTML = `Arquivo: <strong style="color: #0284c7;">${file.name}</strong>`;
                 btnSubmit.disabled = false;
             } else {
-                label.innerText = "Clique para selecionar o arquivo Excel (.xlsx)";
+                label.innerText = "Selecionar arquivo Excel (.xlsx)";
                 btnSubmit.disabled = true;
             }
         }
 
-        /* ANIMAÇÃO DINÂMICA DA BARRA DE PROGRESSO */
         function iniciarAnimacaoProgresso() {
             const boxProgresso = document.getElementById("container-progresso-auto");
             const barFill = document.getElementById("bar-progresso-fill");
@@ -976,10 +956,10 @@
             txtPct.innerText = "0%";
 
             const etapas = [
-                { limite: 20, texto: "Lendo e validando estrutura do Excel..." },
-                { limite: 55, texto: "Registrando lotes e gerando movimentações..." },
-                { limite: 80, texto: "Recalibrando cotas e reservas de kits..." },
-                { limite: 94, texto: "Consolidando saldos físicos do balcão..." }
+                { limite: 20, texto: "Lendo estrutura..." },
+                { limite: 55, texto: "Registrando lotes..." },
+                { limite: 80, texto: "Recalibrando reservas..." },
+                { limite: 94, texto: "Atualizando saldos..." }
             ];
 
             progressoInterval = setInterval(() => {
@@ -1005,7 +985,7 @@
             const inputFile = document.getElementById("input-excel-file");
 
             if (!inputFile.files || inputFile.files.length === 0) {
-                mostrarToast("Selecione um arquivo Excel antes de prosseguir.", "error");
+                mostrarToast("Selecione um arquivo Excel antes.", "error");
                 return;
             }
 
@@ -1031,22 +1011,22 @@
                     barFill.style.width = "100%";
                     txtPct.innerText = "100%";
                     barFill.style.background = "#22c55e";
-                    txtStatus.innerHTML = `Estoque atualizado com sucesso!`;
+                    txtStatus.innerHTML = `Concluído!`;
 
                     setTimeout(async () => {
                         mostrarToast(data.mensagem, "success");
                         fecharModalEntradaAuto();
                         await carregarEstoque();
-                    }, 650);
+                    }, 600);
 
                 } else {
-                    mostrarToast(data.mensagem || "Erro ao processar planilha.", "error");
+                    mostrarToast(data.mensagem || "Erro na planilha.", "error");
                     resetarModalEntradaAuto();
                     document.getElementById("btn-submit-auto").disabled = false;
                 }
             } catch (err) {
                 if (progressoInterval) clearInterval(progressoInterval);
-                mostrarToast("Erro de comunicação ao enviar arquivo Excel.", "error");
+                mostrarToast("Erro de comunicação ao enviar arquivo.", "error");
                 resetarModalEntradaAuto();
                 document.getElementById("btn-submit-auto").disabled = false;
             }
@@ -1064,7 +1044,7 @@
 
         async function carregarRelatorioMovimentacoes() {
             const tbody = document.getElementById("tabela-movi-body");
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Carregando histórico de movimentações...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Carregando...</td></tr>";
 
             try {
                 const res = await fetch('/api/estoque/movimentacoes');
@@ -1075,21 +1055,20 @@
                     renderizarTabelaMovimentacoes(dadosMovimentacoesAtuais);
                 } else {
                     dadosMovimentacoesAtuais = [];
-                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Nenhuma movimentação de estoque registrada ainda.</td></tr>";
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Nenhuma movimentação registrada.</td></tr>";
                 }
             } catch (err) {
                 dadosMovimentacoesAtuais = [];
-                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Erro ao carregar movimentações do estoque.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Erro ao carregar movimentações.</td></tr>";
             }
         }
 
-        /* RENDERIZAÇÃO COM DIVISÃO VISUAL POR DIA E SINAIS (+ / -) CORRETOS */
         function renderizarTabelaMovimentacoes(lista) {
             const tbody = document.getElementById("tabela-movi-body");
             tbody.innerHTML = "";
 
             if (lista.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 16px; color: #64748b;'>Nenhuma movimentação encontrada para este filtro.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 16px; color: #64748b;'>Nenhum registro encontrado.</td></tr>";
                 return;
             }
 
@@ -1101,7 +1080,6 @@
                 const dataApenas = partes[0] || 'Sem Data';
                 const horaApenas = partes[1] || dataHoraRaw;
 
-                // Divisor de dia com cabeçalho visual timeline
                 if (dataApenas !== diaAnterior) {
                     diaAnterior = dataApenas;
                     const trDivider = document.createElement("tr");
@@ -1110,7 +1088,7 @@
                         <td colspan="5">
                             <span class="data-divider-badge">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                Movimentações de ${dataApenas}
+                                ${dataApenas}
                             </span>
                         </td>
                     `;
@@ -1119,7 +1097,6 @@
 
                 const tr = document.createElement("tr");
 
-                // Lógica dos sinais matemáticos (+ para entrada, - para saídas) e badges
                 let badgeClass = "badge-saida";
                 let sinalQtd = "+";
                 let corQtd = "#16a34a";
@@ -1162,7 +1139,6 @@
             });
         }
 
-        /* FILTRAGEM POR DATA (ex: 11/11), MODELO, TIPO OU OBSERVAÇÃO */
         function filtrarTabelaMovimentacoes() {
             const termo = document.getElementById("input-filtro-movi").value.toLowerCase().trim();
             if (!termo) {
@@ -1182,7 +1158,6 @@
             renderizarTabelaMovimentacoes(filtrados);
         }
 
-        /* NOTIFICAÇÃO TOAST VISUALMENTE DESTACADA NO TOPO CENTRAL */
         function mostrarToast(mensagem, tipo = 'success') {
             const container = document.getElementById("toast-container");
             const toast = document.createElement("div");
@@ -1208,8 +1183,9 @@
                 const res = await fetch('/api/estoque/listar');
                 const data = await res.json();
                 if (data.sucesso) {
-                    populacaoSelect(data.estoque);
-                    renderizarTabela(data.estoque);
+                    dadosEstoqueGlobal = data.estoque;
+                    populacaoSelect(dadosEstoqueGlobal);
+                    renderizarTabelaSaas(dadosEstoqueGlobal);
                 }
             } catch (err) {
                 console.error("Erro ao carregar estoque:", err);
@@ -1226,7 +1202,7 @@
                 const opt = document.createElement("option");
                 opt.value = m;
                 if (mapaComEstoque[m] !== undefined && mapaComEstoque[m] > 0) {
-                    opt.innerText = `${m} (${mapaComEstoque[m]} und no balcão)`;
+                    opt.innerText = `${m} (${mapaComEstoque[m]} und)`;
                     opt.style.fontWeight = "bold";
                     opt.style.color = "#0284c7";
                 } else {
@@ -1236,20 +1212,22 @@
             });
         }
 
-        function renderizarTabela(lista) {
-            const tbody = document.getElementById("tabela-estoque");
+        /* RENDERIZAÇÃO DA TABELA (TEXTOS ENXUTOS E BARRA SLATE/ÂMBAR/ESMERALDA) */
+        function renderizarTabelaSaas(lista) {
+            const tbody = document.getElementById("tabela-estoque-saas");
             tbody.innerHTML = "";
 
             let totalLoteGlobal = 0, totalSaidasGlobal = 0, totalBalcaoGlobal = 0, totalReservaGlobal = 0, totalSobraOrfaosGlobal = 0;
 
             if (lista.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='7'>Nenhum modelo cadastrado no estoque ainda.</td></tr>";
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 25px; color: #64748b;">Nenhum kit encontrado.</td></tr>`;
+                document.getElementById("contador-kits-visiveis").innerText = "0 modelos";
                 return;
             }
 
             lista.forEach(item => {
                 const saidas = item.quantidade_baixada || 0;
-                const saldoBalcao = item.quantidade_disponivel;
+                const saldoBalcao = item.quantidade_disponivel || 0;
                 const loteEntregue = item.quantidade_total_entrada || (saldoBalcao + saidas);
                 const reservas = item.quantidade_reservada || 0;
                 const sobraOrfaos = saldoBalcao - reservas;
@@ -1261,44 +1239,109 @@
                 totalReservaGlobal += reservas;
                 if (sobraOrfaos > 0) totalSobraOrfaosGlobal += sobraOrfaos;
 
-                let badgeSobraHtml = `<span class="${sobraOrfaos > 0 ? 'badge-sobra' : 'badge-esgotado'}">${sobraOrfaos} und</span>`;
-                if (!isAtivo) {
-                    badgeSobraHtml = `<span class="badge-inativo">Inativado</span>`;
+                // Percentuais proporcionais
+                let pctSaidas = 0;
+                let pctReservas = 0;
+                let pctSobra = 0;
+
+                if (loteEntregue > 0) {
+                    pctSaidas = (saidas / loteEntregue) * 100;
+                    pctReservas = (reservas / loteEntregue) * 100;
+                    pctSobra = (Math.max(0, sobraOrfaos) / loteEntregue) * 100;
                 }
 
+                // Badges limpos e sem poluição
+                let badgeStatusHtml = '';
+                if (!isAtivo) {
+                    badgeStatusHtml = `<span class="badge-saas-status status-bloqueado">● Inativo</span>`;
+                } else if (sobraOrfaos <= 0) {
+                    badgeStatusHtml = `<span class="badge-saas-status status-critico">● Esgotado</span>`;
+                } else if (sobraOrfaos < 15) {
+                    badgeStatusHtml = `<span class="badge-saas-status status-atencao">● Atenção</span>`;
+                } else {
+                    badgeStatusHtml = `<span class="badge-saas-status status-normal">● Normal</span>`;
+                }
+
+                const corSaldo = !isAtivo ? '#94a3b8' : (saldoBalcao > 0 ? '#16a34a' : '#dc2626');
+
                 const btnStatusHtml = isAtivo
-                    ? `<button class="btn-icon-only btn-icon-bloquear" title="Bloquear / Inativar Modelo" onclick="event.stopPropagation(); solicitarAlternarStatus('${item.codigo_kit}', true)">${SVG_ICONS.block}</button>`
-                    : `<button class="btn-icon-only btn-icon-ativar" title="Ativar / Reativar Modelo" onclick="event.stopPropagation(); solicitarAlternarStatus('${item.codigo_kit}', false)">${SVG_ICONS.check}</button>`;
+                    ? `<button class="btn-saas-icon btn-saas-bloquear" title="Bloquear" onclick="event.stopPropagation(); solicitarAlternarStatus('${item.codigo_kit}', true)">${SVG_ICONS.block}</button>`
+                    : `<button class="btn-saas-icon btn-saas-ativar" title="Reativar" onclick="event.stopPropagation(); solicitarAlternarStatus('${item.codigo_kit}', false)">${SVG_ICONS.check}</button>`;
 
                 const btnEditarHtml = isAtivo
-                    ? `<button class="btn-icon-only btn-icon-editar" title="Ajustar Saldo do Balcão" onclick="event.stopPropagation(); abrirModalAjuste('${item.codigo_kit}', ${saldoBalcao})">${SVG_ICONS.edit}</button>`
-                    : `<button class="btn-icon-only btn-icon-editar" title="Modelo inativado. Reative para ajustar." disabled>${SVG_ICONS.edit}</button>`;
+                    ? `<button class="btn-saas-icon btn-saas-editar" title="Ajustar Saldo" onclick="event.stopPropagation(); abrirModalAjuste('${item.codigo_kit}', ${saldoBalcao})">${SVG_ICONS.edit}</button>`
+                    : `<button class="btn-saas-icon btn-saas-editar" title="Inativo" disabled>${SVG_ICONS.edit}</button>`;
 
                 const tr = document.createElement("tr");
-                tr.className = isAtivo ? "tr-clicavel" : "tr-clicavel tr-inativo";
+                tr.className = isAtivo ? "tr-saas" : "tr-saas tr-saas-inativo";
 
                 tr.innerHTML = `
-                    <td onclick="abrirModalEstratificado('${item.codigo_kit}')">
-                        <span class="cell-modelo-link">${SVG_ICONS.search} <strong>${item.codigo_kit}</strong></span>
+                    <td>
+                        <div class="cell-kit-info" onclick="abrirModalEstratificado('${item.codigo_kit}')">
+                            <div class="kit-icon-badge">${SVG_ICONS.backpack}</div>
+                            <div>
+                                <span class="kit-nome-texto">${item.codigo_kit}</span>
+                                <span class="kit-lote-sub">Lote: ${loteEntregue}</span>
+                            </div>
+                        </div>
                     </td>
-                    <td onclick="abrirModalEstratificado('${item.codigo_kit}')"><strong>${loteEntregue} und</strong></td>
-                    <td><span class="badge-saida" onclick="abrirModalEstratificado('${item.codigo_kit}')">${saidas} und</span></td>
-                    <td onclick="abrirModalEstratificado('${item.codigo_kit}')"><strong style="color: ${isAtivo ? '#16a34a' : '#64748b'};">${saldoBalcao} und</strong></td>
-                    <td onclick="abrirModalEstratificado('${item.codigo_kit}')"><span class="badge-reserva">${reservas} und</span></td>
-                    <td onclick="abrirModalEstratificado('${item.codigo_kit}')">${badgeSobraHtml}</td>
-                    <td style="text-align: right; white-space: nowrap;">
-                        ${btnEditarHtml}
-                        ${btnStatusHtml}
+                    <td>${badgeStatusHtml}</td>
+                    <td>
+                        <div class="saas-saldo-main" style="color: ${corSaldo};">${saldoBalcao} <span class="saas-saldo-unit">und</span></div>
+                    </td>
+                    <td>
+                        <div class="saas-dist-box">
+                            <div class="saas-multi-bar" title="Saídas: ${saidas} | Reservas: ${reservas} | Sobra: ${sobraOrfaos > 0 ? sobraOrfaos : 0}">
+                                <div class="saas-seg-saidas" style="width: ${pctSaidas}%;"></div>
+                                <div class="saas-seg-reservas" style="width: ${pctReservas}%;"></div>
+                                <div class="saas-seg-sobra" style="width: ${pctSobra}%;"></div>
+                            </div>
+                            <div class="saas-dist-legend">
+                                <span class="legend-item"><span class="legend-dot dot-saida"></span> Sai: <strong>${saidas}</strong></span>
+                                <span class="legend-item"><span class="legend-dot dot-reserva"></span> Res: <strong>${reservas}</strong></span>
+                                <span class="legend-item">
+                                    <span class="legend-dot ${sobraOrfaos > 0 ? 'dot-sobra' : 'dot-esgotado'}"></span> 
+                                    Sob: <strong style="color: ${sobraOrfaos > 0 ? '#10b981' : '#dc2626'};">${sobraOrfaos > 0 ? sobraOrfaos : 0}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-saas-actions">
+                            <button type="button" class="btn-saas-extrato" onclick="abrirModalEstratificado('${item.codigo_kit}')">
+                                ${SVG_ICONS.search} Extrato
+                            </button>
+                            ${btnEditarHtml}
+                            ${btnStatusHtml}
+                        </div>
                     </td>
                 `;
+
                 tbody.appendChild(tr);
             });
 
+            document.getElementById("contador-kits-visiveis").innerText = `${lista.length} de ${dadosEstoqueGlobal.length}`;
             document.getElementById("stat-lote-total").innerText = totalLoteGlobal;
             document.getElementById("stat-total-saidas").innerText = totalSaidasGlobal;
             document.getElementById("stat-saldo-balcao").innerText = totalBalcaoGlobal;
             document.getElementById("stat-total-reservado").innerText = totalReservaGlobal;
             document.getElementById("stat-total-orfaos").innerText = totalSobraOrfaosGlobal;
+        }
+
+        function filtrarTabelaEstoque() {
+            const termo = document.getElementById("input-busca-kit").value.toLowerCase().trim();
+            if (!termo) {
+                renderizarTabelaSaas(dadosEstoqueGlobal);
+                return;
+            }
+
+            const filtrados = dadosEstoqueGlobal.filter(item => {
+                const cod = (item.codigo_kit || "").toLowerCase();
+                const desc = (item.descricao_kit || "").toLowerCase();
+                return cod.includes(termo) || desc.includes(termo);
+            });
+
+            renderizarTabelaSaas(filtrados);
         }
 
         async function abrirModalEstratificado(modeloKit) {
@@ -1307,7 +1350,7 @@
             document.getElementById("btn-download-csv").href = `/api/estoque/exportar/${encodeURIComponent(modeloKit)}`;
 
             const bodyTabela = document.getElementById("tabela-estratificada-body");
-            bodyTabela.innerHTML = "<tr><td colspan='4'>Carregando registros do histórico...</td></tr>";
+            bodyTabela.innerHTML = "<tr><td colspan='4'>Carregando registros...</td></tr>";
             
             document.getElementById("modal-estratificado").classList.remove("hidden");
 
@@ -1320,10 +1363,10 @@
                     renderizarLinhasEstratificadas(dadosEstratificadosAtuais);
                 } else {
                     dadosEstratificadosAtuais = [];
-                    bodyTabela.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">Nenhum kit <strong>${modeloKit}</strong> foi despachado presencialmente ainda.</td></tr>`;
+                    bodyTabela.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">Nenhuma saída realizada.</td></tr>`;
                 }
             } catch (err) {
-                bodyTabela.innerHTML = "<tr><td colspan='4' style='color:red;'>Erro ao carregar os dados estratificados.</td></tr>";
+                bodyTabela.innerHTML = "<tr><td colspan='4' style='color:red;'>Erro ao carregar dados.</td></tr>";
             }
         }
 
@@ -1332,7 +1375,7 @@
             bodyTabela.innerHTML = "";
 
             if (lista.length === 0) {
-                bodyTabela.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 16px; color: #64748b;">Nenhum registro encontrado para este filtro.</td></tr>`;
+                bodyTabela.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 16px; color: #64748b;">Nenhum registro.</td></tr>`;
                 return;
             }
 
@@ -1391,8 +1434,8 @@
 
             fecharModalAjuste();
             abrirModalSenha(
-                "Confirmar Ajuste de Estoque",
-                `Digite sua senha de Administrador para alterar o saldo do modelo "${codigoKit}" para ${novaQuantidade} und.`,
+                "Ajustar Saldo",
+                `Alterar saldo de "${codigoKit}" para ${novaQuantidade} und?`,
                 () => salvarAjusteEstoqueServidor(codigoKit, novaQuantidade)
             );
         }
@@ -1418,14 +1461,11 @@
         }
 
         function solicitarAlternarStatus(codigoKit, atualmenteAtivo) {
-            const acaoTexto = atualmenteAtivo ? "inativar/bloquear" : "reativar";
-            const detalheTexto = atualmenteAtivo 
-                ? `Ele permanecerá visível na tabela, mas bloqueado para novas baixas e ajustes.`
-                : `Ele voltará a ficar disponível para seleção, baixas e ajustes.`;
+            const acaoTexto = atualmenteAtivo ? "bloquear" : "reativar";
 
             abrirModalSenha(
-                `Confirmar Alteração de Status (${codigoKit})`,
-                `Digite sua senha de Administrador para ${acaoTexto} o modelo "${codigoKit}". ${detalheTexto}`,
+                `Status: ${codigoKit}`,
+                `Deseja ${acaoTexto} o modelo "${codigoKit}"?`,
                 () => alternarStatusServidor(codigoKit)
             );
         }
@@ -1446,11 +1486,10 @@
                     mostrarToast(data.mensagem, 'error');
                 }
             } catch (err) {
-                mostrarToast("Erro ao alterar status do modelo no estoque.", 'error');
+                mostrarToast("Erro ao alterar status.", 'error');
             }
         }
 
-        /* GERENCIAMENTO DO MODAL DE SENHA PADRÃO DO SISTEMA */
         function abrirModalSenha(titulo, subtitulo, callback) {
             document.getElementById("senha-modal-titulo").innerText = titulo;
             document.getElementById("senha-modal-subtitulo").innerText = subtitulo;
@@ -1484,7 +1523,7 @@
             const btnSubmit = document.getElementById("btn-submit-senha-modal");
 
             if (!senha) {
-                exibirAlertaModal("Por favor, digite sua senha de confirmação.");
+                exibirAlertaModal("Digite sua senha de confirmação.");
                 return;
             }
 
@@ -1502,19 +1541,19 @@
                 if (!data.sucesso) {
                     exibirAlertaModal(data.mensagem || "Senha incorreta!");
                     btnSubmit.disabled = false;
-                    btnSubmit.innerText = "Confirmar Ação";
+                    btnSubmit.innerText = "Confirmar";
                     return;
                 }
 
                 const callback = acaoPendenteCallback;
                 fecharModalSenha();
                 btnSubmit.disabled = false;
-                btnSubmit.innerText = "Confirmar Ação";
+                btnSubmit.innerText = "Confirmar";
                 if (callback) await callback();
             } catch (err) {
-                exibirAlertaModal("Erro de conexão ao validar credenciais.");
+                exibirAlertaModal("Erro ao validar credenciais.");
                 btnSubmit.disabled = false;
-                btnSubmit.innerText = "Confirmar Ação";
+                btnSubmit.innerText = "Confirmar";
             }
         }
 
