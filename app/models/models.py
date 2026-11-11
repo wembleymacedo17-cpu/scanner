@@ -186,7 +186,7 @@ class EstoqueKit(db.Model):
             'ultima_atualizacao': self.ultima_atualizacao.isoformat() if self.ultima_atualizacao else None
         }
 
-
+#uuuuuu
 class MovimentacaoEstoque(db.Model):
     __tablename__ = 'movimentacoes_estoque'
 

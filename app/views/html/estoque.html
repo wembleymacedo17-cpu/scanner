@@ -75,6 +75,56 @@
             border-color: #0284c7;
         }
 
+        /* ÁREA DE UPLOAD DO EXCEL (ENTRADA AUTO) */
+        .upload-dropzone {
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 26px 20px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 14px 0;
+        }
+        .upload-dropzone:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+        .upload-dropzone svg {
+            color: #0284c7;
+            margin-bottom: 8px;
+        }
+
+        /* BOTÃO DE EXPORTAÇÃO NOVO - PADRÃO SVG CORPORATIVO (SUBSTITUI O VERDE SÓLIDO) */
+        .btn-export-svg {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        }
+        .btn-export-svg:hover {
+            background: #f8fafc;
+            border-color: #0284c7;
+            color: #0284c7;
+            transform: translateY(-1px);
+        }
+        .btn-export-svg svg {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2.2;
+            color: #0284c7;
+        }
+
         /* BOTÕES COMPACTOS APENAS COM ÍCONE */
         .btn-icon-only {
             display: inline-flex;
@@ -147,7 +197,7 @@
             border-radius: 16px;
             padding: 24px;
             width: 90%;
-            max-width: 440px;
+            max-width: 460px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             position: relative;
         }
@@ -183,26 +233,7 @@
             font-size: 0.85rem;
             outline: none;
         }
-
         .input-filtro-modal:focus { border-color: #0284c7; }
-
-        .btn-export-excel {
-            background: #16a34a;
-            color: #ffffff;
-            border: none;
-            padding: 9px 14px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.82rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-export-excel:hover { background: #15803d; }
 
         .modal-body-scroll {
             overflow-y: auto;
@@ -240,6 +271,7 @@
             gap: 6px;
         }
         .btn-modal-confirm:hover, .btn-confirm-action:hover { background: #0369a1; }
+        .btn-modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .modal-alert {
             padding: 8px 12px;
@@ -253,7 +285,7 @@
 
         .hidden { display: none !important; }
 
-        /* NOTIFICAÇÃO TOAST CENTRALIZADA NO TOPO (FOCO VISUAL IMEDIATO) */
+        /* NOTIFICAÇÃO TOAST CENTRALIZADA NO TOPO */
         .toast-container { 
             position: fixed; 
             top: 24px; 
@@ -353,30 +385,38 @@
         </div>
     </div>
 
-    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA -->
+    <!-- 2. MODAL DE ENTRADA AUTOMÁTICA VIA EXCEL -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-auto">
         <div class="custom-modal-card">
             <div class="modal-header-estrat">
                 <div>
-                    <h3 style="font-size: 1.15rem; color: #0f172a;">Entrada Automática de Lote</h3>
-                    <p style="font-size: 0.8rem; color: #64748b;">Carga automática ou importação em lote</p>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;">Entrada Automática (Excel)</h3>
+                    <p style="font-size: 0.8rem; color: #64748b;">Carga automática de estoque em lote</p>
                 </div>
                 <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalEntradaAuto()">✕</span>
             </div>
 
-            <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; margin: 10px 0 16px 0;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <p style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Módulo de Entrada Automática</p>
-                <p style="font-size: 0.8rem; color: #64748b;">Pronto para receber o arquivo de importação ou execução em massa.</p>
-            </div>
+            <form id="form-entrada-auto" onsubmit="processarEntradaAutomatica(event)">
+                <input type="file" id="input-excel-file" accept=".xlsx, .xls" style="display: none;" onchange="atualizarNomeArquivoUpload(this)" />
+                
+                <div class="upload-dropzone" onclick="document.getElementById('input-excel-file').click()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p id="label-dropzone-arquivo" style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Clique para selecionar o arquivo Excel (.xlsx)</p>
+                    <p style="font-size: 0.78rem; color: #64748b;">A planilha deve conter as colunas: <strong>Nome</strong> e <strong>Quantidade</strong></p>
+                </div>
 
-            <div class="modal-actions">
-                <button type="button" class="btn-modal-cancel" onclick="fecharModalEntradaAuto()">Fechar</button>
-            </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-cancel" onclick="fecharModalEntradaAuto()">Cancelar</button>
+                    <button type="submit" id="btn-submit-auto" class="btn-modal-confirm" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Processar Entrada
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -393,8 +433,13 @@
 
             <div class="modal-filter-bar">
                 <input type="text" id="input-filtro-movi" class="input-filtro-modal" placeholder="Filtrar por modelo, tipo de movimentação ou observação..." oninput="filtrarTabelaMovimentacoes()" />
-                <a id="btn-export-csv-movi" href="/api/estoque/exportar-movimentacoes" target="_blank" class="btn-export-excel">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <!-- BOTÃO DE EXPORTAÇÃO REFORMULADO NO PADRÃO SVG -->
+                <a id="btn-export-csv-movi" href="/api/estoque/exportar-movimentacoes" target="_blank" class="btn-export-svg">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
                     Exportar Relatório
                 </a>
             </div>
@@ -435,9 +480,14 @@
 
             <div class="modal-filter-bar">
                 <input type="text" id="input-filtro-estrat" class="input-filtro-modal" placeholder="Filtrar por nome de beneficiário, dependente ou operador..." oninput="filtrarTabelaEstratificada()" />
-                <a id="btn-download-csv" href="#" target="_blank" class="btn-export-excel">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Exportar CSV/Excel
+                <!-- BOTÃO DE EXPORTAÇÃO REFORMULADO NO PADRÃO SVG -->
+                <a id="btn-download-csv" href="#" target="_blank" class="btn-export-svg">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Exportar Extrato
                 </a>
             </div>
 
@@ -620,11 +670,68 @@
         }
 
         function abrirModalEntradaAuto() {
+            document.getElementById("input-excel-file").value = "";
+            document.getElementById("label-dropzone-arquivo").innerText = "Clique para selecionar o arquivo Excel (.xlsx)";
+            document.getElementById("btn-submit-auto").disabled = true;
             document.getElementById("modal-entrada-auto").classList.remove("hidden");
         }
 
         function fecharModalEntradaAuto() {
             document.getElementById("modal-entrada-auto").classList.add("hidden");
+        }
+
+        function atualizarNomeArquivoUpload(input) {
+            const btnSubmit = document.getElementById("btn-submit-auto");
+            const label = document.getElementById("label-dropzone-arquivo");
+
+            if (input.files && input.files.length > 0) {
+                const file = input.files[0];
+                label.innerHTML = `Arquivo Selecionado: <strong style="color: #0284c7;">${file.name}</strong>`;
+                btnSubmit.disabled = false;
+            } else {
+                label.innerText = "Clique para selecionar o arquivo Excel (.xlsx)";
+                btnSubmit.disabled = true;
+            }
+        }
+
+        async function processarEntradaAutomatica(e) {
+            e.preventDefault();
+            const inputFile = document.getElementById("input-excel-file");
+            const btnSubmit = document.getElementById("btn-submit-auto");
+
+            if (!inputFile.files || inputFile.files.length === 0) {
+                mostrarToast("Selecione um arquivo Excel antes de prosseguir.", "error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("arquivo", inputFile.files[0]);
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Processando Planilha...";
+
+            try {
+                const res = await fetch('/api/estoque/entrada-auto', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.sucesso) {
+                    mostrarToast(data.mensagem, "success");
+                    fecharModalEntradaAuto();
+                    await carregarEstoque();
+                } else {
+                    mostrarToast(data.mensagem || "Erro ao processar planilha.", "error");
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "Processar Entrada";
+                }
+            } catch (err) {
+                mostrarToast("Erro de comunicação ao enviar arquivo Excel.", "error");
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Processar Entrada";
+            }
         }
 
         async function abrirModalRelatorio() {
@@ -654,7 +761,7 @@
                 }
             } catch (err) {
                 dadosMovimentacoesAtuais = [];
-                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Nenhuma movimentação de estoque registrada ainda.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px; color: #64748b;'>Erro ao carregar movimentações do estoque.</td></tr>";
             }
         }
 
@@ -671,7 +778,7 @@
                 const tr = document.createElement("tr");
 
                 let badgeTipo = "badge-saida";
-                if (m.tipo_movimentacao === 'ENTRADA') badgeTipo = "badge-sobra";
+                if (m.tipo_movimentacao === 'ENTRADA' || m.tipo_movimentacao === 'ENTRADA_AUTO') badgeTipo = "badge-sobra";
                 else if (m.tipo_movimentacao === 'ESTORNO_CORRECAO' || m.tipo_movimentacao === 'REVOGACAO_ADMIN') badgeTipo = "badge-reserva";
                 else if (m.tipo_movimentacao === 'INATIVACAO') badgeTipo = "badge-esgotado";
 

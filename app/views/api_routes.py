@@ -6,6 +6,7 @@ from app.services.estoque_service import recalibrar_estoque, MODELOS_OFICIAIS
 from io import StringIO
 import csv
 import time
+import pandas as pd
 import re
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 import copy
@@ -509,6 +510,41 @@ def listar_historico():
     }), 200
 
 
+@api_bp.route('/estoque/movimentacoes', methods=['GET'])
+def listar_movimentacoes_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    movs = db.session.query(
+        MovimentacaoEstoque.data_movimentacao,
+        EstoqueKit.codigo_kit,
+        MovimentacaoEstoque.tipo_movimentacao,
+        MovimentacaoEstoque.quantidade,
+        MovimentacaoEstoque.observacao
+    ).join(
+        EstoqueKit, MovimentacaoEstoque.id_estoque == EstoqueKit.id_estoque
+    ).order_by(
+        MovimentacaoEstoque.data_movimentacao.desc()
+    ).limit(300).all()
+
+    lista = []
+    for m in movs:
+        dt_str = ""
+        if m.data_movimentacao:
+            data_brasilia = m.data_movimentacao - timedelta(hours=3)
+            dt_str = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
+
+        lista.append({
+            'data_movimentacao': dt_str,
+            'codigo_kit': m.codigo_kit,
+            'tipo_movimentacao': m.tipo_movimentacao,
+            'quantidade': m.quantidade,
+            'observacao': m.observacao or '---'
+        })
+
+    return jsonify({'sucesso': True, 'movimentacoes': lista}), 200
+
+
 @api_bp.route('/editar-baixa-historico', methods=['PUT'])
 def editar_baixa_historico():
     if session.get('usuario_perfil') != 'ADMIN':
@@ -907,7 +943,105 @@ def entrada_estoque():
     db.session.commit()
 
     return jsonify({'sucesso': True, 'mensagem': f'{quantidade} unidades adicionadas ao modelo {codigo_kit}!'}), 200
+@api_bp.route('/estoque/entrada-auto', methods=['POST'])
+def entrada_automatica_estoque():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado. Apenas administradores podem dar entrada automática.'}), 403
 
+    if 'arquivo' not in request.files:
+        return jsonify({'sucesso': False, 'mensagem': 'Nenhum arquivo enviado.'}), 400
+
+    arquivo = request.files['arquivo']
+    if not arquivo or arquivo.filename == '':
+        return jsonify({'sucesso': False, 'mensagem': 'Selecione um arquivo Excel válido.'}), 400
+
+    extensao = arquivo.filename.rsplit('.', 1)[-1].lower()
+    if extensao not in ['xlsx', 'xls']:
+        return jsonify({'sucesso': False, 'mensagem': 'Formato inválido. Envie um arquivo Excel (.xlsx ou .xls).'}), 400
+
+    try:
+        df = pd.read_excel(arquivo)
+        # Normaliza nomes de colunas (sem espaços e em minúsculo)
+        df.columns = [str(c).strip().lower() for c in df.columns]
+
+        col_nome = None
+        col_qtd = None
+
+        for c in df.columns:
+            if c in ['nome', 'modelo', 'kit', 'mochila', 'modelo_kit']:
+                col_nome = c
+            elif c in ['quantidade', 'qtd', 'quant', 'total']:
+                col_qtd = c
+
+        if not col_nome or not col_qtd:
+            return jsonify({
+                'sucesso': False,
+                'mensagem': 'A planilha deve conter obrigatoriamente as colunas "Nome" (ou Modelo) e "Quantidade".'
+            }), 400
+
+        total_adicionado = 0
+        modelos_processados = 0
+        linhas_ignoradas = 0
+
+        for _, row in df.iterrows():
+            nome_bruto = str(row[col_nome]).strip()
+            if not nome_bruto or nome_bruto.lower() in ['nan', 'none', '---']:
+                linhas_ignoradas += 1
+                continue
+
+            try:
+                qtd = int(row[col_qtd])
+            except (ValueError, TypeError):
+                linhas_ignoradas += 1
+                continue
+
+            if qtd <= 0:
+                linhas_ignoradas += 1
+                continue
+
+            # Localiza o modelo no banco sem distinção de maiúsculas/minúsculas
+            item = EstoqueKit.query.filter(EstoqueKit.codigo_kit.ilike(nome_bruto)).first()
+            if not item:
+                # Se não existir, cadastra o novo modelo oficial
+                item = EstoqueKit(
+                    codigo_kit=nome_bruto,
+                    descricao_kit=f"Kit Escolar {nome_bruto}",
+                    quantidade_disponivel=qtd,
+                    quantidade_reservada=0,
+                    quantidade_baixada=0,
+                    ativo=True
+                )
+                db.session.add(item)
+                db.session.flush()
+            else:
+                item.quantidade_disponivel = (item.quantidade_disponivel or 0) + qtd
+
+            # Registra auditoria da movimentação
+            mov = MovimentacaoEstoque(
+                id_estoque=item.id_estoque,
+                tipo_movimentacao='ENTRADA_AUTO',
+                quantidade=qtd,
+                observacao=f"Entrada em lote via Excel ({arquivo.filename}) por {session.get('usuario_nome')}"
+            )
+            db.session.add(mov)
+
+            total_adicionado += qtd
+            modelos_processados += 1
+
+        db.session.commit()
+        recalibrar_estoque()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': f'Entrada automática concluída! {total_adicionado} unidades distribuídas em {modelos_processados} modelos.',
+            'total_adicionado': total_adicionado,
+            'modelos_processados': modelos_processados,
+            'linhas_ignoradas': linhas_ignoradas
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'sucesso': False, 'mensagem': f'Erro ao ler planilha: {str(e)}'}), 500
 
 @api_bp.route('/estoque/ajustar', methods=['PUT'])
 def ajustar_estoque():
@@ -1003,7 +1137,47 @@ def estoque_detalhes_modelo(modelo_kit):
         'total_baixado': len(lista_estratificada),
         'historico': lista_estratificada
     }), 200
+@api_bp.route('/estoque/exportar-movimentacoes', methods=['GET'])
+def exportar_todas_movimentacoes_csv():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
 
+    movs = db.session.query(
+        MovimentacaoEstoque.data_movimentacao,
+        EstoqueKit.codigo_kit,
+        MovimentacaoEstoque.tipo_movimentacao,
+        MovimentacaoEstoque.quantidade,
+        MovimentacaoEstoque.observacao
+    ).join(
+        EstoqueKit, MovimentacaoEstoque.id_estoque == EstoqueKit.id_estoque
+    ).order_by(
+        MovimentacaoEstoque.data_movimentacao.desc()
+    ).all()
+
+    output = StringIO()
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(['Data/Hora', 'Modelo Kit', 'Tipo de Operacao', 'Quantidade', 'Observacao / Responsavel'])
+
+    for m in movs:
+        dt_str = ""
+        if m.data_movimentacao:
+            data_brasilia = m.data_movimentacao - timedelta(hours=3)
+            dt_str = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
+
+        writer.writerow([
+            dt_str,
+            m.codigo_kit,
+            m.tipo_movimentacao,
+            m.quantidade,
+            m.observacao or '---'
+        ])
+
+    response = Response(
+        "\ufeff" + output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=relatorio_movimentacoes_estoque.csv"}
+    )
+    return response
 
 @api_bp.route('/estoque/exportar/<string:modelo_kit>', methods=['GET'])
 def estoque_exportar_modelo(modelo_kit):
