@@ -1,7 +1,6 @@
 import os
-import time
 from datetime import timedelta
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify
+from flask import Flask, render_template, session, redirect, url_for, request
 from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 from app.models import db, Usuario
@@ -22,14 +21,13 @@ def create_app():
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.secret_key = os.getenv('SECRET_KEY', 'chave_secreta_funfarme_2026')
     
-    # 1. Configuração de Proxy para Render e AWS (Identifica HTTPS corretamente)
+    # 1. ProxyFix para identificar cabeçalhos de rede no Render e AWS Nginx
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
-    # 2. Configurações de Cookies Compatíveis com Mobile e Nuvem (HTTPS)
-    is_prod = os.getenv('RENDER') is not None or os.getenv('AWS_EXECUTION_ENV') is not None or not app.debug
+    # 2. Configuração estável de Cookies (compatível com HTTP local e HTTPS Render/AWS)
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SECURE'] = is_prod  # Exige HTTPS em produção para não ser descartado pelo celular
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
     
     database_url = os.getenv('DATABASE_URL')
@@ -65,34 +63,14 @@ def create_app():
 
     db.init_app(app)
 
-    # MIDDLEWARE GLOBAL (VALIDA SESSÃO ÚNICA)
-    @app.before_request
-    def verificar_sessao_global():
-        if request.endpoint in ['login_page', 'api.login_api', 'static']:
-            return None
-
-        user_id = session.get('usuario_id')
-        token_local = session.get('session_token')
-
-        if user_id and token_local:
-            agora = time.time()
-            ultima_checagem = session.get('ultimo_check_sessao', 0)
-
-            # Checa o banco com intervalo mínimo de 5 segundos
-            if (agora - ultima_checagem) > 5:
-                user = Usuario.query.get(user_id)
-                # Se o token no banco mudou, apenas limpa a sessão local sem alterar o banco
-                if user and user.session_token and user.session_token != token_local:
-                    session.clear()
-                    if request.path.startswith('/api/'):
-                        return jsonify({
-                            'sucesso': False,
-                            'sessao_expirada': True,
-                            'mensagem': 'Sua sessão foi encerrada pois um novo login foi realizado em outro dispositivo.'
-                        }), 401
-                    return redirect(url_for('login_page'))
-                
-                session['ultimo_check_sessao'] = agora
+    # 3. Impede que o navegador faça cache de redirecionamentos ou telas ao trocar de usuário
+    @app.after_request
+    def adicionar_cabecalhos_no_cache(response):
+        if not request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
 
     @app.route('/')
     def index():
@@ -110,8 +88,8 @@ def create_app():
         token_local = session.get('session_token')
 
         if user_id and token_local:
+            db.session.expire_all()
             user = Usuario.query.get(user_id)
-            # Só limpa o banco se o token for o do próprio dispositivo saindo
             if user and user.session_token == token_local:
                 user.session_token = None
                 db.session.commit()

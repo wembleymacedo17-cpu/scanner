@@ -74,6 +74,7 @@ def login_api():
     if not email or not senha:
         return jsonify({'sucesso': False, 'mensagem': 'Preencha todos os campos.'}), 400
 
+    db.session.expire_all()
     user = Usuario.query.filter_by(email=email, ativo=True).first()
     if not user or not user.checar_senha(senha):
         return jsonify({'sucesso': False, 'mensagem': 'E-mail ou senha incorretos.'}), 401
@@ -81,13 +82,14 @@ def login_api():
     novo_token = user.gerar_novo_session_token()
     db.session.commit()
 
-    # ATIVA A DURAÇÃO DEFINIDA NO PERMANENT_SESSION_LIFETIME (8 HORAS)
+    # Limpa qualquer resquício de sessão anterior antes de gravar o novo usuário
+    session.clear()
     session.permanent = True
 
     session['usuario_id'] = user.id_usuario
     session['usuario_nome'] = user.nome
     session['usuario_email'] = user.email
-    session['usuario_perfil'] = user.perfil
+    session['usuario_perfil'] = (user.perfil or 'OPERADOR').strip().upper()
     session['session_token'] = novo_token
     session['ultimo_check_sessao'] = time.time()
 
@@ -1070,7 +1072,8 @@ def validar_senha_admin():
 @api_bp.route('/verificar-sessao', methods=['GET'])
 def verificar_sessao_ativa():
     """
-    Heartbeat em tempo real: verifica se outro dispositivo assumiu a conta.
+    Heartbeat em tempo real: força leitura atualizada do banco (expire_all)
+    para verificar se outro dispositivo assumiu a conta.
     """
     user_id = session.get('usuario_id')
     token_local = session.get('session_token')
@@ -1082,11 +1085,20 @@ def verificar_sessao_ativa():
             'mensagem': 'Sessão não identificada.'
         }), 401
 
+    # Garante que o worker do Gunicorn consulte o valor real no PostgreSQL sem usar cache em memória
+    db.session.expire_all()
     user = Usuario.query.get(user_id)
     
-    # Se o token no banco existe e é DIFERENTE do meu token local, outro login ocorreu
-    if user and user.session_token and user.session_token != token_local:
-        session.clear()  # Limpa apenas a sessão local, NUNCA mexe no banco!
+    if not user or not user.ativo:
+        session.clear()
+        return jsonify({
+            'sucesso': False,
+            'sessao_expirada': True,
+            'mensagem': 'Sua conta foi desativada pelo administrador.'
+        }), 401
+
+    if user.session_token and user.session_token != token_local:
+        session.clear()
         return jsonify({
             'sucesso': False,
             'sessao_expirada': True,

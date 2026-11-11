@@ -58,8 +58,9 @@
         .form-group label { display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #ffffff; font-size: 0.9rem; outline: none; }
         .form-group input:focus { border-color: #0284c7; }
-        .btn-login { width: 100%; padding: 12px; background: #0284c7; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+        .btn-login { width: 100%; padding: 12px; background: #0284c7; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s, opacity 0.2s; margin-top: 8px; }
         .btn-login:hover { background: #0369a1; }
+        .btn-login:disabled { background: #0369a1; opacity: 0.75; cursor: not-allowed; }
         .alert { padding: 10px; border-radius: 6px; font-size: 0.82rem; text-align: center; margin-top: 14px; display: none; }
         .alert-danger { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
     </style>
@@ -103,11 +104,16 @@
     <script>
         document.getElementById("form-login").addEventListener("submit", async (e) => {
             e.preventDefault();
+            const btnSubmit = e.target.querySelector(".btn-login");
+            if (btnSubmit.disabled) return;
+
             const email = document.getElementById("email").value;
             const senha = document.getElementById("senha").value;
             const alertBox = document.getElementById("alert-error");
 
             alertBox.style.display = "none";
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Autenticando...";
 
             try {
                 const res = await fetch("/api/login", {
@@ -119,14 +125,18 @@
                 const data = await res.json();
 
                 if (res.ok && data.sucesso) {
-                    window.location.href = "/";
+                    window.top.location.href = "/";
                 } else {
                     alertBox.innerText = data.mensagem || "Erro ao efetuar login.";
                     alertBox.style.display = "block";
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "Entrar no Sistema";
                 }
             } catch (err) {
                 alertBox.innerText = "Erro na conexão com o servidor.";
                 alertBox.style.display = "block";
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Entrar no Sistema";
             }
         });
     </script>
