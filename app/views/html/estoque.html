@@ -7,10 +7,98 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
         .main-container { max-width: 1200px !important; width: 96% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
-        .cards-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
-        .card-stat { background: #ffffff; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .card-stat h4 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.3px; }
-        .card-stat .value { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
+        
+        /* NOVO DESIGN: CARDS EXECUTIVOS MODERNOS */
+        .cards-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card-stat-modern {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 18px 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-stat-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .card-stat-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-lote::before { background: #475569; }
+        .stat-saidas::before { background: #0284c7; }
+        .stat-balcao::before { background: #16a34a; }
+        .stat-reservas::before { background: #d97706; }
+        .stat-orfaos::before { background: #6366f1; }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon-wrapper {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon-wrapper svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2.2;
+        }
+
+        .stat-lote .stat-icon-wrapper { background: #f1f5f9; color: #475569; }
+        .stat-saidas .stat-icon-wrapper { background: #e0f2fe; color: #0284c7; }
+        .stat-balcao .stat-icon-wrapper { background: #dcfce7; color: #16a34a; }
+        .stat-reservas .stat-icon-wrapper { background: #fef3c7; color: #d97706; }
+        .stat-orfaos .stat-icon-wrapper { background: #ede9fe; color: #6366f1; }
+
+        .stat-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #0f172a;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 4px;
+        }
+
+        .stat-caption {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
 
         /* MENU INTERNO DE OPERAÇÕES DO ESTOQUE (BOTÕES VETORIZADOS) */
         .estoque-menu-bar {
@@ -163,7 +251,7 @@
             100% { transform: translateX(100%); }
         }
 
-        /* BOTÃO DE EXPORTAÇÃO PADRÃO SVG CORPORATIVO */
+        /* BOTÃO DE EXPORTAÇÃO NOVO - PADRÃO SVG CORPORATIVO */
         .btn-export-svg {
             background: #ffffff;
             color: #334155;
@@ -244,7 +332,7 @@
         .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
         .badge-inativo { background: #cbd5e1; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        
+
         /* DESTAQUE EM VERMELHO PARA REVOGACAO_ADMIN */
         .badge-revogacao-admin {
             background: #fee2e2 !important;
@@ -541,7 +629,7 @@
         </div>
     </div>
 
-    <!-- 3. MODAL DE RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE (COM AGRUPAMENTO DE DIAS E FILTRO COMPLETO) -->
+    <!-- 3. MODAL DE RELATÓRIO DE MOVIMENTAÇÃO DE ESTOQUE -->
     <div class="custom-modal-overlay hidden" id="modal-relatorio-movimentacoes">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
@@ -558,7 +646,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                     Exportar Relatório
                 </a>
@@ -604,7 +692,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                     Exportar Extrato
                 </a>
@@ -679,27 +767,66 @@
             </div>
         </header>
 
-        <!-- RESUMO DE ESTOQUE -->
+        <!-- NOVO RESUMO DE ESTOQUE: CARDS EXECUTIVOS MODERNOS -->
         <div class="cards-summary">
-            <div class="card-stat">
-                <h4>Lote Fisico (Total)</h4>
-                <div class="value" id="stat-lote-total">0</div>
+            <!-- 1. Lote Físico -->
+            <div class="card-stat-modern stat-lote">
+                <div class="stat-top">
+                    <span class="stat-label">Lote Físico</span>
+                    <div class="stat-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-lote-total">0</div>
+                <span class="stat-caption">Total cadastrado em fábrica</span>
             </div>
-            <div class="card-stat">
-                <h4>Saídas Presenciais</h4>
-                <div class="value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+
+            <!-- 2. Saídas Presenciais -->
+            <div class="card-stat-modern stat-saidas">
+                <div class="stat-top">
+                    <span class="stat-label">Saídas Presenciais</span>
+                    <div class="stat-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+                <span class="stat-caption">Entregas confirmadas balcão</span>
             </div>
-            <div class="card-stat">
-                <h4>Saldo Físico Balcão</h4>
-                <div class="value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+
+            <!-- 3. Saldo Físico Balcão -->
+            <div class="card-stat-modern stat-balcao">
+                <div class="stat-top">
+                    <span class="stat-label">Saldo em Balcão</span>
+                    <div class="stat-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+                <span class="stat-caption">Mochilas prontas p/ entrega</span>
             </div>
-            <div class="card-stat">
-                <h4>Reservas Garantidas</h4>
-                <div class="value" style="color: #b45309;" id="stat-total-reservado">0</div>
+
+            <!-- 4. Reservas Garantidas -->
+            <div class="card-stat-modern stat-reservas">
+                <div class="stat-top">
+                    <span class="stat-label">Reservas Garantidas</span>
+                    <div class="stat-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #d97706;" id="stat-total-reservado">0</div>
+                <span class="stat-caption">Cota titular pré-destinada</span>
             </div>
-            <div class="card-stat">
-                <h4>Disponível Órfãos</h4>
-                <div class="value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
+
+            <!-- 5. Disponível Órfãos -->
+            <div class="card-stat-modern stat-orfaos">
+                <div class="stat-top">
+                    <span class="stat-label">Disponível Órfãos</span>
+                    <div class="stat-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4-4-4 4"></path><path d="M12 16V8"></path></svg>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
+                <span class="stat-caption">Livre para escolha e sobra</span>
             </div>
         </div>
 
@@ -956,7 +1083,7 @@
             }
         }
 
-        /* 4. RENDERIZAÇÃO COM DIVISÃO VISUAL POR DIA E SINAIS (+ / -) CORRETOS */
+        /* RENDERIZAÇÃO COM DIVISÃO VISUAL POR DIA E SINAIS (+ / -) CORRETOS */
         function renderizarTabelaMovimentacoes(lista) {
             const tbody = document.getElementById("tabela-movi-body");
             tbody.innerHTML = "";
@@ -992,10 +1119,10 @@
 
                 const tr = document.createElement("tr");
 
-                // 1 & 3: Lógica dos sinais matemáticos (+ para entrada, - para saídas) e badges
+                // Lógica dos sinais matemáticos (+ para entrada, - para saídas) e badges
                 let badgeClass = "badge-saida";
                 let sinalQtd = "+";
-                let corQtd = "#16a34a"; // verde positivo
+                let corQtd = "#16a34a";
 
                 const tipoUpper = (m.tipo_movimentacao || '').toUpperCase();
 
@@ -1006,7 +1133,7 @@
                 } else if (tipoUpper === 'SAIDA_BAIXA' || tipoUpper === 'SAIDA_CORRECAO') {
                     badgeClass = "badge-saida";
                     sinalQtd = "-";
-                    corQtd = "#dc2626"; // vermelho negativo
+                    corQtd = "#dc2626";
                 } else if (tipoUpper === 'ENTRADA' || tipoUpper === 'ENTRADA_AUTO') {
                     badgeClass = "badge-sobra";
                     sinalQtd = "+";
@@ -1035,7 +1162,7 @@
             });
         }
 
-        /* 4. FILTRAGEM POR DATA (ex: 11/11), MODELO, TIPO OU OBSERVAÇÃO */
+        /* FILTRAGEM POR DATA (ex: 11/11), MODELO, TIPO OU OBSERVAÇÃO */
         function filtrarTabelaMovimentacoes() {
             const termo = document.getElementById("input-filtro-movi").value.toLowerCase().trim();
             if (!termo) {
