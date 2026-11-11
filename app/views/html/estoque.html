@@ -7,8 +7,70 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <style>
         .main-container { max-width: 1240px !important; width: 96% !important; margin: 15px auto !important; padding-bottom: 90px !important; }
-        
-        /* RESUMO DE MÉTRICAS (ENXUTO E DIRETO) */
+
+        /* CABEÇALHO COM TÍTULO E BOTÕES NO TOPO */
+        .app-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header-title-box h2 {
+            font-size: 1.45rem;
+            color: #0f172a;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .header-title-box p {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* 1. BOTÕES DE AÇÃO: TODOS COM COR NORMAL/NEUTRA POR PADRÃO */
+        .header-actions-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-modern-action {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 9px 16px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        }
+
+        .btn-modern-action svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            stroke-width: 2.2;
+            color: #0284c7;
+        }
+
+        .btn-modern-action:hover {
+            background: #f8fafc;
+            border-color: #0284c7;
+            color: #0284c7;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+        }
+
+        /* CARDS DE MÉTRICAS */
         .cards-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -18,10 +80,10 @@
 
         .card-stat-modern {
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 16px 18px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -31,7 +93,7 @@
 
         .card-stat-modern:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
         }
 
         .card-stat-modern::before {
@@ -91,46 +153,7 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* MENU DE AÇÕES SUPERIOR */
-        .estoque-menu-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .btn-menu-estoque {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 9px 16px;
-            font-size: 0.84rem;
-            font-weight: 700;
-            color: #334155;
-            cursor: pointer;
-            border-radius: 9px;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-        }
-
-        .btn-menu-estoque svg {
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-            stroke-width: 2.2;
-        }
-
-        .btn-menu-estoque:hover {
-            background: #f8fafc;
-            border-color: #0284c7;
-            color: #0284c7;
-            transform: translateY(-1px);
-        }
-
-        /* BARRA DE PESQUISA DA TABELA */
+        /* BARRA DE PESQUISA */
         .saas-toolbar {
             display: flex;
             justify-content: space-between;
@@ -184,7 +207,7 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* TABELA COMPACTA E MODERNA */
+        /* TABELA */
         .saas-table-container {
             background: #ffffff;
             border-radius: 14px;
@@ -231,17 +254,16 @@
             opacity: 0.55;
         }
 
-        /* COLUNA KIT */
         .cell-kit-info {
             display: flex;
             align-items: center;
-            gap: 9px;
+            gap: 10px;
             cursor: pointer;
         }
 
         .kit-icon-badge {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 7px;
             background: #f1f5f9;
             color: #475569;
@@ -258,16 +280,33 @@
         }
 
         .kit-icon-badge svg {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
             stroke-width: 2.2;
         }
 
         .kit-nome-texto {
-            font-size: 0.92rem;
+            font-size: 0.93rem;
             font-weight: 800;
             color: #0f172a;
-            display: block;
+        }
+
+        /* 2c. TAG DE PORCENTAGEM DE ENTREGA */
+        .badge-pct-entregue {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            white-space: nowrap;
+        }
+
+        .badge-pct-entregue.pct-zero {
+            background: #f1f5f9;
+            color: #64748b;
+            border-color: #e2e8f0;
         }
 
         .kit-lote-sub {
@@ -276,24 +315,6 @@
             font-weight: 600;
         }
 
-        /* COLUNA STATUS */
-        .badge-saas-status {
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-        }
-
-        .status-normal { background: #dcfce7; color: #15803d; }
-        .status-atencao { background: #fef3c7; color: #b45309; }
-        .status-critico { background: #fee2e2; color: #b91c1c; }
-        .status-bloqueado { background: #f1f5f9; color: #64748b; }
-
-        /* COLUNA BALCÃO */
         .saas-saldo-main {
             font-size: 1.25rem;
             font-weight: 800;
@@ -307,18 +328,18 @@
             color: #64748b;
         }
 
-        /* NOVO DESIGN DA BARRA DE DISTRIBUIÇÃO */
+        /* 2b. BARRA DE DISTRIBUIÇÃO: SAI: VERDE | RES: LARANJA | SOB: AZUL */
         .saas-dist-box {
             display: flex;
             flex-direction: column;
             gap: 5px;
-            min-width: 220px;
-            max-width: 320px;
+            min-width: 240px;
+            max-width: 340px;
         }
 
         .saas-multi-bar {
             width: 100%;
-            height: 7px;
+            height: 8px;
             background: #e2e8f0;
             border-radius: 999px;
             overflow: hidden;
@@ -327,8 +348,8 @@
         }
 
         .saas-seg-saidas { 
-            background: #94a3b8; 
-            border-radius: 999px 0 0 999px;
+            background: #10b981; 
+            border-radius: 999px 0 0 999px; 
             transition: width 0.3s ease; 
         }
 
@@ -338,8 +359,8 @@
         }
 
         .saas-seg-sobra { 
-            background: #10b981; 
-            border-radius: 0 999px 999px 0;
+            background: #0284c7; 
+            border-radius: 0 999px 999px 0; 
             transition: width 0.3s ease; 
         }
 
@@ -364,12 +385,10 @@
             flex-shrink: 0;
         }
 
-        .dot-saida { background: #94a3b8; }
+        .dot-saida { background: #10b981; }
         .dot-reserva { background: #f59e0b; }
-        .dot-sobra { background: #10b981; }
-        .dot-esgotado { background: #ef4444; }
+        .dot-sobra { background: #0284c7; }
 
-        /* AÇÕES */
         .cell-saas-actions {
             display: flex;
             align-items: center;
@@ -450,7 +469,7 @@
             color: #0284c7;
         }
 
-        /* UPLOAD & PROGRESS */
+        /* UPLOAD & BARRA DE PROGRESSO */
         .upload-dropzone {
             border: 2px dashed #94a3b8;
             border-radius: 12px;
@@ -744,13 +763,44 @@
     </div>
 
     <div class="main-container">
-        <header class="app-header" style="margin-bottom: 18px;">
-            <div>
+        <!-- 1. CABEÇALHO COM TÍTULO E BOTÕES NO TOPO (COR NORMAL) -->
+        <header class="app-header-top">
+            <div class="header-title-box">
                 <h2>Controle de Estoque</h2>
+                <p>Gestão visual e calibragem de lotes em tempo real</p>
+            </div>
+
+            <div class="header-actions-bar">
+                <button type="button" class="btn-modern-action" onclick="abrirModalEntradaManual()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Entrada Manual
+                </button>
+
+                <button type="button" class="btn-modern-action" onclick="abrirModalEntradaAuto()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Entrada Automática
+                </button>
+
+                <button type="button" class="btn-modern-action" onclick="abrirModalRelatorio()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Relatório Movimentações
+                </button>
             </div>
         </header>
 
-        <!-- RESUMO DE MÉTRICAS -->
+        <!-- CARDS DE RESUMO (ABAIXO DO MENU E ACIMA DA BUSCA) -->
         <div class="cards-summary">
             <div class="card-stat-modern stat-lote">
                 <div class="stat-top">
@@ -803,37 +853,6 @@
             </div>
         </div>
 
-        <!-- MENU SUPERIOR -->
-        <div class="estoque-menu-bar">
-            <button type="button" class="btn-menu-estoque" onclick="abrirModalEntradaManual()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                + Entrada Manual
-            </button>
-
-            <button type="button" class="btn-menu-estoque" onclick="abrirModalEntradaAuto()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                + Entrada Auto
-            </button>
-
-            <button type="button" class="btn-menu-estoque" onclick="abrirModalRelatorio()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                Relatório de Movimentações
-            </button>
-        </div>
-
         <!-- BARRA DE PESQUISA -->
         <div class="saas-toolbar">
             <div class="saas-search-box">
@@ -843,20 +862,19 @@
             <span class="saas-counter" id="contador-kits-visiveis">Carregando...</span>
         </div>
 
-        <!-- TABELA DE KITS -->
+        <!-- TABELA DE KITS (SEM A COLUNA STATUS) -->
         <div class="saas-table-container">
             <table class="table-saas">
                 <thead>
                     <tr>
-                        <th style="min-width: 150px;">Kit</th>
-                        <th style="min-width: 110px;">Status</th>
+                        <th style="min-width: 170px;">Kit</th>
                         <th style="min-width: 110px;">Balcão</th>
-                        <th style="min-width: 260px;">Distribuição</th>
+                        <th style="min-width: 270px;">Distribuição</th>
                         <th style="text-align: right; min-width: 140px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-estoque-saas">
-                    <tr><td colspan="5" style="text-align: center; padding: 25px; color: #64748b;">Carregando...</td></tr>
+                    <tr><td colspan="4" style="text-align: center; padding: 25px; color: #64748b;">Carregando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1212,7 +1230,7 @@
             });
         }
 
-        /* RENDERIZAÇÃO DA TABELA (TEXTOS ENXUTOS E BARRA SLATE/ÂMBAR/ESMERALDA) */
+        /* 2. RENDERIZAÇÃO: SEM COLUNA STATUS, COM PORCENTAGEM E CORES AJUSTADAS */
         function renderizarTabelaSaas(lista) {
             const tbody = document.getElementById("tabela-estoque-saas");
             tbody.innerHTML = "";
@@ -1220,7 +1238,7 @@
             let totalLoteGlobal = 0, totalSaidasGlobal = 0, totalBalcaoGlobal = 0, totalReservaGlobal = 0, totalSobraOrfaosGlobal = 0;
 
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 25px; color: #64748b;">Nenhum kit encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 25px; color: #64748b;">Nenhum kit encontrado.</td></tr>`;
                 document.getElementById("contador-kits-visiveis").innerText = "0 modelos";
                 return;
             }
@@ -1239,7 +1257,11 @@
                 totalReservaGlobal += reservas;
                 if (sobraOrfaos > 0) totalSobraOrfaosGlobal += sobraOrfaos;
 
-                // Percentuais proporcionais
+                // 2c. Cálculo da porcentagem entregue do kit
+                const pctEntregue = loteEntregue > 0 ? Math.round((saidas / loteEntregue) * 100) : 0;
+                const badgePctClass = pctEntregue > 0 ? 'badge-pct-entregue' : 'badge-pct-entregue pct-zero';
+
+                // Percentuais proporcionais da barra
                 let pctSaidas = 0;
                 let pctReservas = 0;
                 let pctSobra = 0;
@@ -1248,18 +1270,6 @@
                     pctSaidas = (saidas / loteEntregue) * 100;
                     pctReservas = (reservas / loteEntregue) * 100;
                     pctSobra = (Math.max(0, sobraOrfaos) / loteEntregue) * 100;
-                }
-
-                // Badges limpos e sem poluição
-                let badgeStatusHtml = '';
-                if (!isAtivo) {
-                    badgeStatusHtml = `<span class="badge-saas-status status-bloqueado">● Inativo</span>`;
-                } else if (sobraOrfaos <= 0) {
-                    badgeStatusHtml = `<span class="badge-saas-status status-critico">● Esgotado</span>`;
-                } else if (sobraOrfaos < 15) {
-                    badgeStatusHtml = `<span class="badge-saas-status status-atencao">● Atenção</span>`;
-                } else {
-                    badgeStatusHtml = `<span class="badge-saas-status status-normal">● Normal</span>`;
                 }
 
                 const corSaldo = !isAtivo ? '#94a3b8' : (saldoBalcao > 0 ? '#16a34a' : '#dc2626');
@@ -1280,28 +1290,31 @@
                         <div class="cell-kit-info" onclick="abrirModalEstratificado('${item.codigo_kit}')">
                             <div class="kit-icon-badge">${SVG_ICONS.backpack}</div>
                             <div>
-                                <span class="kit-nome-texto">${item.codigo_kit}</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="kit-nome-texto">${item.codigo_kit}</span>
+                                    <span class="${badgePctClass}">${pctEntregue}% entregue</span>
+                                </div>
                                 <span class="kit-lote-sub">Lote: ${loteEntregue}</span>
                             </div>
                         </div>
                     </td>
-                    <td>${badgeStatusHtml}</td>
                     <td>
                         <div class="saas-saldo-main" style="color: ${corSaldo};">${saldoBalcao} <span class="saas-saldo-unit">und</span></div>
                     </td>
                     <td>
                         <div class="saas-dist-box">
+                            <!-- 2b. Barra: Sai (Verde) | Res (Laranja) | Sob (Azul) -->
                             <div class="saas-multi-bar" title="Saídas: ${saidas} | Reservas: ${reservas} | Sobra: ${sobraOrfaos > 0 ? sobraOrfaos : 0}">
                                 <div class="saas-seg-saidas" style="width: ${pctSaidas}%;"></div>
                                 <div class="saas-seg-reservas" style="width: ${pctReservas}%;"></div>
                                 <div class="saas-seg-sobra" style="width: ${pctSobra}%;"></div>
                             </div>
                             <div class="saas-dist-legend">
-                                <span class="legend-item"><span class="legend-dot dot-saida"></span> Sai: <strong>${saidas}</strong></span>
-                                <span class="legend-item"><span class="legend-dot dot-reserva"></span> Res: <strong>${reservas}</strong></span>
+                                <span class="legend-item"><span class="legend-dot dot-saida"></span> Sai: <strong style="color: #10b981;">${saidas}</strong></span>
+                                <span class="legend-item"><span class="legend-dot dot-reserva"></span> Res: <strong style="color: #f59e0b;">${reservas}</strong></span>
                                 <span class="legend-item">
-                                    <span class="legend-dot ${sobraOrfaos > 0 ? 'dot-sobra' : 'dot-esgotado'}"></span> 
-                                    Sob: <strong style="color: ${sobraOrfaos > 0 ? '#10b981' : '#dc2626'};">${sobraOrfaos > 0 ? sobraOrfaos : 0}</strong>
+                                    <span class="legend-dot dot-sobra"></span> 
+                                    Sob: <strong style="color: #0284c7;">${sobraOrfaos > 0 ? sobraOrfaos : 0}</strong>
                                 </span>
                             </div>
                         </div>
