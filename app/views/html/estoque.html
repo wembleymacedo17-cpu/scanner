@@ -30,7 +30,7 @@
             color: #64748b;
         }
 
-        /* 1. BOTÕES DE AÇÃO: TODOS COM COR NORMAL/NEUTRA POR PADRÃO */
+        /* BOTÕES DE AÇÃO COM ESTILO NEUTRO */
         .header-actions-bar {
             display: flex;
             gap: 10px;
@@ -291,24 +291,6 @@
             color: #0f172a;
         }
 
-        /* 2c. TAG DE PORCENTAGEM DE ENTREGA */
-        .badge-pct-entregue {
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 6px;
-            background: #f0fdf4;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-            white-space: nowrap;
-        }
-
-        .badge-pct-entregue.pct-zero {
-            background: #f1f5f9;
-            color: #64748b;
-            border-color: #e2e8f0;
-        }
-
         .kit-lote-sub {
             font-size: 0.72rem;
             color: #94a3b8;
@@ -328,23 +310,24 @@
             color: #64748b;
         }
 
-        /* 2b. BARRA DE DISTRIBUIÇÃO: SAI: VERDE | RES: LARANJA | SOB: AZUL */
+        /* BARRA DE DISTRIBUIÇÃO MAIS GROSSA E REFINADA */
         .saas-dist-box {
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            min-width: 240px;
-            max-width: 340px;
+            gap: 6px;
+            min-width: 230px;
+            max-width: 320px;
         }
 
         .saas-multi-bar {
             width: 100%;
-            height: 8px;
+            height: 12px;
             background: #e2e8f0;
             border-radius: 999px;
             overflow: hidden;
             display: flex;
             gap: 2px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
         .saas-seg-saidas { 
@@ -389,6 +372,29 @@
         .dot-reserva { background: #f59e0b; }
         .dot-sobra { background: #0284c7; }
 
+        /* SELO DE PORCENTAGEM NO ESPAÇO CENTRAL */
+        .badge-pct-entregue {
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 5px 11px;
+            border-radius: 20px;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(16, 185, 129, 0.08);
+        }
+
+        .badge-pct-entregue.pct-zero {
+            background: #f1f5f9;
+            color: #64748b;
+            border-color: #cbd5e1;
+            box-shadow: none;
+        }
+
+        /* AÇÕES */
         .cell-saas-actions {
             display: flex;
             align-items: center;
@@ -862,14 +868,14 @@
             <span class="saas-counter" id="contador-kits-visiveis">Carregando...</span>
         </div>
 
-        <!-- TABELA DE KITS (SEM A COLUNA STATUS) -->
+        <!-- TABELA COM BARRA DE DISTRIBUIÇÃO MAIS GROSSA E PORCENTAGEM NO ESPAÇO À DIREITA -->
         <div class="saas-table-container">
             <table class="table-saas">
                 <thead>
                     <tr>
-                        <th style="min-width: 170px;">Kit</th>
-                        <th style="min-width: 110px;">Balcão</th>
-                        <th style="min-width: 270px;">Distribuição</th>
+                        <th style="min-width: 160px;">Kit</th>
+                        <th style="min-width: 100px;">Balcão</th>
+                        <th style="min-width: 380px;">Distribuição & Progresso</th>
                         <th style="text-align: right; min-width: 140px;">Ações</th>
                     </tr>
                 </thead>
@@ -1230,7 +1236,7 @@
             });
         }
 
-        /* 2. RENDERIZAÇÃO: SEM COLUNA STATUS, COM PORCENTAGEM E CORES AJUSTADAS */
+        /* RENDERIZAÇÃO DA TABELA COM BARRA MAIS GROSSA E PORCENTAGEM NO ESPAÇO À DIREITA */
         function renderizarTabelaSaas(lista) {
             const tbody = document.getElementById("tabela-estoque-saas");
             tbody.innerHTML = "";
@@ -1257,11 +1263,11 @@
                 totalReservaGlobal += reservas;
                 if (sobraOrfaos > 0) totalSobraOrfaosGlobal += sobraOrfaos;
 
-                // 2c. Cálculo da porcentagem entregue do kit
+                // Cálculo da porcentagem entregue do kit
                 const pctEntregue = loteEntregue > 0 ? Math.round((saidas / loteEntregue) * 100) : 0;
                 const badgePctClass = pctEntregue > 0 ? 'badge-pct-entregue' : 'badge-pct-entregue pct-zero';
 
-                // Percentuais proporcionais da barra
+                // Percentuais da barra proporcional
                 let pctSaidas = 0;
                 let pctReservas = 0;
                 let pctSobra = 0;
@@ -1290,10 +1296,7 @@
                         <div class="cell-kit-info" onclick="abrirModalEstratificado('${item.codigo_kit}')">
                             <div class="kit-icon-badge">${SVG_ICONS.backpack}</div>
                             <div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span class="kit-nome-texto">${item.codigo_kit}</span>
-                                    <span class="${badgePctClass}">${pctEntregue}% entregue</span>
-                                </div>
+                                <span class="kit-nome-texto">${item.codigo_kit}</span>
                                 <span class="kit-lote-sub">Lote: ${loteEntregue}</span>
                             </div>
                         </div>
@@ -1302,20 +1305,26 @@
                         <div class="saas-saldo-main" style="color: ${corSaldo};">${saldoBalcao} <span class="saas-saldo-unit">und</span></div>
                     </td>
                     <td>
-                        <div class="saas-dist-box">
-                            <!-- 2b. Barra: Sai (Verde) | Res (Laranja) | Sob (Azul) -->
-                            <div class="saas-multi-bar" title="Saídas: ${saidas} | Reservas: ${reservas} | Sobra: ${sobraOrfaos > 0 ? sobraOrfaos : 0}">
-                                <div class="saas-seg-saidas" style="width: ${pctSaidas}%;"></div>
-                                <div class="saas-seg-reservas" style="width: ${pctReservas}%;"></div>
-                                <div class="saas-seg-sobra" style="width: ${pctSobra}%;"></div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 18px;">
+                            <div class="saas-dist-box">
+                                <div class="saas-multi-bar" title="Saídas: ${saidas} | Reservas: ${reservas} | Sobra: ${sobraOrfaos > 0 ? sobraOrfaos : 0}">
+                                    <div class="saas-seg-saidas" style="width: ${pctSaidas}%;"></div>
+                                    <div class="saas-seg-reservas" style="width: ${pctReservas}%;"></div>
+                                    <div class="saas-seg-sobra" style="width: ${pctSobra}%;"></div>
+                                </div>
+                                <div class="saas-dist-legend">
+                                    <span class="legend-item"><span class="legend-dot dot-saida"></span> Sai: <strong style="color: #10b981;">${saidas}</strong></span>
+                                    <span class="legend-item"><span class="legend-dot dot-reserva"></span> Res: <strong style="color: #f59e0b;">${reservas}</strong></span>
+                                    <span class="legend-item">
+                                        <span class="legend-dot dot-sobra"></span> 
+                                        Sob: <strong style="color: #0284c7;">${sobraOrfaos > 0 ? sobraOrfaos : 0}</strong>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="saas-dist-legend">
-                                <span class="legend-item"><span class="legend-dot dot-saida"></span> Sai: <strong style="color: #10b981;">${saidas}</strong></span>
-                                <span class="legend-item"><span class="legend-dot dot-reserva"></span> Res: <strong style="color: #f59e0b;">${reservas}</strong></span>
-                                <span class="legend-item">
-                                    <span class="legend-dot dot-sobra"></span> 
-                                    Sob: <strong style="color: #0284c7;">${sobraOrfaos > 0 ? sobraOrfaos : 0}</strong>
-                                </span>
+
+                            <!-- PORCENTAGEM NO ESPAÇO À DIREITA DA DISTRIBUIÇÃO -->
+                            <div class="${badgePctClass}">
+                                ${pctEntregue}% entregue
                             </div>
                         </div>
                     </td>
