@@ -7,53 +7,59 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
+        body {
+            background-color: #f1f5f9;
+        }
+
         .dash-wrapper {
-            max-width: 1340px;
+            max-width: 1360px;
             width: 96%;
             margin: 18px auto 95px auto;
             display: grid;
-            grid-template-columns: 245px 1fr;
-            gap: 22px;
+            grid-template-columns: 255px 1fr;
+            gap: 24px;
             align-items: start;
         }
 
-        @media (max-width: 920px) {
+        @media (max-width: 960px) {
             .dash-wrapper {
                 grid-template-columns: 1fr;
             }
         }
 
-        /* MENU LATERAL */
+        /* =========================================================================
+           SIDEBAR EXECUTIVA DARK SLATE (MANTIDA COMO APROVADA)
+           ========================================================================= */
         .dash-sidebar {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 16px 12px;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 18px;
+            padding: 20px 14px;
+            box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.25);
             position: sticky;
             top: 18px;
+            color: #f8fafc;
         }
 
         .sidebar-brand-box {
-            padding: 6px 10px 14px 10px;
-            border-bottom: 1px solid #f1f5f9;
-            margin-bottom: 12px;
+            padding: 4px 10px 16px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 14px;
         }
 
         .sidebar-brand-title {
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.7px;
-            color: #94a3b8;
+            letter-spacing: 0.9px;
+            color: #38bdf8;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .sidebar-brand-sub {
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             font-weight: 800;
-            color: #0f172a;
+            color: #ffffff;
         }
 
         .sidebar-nav-list {
@@ -66,14 +72,14 @@
             width: 100%;
             background: transparent;
             border: 1px solid transparent;
-            padding: 11px 14px;
-            border-radius: 11px;
+            padding: 12px 14px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 11px;
             font-size: 0.86rem;
             font-weight: 700;
-            color: #475569;
+            color: #94a3b8;
             cursor: pointer;
             text-align: left;
             transition: all 0.2s ease;
@@ -89,33 +95,69 @@
         }
 
         .sidebar-nav-btn:hover {
-            background: #f8fafc;
-            color: #0f172a;
+            background: rgba(255, 255, 255, 0.06);
+            color: #f8fafc;
         }
 
-        /* ITEM FLEGADO / ATIVO NO MENU LATERAL */
+        .sidebar-nav-btn:hover svg {
+            color: #38bdf8;
+        }
+
         .sidebar-nav-btn.active {
-            background: #ecfdf5;
-            color: #047857;
-            border-color: #a7f3d0;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.2) 0%, rgba(2, 132, 199, 0.15) 100%);
+            color: #ffffff;
+            border-color: rgba(16, 185, 129, 0.45);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .sidebar-nav-btn.active svg {
-            color: #10b981;
+            color: #34d399;
         }
 
-        .sidebar-footer-info {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #f1f5f9;
-            font-size: 0.74rem;
-            color: #64748b;
-            padding-left: 10px;
-            padding-right: 10px;
+        .sidebar-live-box {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.07);
         }
 
-        /* ÁREA PRINCIPAL DO DASHBOARD */
+        .live-indicator-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #34d399;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .live-dot-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.8s infinite;
+        }
+
+        @keyframes pulseGreen {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .live-sub-text {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            display: block;
+        }
+
+        /* =========================================================================
+           ÁREA PRINCIPAL DO DASHBOARD
+           ========================================================================= */
         .dash-main {
             min-width: 0;
         }
@@ -124,66 +166,147 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
             gap: 12px;
             flex-wrap: wrap;
         }
 
         .dash-topbar h2 {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: #0f172a;
+            letter-spacing: -0.3px;
             margin-bottom: 2px;
         }
 
         .dash-topbar p {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: #64748b;
         }
 
-        .btn-refresh-dash {
+        .live-pill-header {
             background: #ffffff;
             border: 1px solid #cbd5e1;
-            color: #334155;
-            padding: 8px 14px;
-            border-radius: 9px;
-            font-size: 0.82rem;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 0.76rem;
             font-weight: 700;
-            cursor: pointer;
+            color: #334155;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
+            gap: 8px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         }
 
-        .btn-refresh-dash:hover {
-            border-color: #10b981;
-            color: #047857;
-            background: #f0fdf4;
+        /* BARRA DE PROGRESSO GLOBAL CLEAN LIGHT (VISUAL CLARO E LEVE) */
+        .hero-progress-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+            position: relative;
+            overflow: hidden;
         }
 
-        /* CARDS KPI ESTILO V28 COM ANIMAÇÃO HOVER */
-        .kpi-grid-5 {
+        .hero-progress-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981 0%, #0284c7 100%);
+        }
+
+        .hero-progress-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hero-label {
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #64748b;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .hero-numbers {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .hero-numbers span.highlight-green {
+            color: #059669;
+        }
+
+        .hero-pct-badge {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
+            font-size: 0.98rem;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 12px;
+        }
+
+        .hero-track {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .hero-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981 0%, #0284c7 100%);
+            border-radius: 999px;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 4 CARDS KPI EQUILIBRADOS */
+        .kpi-grid-4 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-            gap: 14px;
-            margin-bottom: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         .kpi-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: 16px 18px;
+            padding: 18px 20px;
             box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
             position: relative;
             overflow: hidden;
         }
 
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .kpi-amber::before { background: #f59e0b; }
+        .kpi-emerald::before { background: #10b981; }
+        .kpi-blue::before { background: #0284c7; }
+        .kpi-indigo::before { background: #6366f1; }
+
         .kpi-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.1);
+            box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.1);
             border-color: #cbd5e1;
         }
 
@@ -203,9 +326,9 @@
         }
 
         .kpi-card-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -221,93 +344,56 @@
         .icon-amber { background: #fef3c7; color: #b45309; }
         .icon-blue { background: #e0f2fe; color: #0369a1; }
         .icon-indigo { background: #ede9fe; color: #5b21b6; }
-        .icon-rose { background: #fee2e2; color: #b91c1c; }
 
         .kpi-card-val {
-            font-size: 1.75rem;
+            font-size: 1.9rem;
             font-weight: 800;
             color: #0f172a;
             line-height: 1.1;
             font-variant-numeric: tabular-nums;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
 
         .kpi-card-sub {
-            font-size: 0.74rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #64748b;
-        }
-
-        /* BARRA DE PROGRESSO GLOBAL DO PROJETO */
-        .global-progress-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 18px 20px;
-            margin-bottom: 18px;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
-        }
-
-        .progress-meta-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .progress-track-big {
-            width: 100%;
-            height: 14px;
-            background: #e2e8f0;
-            border-radius: 999px;
-            overflow: hidden;
-        }
-
-        .progress-fill-emerald {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #10b981, #059669);
-            border-radius: 999px;
-            transition: width 0.6s ease;
         }
 
         /* BENTO PANELS PARA GRÁFICOS E TABELAS */
         .dash-grid-2 {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            gap: 16px;
-            margin-bottom: 18px;
+            gap: 18px;
+            margin-bottom: 20px;
         }
 
         .panel-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: 18px 20px;
+            padding: 20px 22px;
             box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
         }
 
         .col-12 { grid-column: span 12; }
-        .col-8 { grid-column: span 8; }
         .col-6 { grid-column: span 6; }
-        .col-4 { grid-column: span 4; }
 
         @media (max-width: 1024px) {
-            .col-8, .col-6, .col-4 { grid-column: span 12; }
+            .col-6 { grid-column: span 12; }
         }
 
         .panel-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .panel-title {
-            font-size: 0.95rem;
+            font-size: 0.98rem;
             font-weight: 800;
             color: #0f172a;
         }
@@ -315,13 +401,14 @@
         .panel-subtitle {
             font-size: 0.76rem;
             color: #64748b;
+            margin-top: 2px;
         }
 
         /* TABELAS INTERNAS DO DASHBOARD */
         .dash-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.83rem;
+            font-size: 0.84rem;
         }
 
         .dash-table th {
@@ -329,29 +416,36 @@
             color: #475569;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 0.69rem;
+            font-size: 0.7rem;
             letter-spacing: 0.4px;
-            padding: 10px 12px;
+            padding: 11px 12px;
             border-bottom: 1px solid #e2e8f0;
             text-align: left;
         }
 
         .dash-table td {
-            padding: 10px 12px;
+            padding: 11px 12px;
             border-bottom: 1px solid #f1f5f9;
             color: #1e293b;
         }
 
-        .dash-table tr:hover td {
-            background: #f8fafc;
+        .tr-auditoria-clicavel {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .tr-auditoria-clicavel:hover td {
+            background: #f0f9ff;
         }
 
         .pill-badge {
-            padding: 3px 9px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.73rem;
-            font-weight: 700;
-            display: inline-block;
+            font-size: 0.74rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .pill-green { background: #dcfce7; color: #15803d; }
@@ -363,11 +457,13 @@
             display: none !important;
         }
 
-        /* MODAL RECONTATO RH */
+        /* =========================================================================
+           MODAL DE DETALHAMENTO DE TITULARES / AUDITORIA
+           ========================================================================= */
         .modal-overlay-dash {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.55);
+            background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
             z-index: 99999;
             display: flex;
@@ -377,44 +473,89 @@
 
         .modal-card-dash {
             background: #ffffff;
-            border-radius: 16px;
-            padding: 22px;
+            border-radius: 18px;
+            padding: 24px;
             width: 92%;
-            max-width: 720px;
-            max-height: 85vh;
+            max-width: 840px;
+            max-height: 86vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+        }
+
+        .modal-filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+
+        .modal-input-search {
+            flex: 1;
+            padding: 9px 14px;
+            border-radius: 9px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .modal-input-search:focus {
+            border-color: #0284c7;
+        }
+
+        .btn-export-excel-dash {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-export-excel-dash:hover {
+            border-color: #0284c7;
+            color: #0284c7;
+            background: #f8fafc;
         }
     </style>
 </head>
 <body>
 
-    <!-- MODAL DE PENDÊNCIAS DE RECONTATO RH -->
-    <div class="modal-overlay-dash hidden-section" id="modal-recontato-rh">
+    <!-- MODAL DE RESUMO DETALHADO (TITULARES ENTREGUES / PARCIAIS / PENDENTES / AJUSTES) -->
+    <div class="modal-overlay-dash hidden-section" id="modal-auditoria-detalhe">
         <div class="modal-card-dash">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 14px;">
                 <div>
-                    <h3 style="font-size: 1.1rem; color: #0f172a;">Colaboradores com Pendência de Recontato RH</h3>
-                    <p style="font-size: 0.78rem; color: #64748b;">Registros sinalizados que necessitam validação cadastral</p>
+                    <h3 style="font-size: 1.15rem; color: #0f172a;" id="modal-aud-titulo">Detalhamento</h3>
+                    <p style="font-size: 0.8rem; color: #64748b;" id="modal-aud-subtitulo">Relação nominal</p>
                 </div>
-                <span style="font-size: 1.2rem; cursor: pointer; color: #64748b; font-weight: 700;" onclick="fecharModalRecontato()">✕</span>
+                <span style="font-size: 1.25rem; cursor: pointer; color: #64748b; font-weight: 700;" onclick="fecharModalAuditoria()">✕</span>
             </div>
-            <div style="overflow-y: auto; max-height: 55vh; border: 1px solid #e2e8f0; border-radius: 10px;">
+
+            <div class="modal-filter-row">
+                <input type="text" id="input-filtro-auditoria" class="modal-input-search" placeholder="Filtrar por nome, crachá ou bolsa..." oninput="filtrarModalAuditoria()" />
+                <button type="button" class="btn-export-excel-dash" onclick="exportarModalAuditoriaExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Exportar Excel
+                </button>
+            </div>
+
+            <div style="overflow-y: auto; max-height: 54vh; border: 1px solid #e2e8f0; border-radius: 10px;">
                 <table class="dash-table">
-                    <thead>
-                        <tr>
-                            <th>Crachá / ID</th>
-                            <th>Colaborador</th>
-                            <th>Status</th>
-                            <th>Motivo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-recontato-rh"></tbody>
+                    <thead id="thead-modal-auditoria"></thead>
+                    <tbody id="tbody-modal-auditoria"></tbody>
                 </table>
             </div>
-            <div style="margin-top: 14px; text-align: right;">
-                <button type="button" class="btn-refresh-dash" onclick="fecharModalRecontato()">Fechar</button>
+
+            <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <span id="rodape-modal-auditoria" style="font-size: 0.8rem; font-weight: 700; color: #64748b;"></span>
+                <button type="button" class="btn-export-excel-dash" onclick="fecharModalAuditoria()">Fechar</button>
             </div>
         </div>
     </div>
@@ -444,9 +585,12 @@
                 </button>
             </nav>
 
-            <div class="sidebar-footer-info">
-                <div style="margin-bottom: 4px; font-weight: 700; color: #334155;">Status da Base</div>
-                <span id="dash-ultima-atualizacao">Sincronizando dados...</span>
+            <div class="sidebar-live-box">
+                <div class="live-indicator-row">
+                    <span class="live-dot-pulse"></span>
+                    Tempo Real Ativo
+                </div>
+                <span class="live-sub-text" id="dash-ultima-atualizacao">Sincronizando balcão...</span>
             </div>
         </aside>
 
@@ -455,39 +599,37 @@
             <div class="dash-topbar">
                 <div>
                     <h2 id="dash-titulo-secao">Visão Geral do Projeto</h2>
-                    <p id="dash-subtitulo-secao">Acompanhamento consolidado de entregas, médias operacionais e qualidade</p>
+                    <p id="dash-subtitulo-secao">Monitoramento automático em tempo real das entregas no balcão</p>
                 </div>
-                <button type="button" class="btn-refresh-dash" onclick="carregarMetricasDashboard()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                    Atualizar Dados
-                </button>
+                <div class="live-pill-header">
+                    <span class="live-dot-pulse"></span>
+                    Sincronização Automática (4s)
+                </div>
             </div>
 
             <!-- =========================================================================
                  ABA 1: VISÃO GERAL (FLEGADA POR PADRÃO)
                  ========================================================================= -->
             <section id="sec-visao-geral">
-                <!-- Barra de Progresso Geral -->
-                <div class="global-progress-card">
-                    <div class="progress-meta-row">
+                <!-- Hero Card de Execução Global (VISUAL CLARO E LIMPO) -->
+                <div class="hero-progress-card">
+                    <div class="hero-progress-top">
                         <div>
-                            <span style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.4px;">Execução Global da Campanha</span>
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-top: 2px;">
-                                <span id="vg-entregues-txt" style="color: #10b981;">0</span> de <span id="vg-previstos-txt">0</span> kits entregues
+                            <span class="hero-label">Andamento Global da Execução</span>
+                            <div class="hero-numbers">
+                                <span class="highlight-green" id="vg-entregues-txt">0</span> de <span id="vg-previstos-txt">0</span> bolsas entregues
                             </div>
                         </div>
-                        <div style="text-align: right;">
-                            <span id="vg-pct-badge" class="pill-badge pill-green" style="font-size: 0.9rem; padding: 5px 12px;">0% concluído</span>
-                        </div>
+                        <div class="hero-pct-badge" id="vg-pct-badge">0% concluído</div>
                     </div>
-                    <div class="progress-track-big">
-                        <div class="progress-fill-emerald" id="vg-barra-progresso"></div>
+                    <div class="hero-track">
+                        <div class="hero-fill" id="vg-barra-progresso"></div>
                     </div>
                 </div>
 
-                <!-- 5 KPIs Principais -->
-                <div class="kpi-grid-5">
-                    <div class="kpi-card">
+                <!-- 4 KPIs Principais -->
+                <div class="kpi-grid-4">
+                    <div class="kpi-card kpi-amber">
                         <div class="kpi-card-top">
                             <span class="kpi-card-label">Faltam Entregar</span>
                             <div class="kpi-card-icon icon-amber">
@@ -498,7 +640,7 @@
                         <div class="kpi-card-sub" id="kpi-benef-pendentes">0 titulares pendentes</div>
                     </div>
 
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-emerald">
                         <div class="kpi-card-top">
                             <span class="kpi-card-label">Média / Dia</span>
                             <div class="kpi-card-icon icon-emerald">
@@ -506,10 +648,10 @@
                             </div>
                         </div>
                         <div class="kpi-card-val" style="color: #059669;" id="kpi-media-dia">0</div>
-                        <div class="kpi-card-sub" id="kpi-dias-ativos">Em 0 dias de operação</div>
+                        <div class="kpi-card-sub" id="kpi-dias-ativos">Em 0 dia(s) de operação</div>
                     </div>
 
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-blue">
                         <div class="kpi-card-top">
                             <span class="kpi-card-label">Média / Login</span>
                             <div class="kpi-card-icon icon-blue">
@@ -520,7 +662,7 @@
                         <div class="kpi-card-sub" id="kpi-total-logins">0 operadores ativos</div>
                     </div>
 
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-indigo">
                         <div class="kpi-card-top">
                             <span class="kpi-card-label">Previsão Término</span>
                             <div class="kpi-card-icon icon-indigo">
@@ -530,17 +672,6 @@
                         <div class="kpi-card-val" style="color: #6366f1;" id="kpi-projecao-dias">--</div>
                         <div class="kpi-card-sub">No ritmo diário atual</div>
                     </div>
-
-                    <div class="kpi-card" style="cursor: pointer;" onclick="abrirModalRecontato()" title="Clique para ver a lista de recontato RH">
-                        <div class="kpi-card-top">
-                            <span class="kpi-card-label">Recontato RH</span>
-                            <div class="kpi-card-icon icon-rose">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            </div>
-                        </div>
-                        <div class="kpi-card-val" style="color: #dc2626;" id="kpi-recontato-rh">0</div>
-                        <div class="kpi-card-sub">Clique para listar →</div>
-                    </div>
                 </div>
 
                 <!-- Gráficos de Composição & Indicadores de Qualidade -->
@@ -549,23 +680,82 @@
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Público Previsto (Dependentes vs. Jovem Aprendiz)</div>
-                                <div class="panel-subtitle">Distribuição total de kits por categoria de vínculo</div>
+                                <div class="panel-subtitle">Distribuição total de bolsas por vínculo</div>
                             </div>
                         </div>
-                        <div id="chart-publico-donut" style="min-height: 260px;"></div>
+                        <div id="chart-publico-donut" style="min-height: 265px;"></div>
                     </div>
 
                     <div class="panel-card col-6">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Modalidade de Cota (Reservados vs. Órfãos)</div>
-                                <div class="panel-subtitle">Kits com modelo pré-escolhido vs. escolha livre no balcão</div>
+                                <div class="panel-title">Modalidade de Cota (Reservados vs. Não Reservado)</div>
+                                <div class="panel-subtitle">Bolsas com modelo pré-definido vs. escolha livre no balcão</div>
                             </div>
                         </div>
-                        <div id="chart-cota-donut" style="min-height: 260px;"></div>
+                        <div id="chart-cota-donut" style="min-height: 265px;"></div>
                     </div>
 
-                    <!-- Qualidade Operacional: Divergências de Modelo e Auditoria -->
+                    <!-- Auditoria & Status dos Titulares -->
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Auditoria & Status dos Titulares</div>
+                                <div class="panel-subtitle">Clique em qualquer linha para abrir a relação nominal</div>
+                            </div>
+                        </div>
+                        <table class="dash-table">
+                            <tbody>
+                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('ENTREGUE')">
+                                    <td>
+                                        <strong>Titulares 100% Entregues</strong>
+                                        <div style="font-size: 0.72rem; color: #64748b;" id="sub-aud-entregues">Corresponde a 0 bolsas entregues</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="pill-badge pill-green" id="aud-entregues">0 →</span>
+                                    </td>
+                                </tr>
+                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('PARCIAL')">
+                                    <td>
+                                        <strong>Titulares com Entrega Parcial</strong>
+                                        <div style="font-size: 0.72rem; color: #64748b;" id="sub-aud-parciais">Faltam 0 bolsas para concluir</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="pill-badge pill-blue" id="aud-parciais">0 →</span>
+                                    </td>
+                                </tr>
+                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('PENDENTE')">
+                                    <td>
+                                        <strong>Titulares Pendentes (Não compareceram)</strong>
+                                        <div style="font-size: 0.72rem; color: #64748b;" id="sub-aud-pendentes">Aguardando retirada de 0 bolsas</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="pill-badge pill-amber" id="aud-pendentes">0 →</span>
+                                    </td>
+                                </tr>
+                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('CORRECOES')">
+                                    <td>
+                                        <strong>Correções de Modelo (SAIDA_CORRECAO)</strong>
+                                        <div style="font-size: 0.72rem; color: #64748b;">Alterações de kit registradas no histórico</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="pill-badge pill-blue" id="aud-correcoes">0 →</span>
+                                    </td>
+                                </tr>
+                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('REVOGACOES')">
+                                    <td>
+                                        <strong>Revogações Administrativas (REVOGACAO_ADMIN)</strong>
+                                        <div style="font-size: 0.72rem; color: #64748b;">Estornos efetuados pela gestão</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="pill-badge pill-red" id="aud-revogacoes">0 →</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Qualidade Operacional: Divergências de Modelo -->
                     <div class="panel-card col-6">
                         <div class="panel-header">
                             <div>
@@ -588,55 +778,22 @@
                             </table>
                         </div>
                     </div>
-
-                    <div class="panel-card col-6">
-                        <div class="panel-header">
-                            <div>
-                                <div class="panel-title">Auditoria & Status dos Titulares</div>
-                                <div class="panel-subtitle">Resumo cadastral de retiradas e movimentações de ajuste</div>
-                            </div>
-                        </div>
-                        <table class="dash-table">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Titulares 100% Entregues</strong></td>
-                                    <td style="text-align: right;"><span class="pill-badge pill-green" id="aud-entregues">0</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Titulares com Entrega Parcial</strong></td>
-                                    <td style="text-align: right;"><span class="pill-badge pill-blue" id="aud-parciais">0</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Titulares Pendentes (Não compareceram)</strong></td>
-                                    <td style="text-align: right;"><span class="pill-badge pill-amber" id="aud-pendentes">0</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Correções de Modelo (SAIDA_CORRECAO)</strong></td>
-                                    <td style="text-align: right;"><span class="pill-badge pill-blue" id="aud-correcoes">0</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Revogações Administrativas (REVOGACAO_ADMIN)</strong></td>
-                                    <td style="text-align: right;"><span class="pill-badge pill-red" id="aud-revogacoes">0</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </section>
 
             <!-- =========================================================================
-                 ABA 2: RITMO DE EXPEDIÇÃO
+                 ABA 2: RITMO DE EXPEDIÇÃO (BARRA TOTAL DIÁRIA + LINHAS POR USUÁRIO)
                  ========================================================================= -->
             <section id="sec-ritmo-expedicao" class="hidden-section">
                 <div class="dash-grid-2">
                     <div class="panel-card col-12">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Evolução Diária de Entregas</div>
-                                <div class="panel-subtitle">Quantidade de kits baixados por dia de operação</div>
+                                <div class="panel-title">Evolução Diária de Entregas & Desempenho por Usuário</div>
+                                <div class="panel-subtitle">Barras representam o total diário baixado e as linhas mostram a produção individual de cada operador</div>
                             </div>
                         </div>
-                        <div id="chart-ritmo-diario" style="min-height: 290px;"></div>
+                        <div id="chart-ritmo-diario" style="min-height: 330px;"></div>
                     </div>
 
                     <div class="panel-card col-6">
@@ -682,7 +839,7 @@
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Execução por Etapa Escolar (Entregues vs. Faltam Entregar)</div>
-                                <div class="panel-subtitle">Comparativo de conclusão entre Educação Infantil, EF1, EF2, Ensino Médio e Órfãos</div>
+                                <div class="panel-subtitle">Comparativo de conclusão entre Educação Infantil, EF1, EF2, Ensino Médio e Sobra</div>
                             </div>
                         </div>
                         <div id="chart-execucao-etapas" style="min-height: 300px;"></div>
@@ -702,7 +859,7 @@
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Detalhamento de Execução e Cobertura por Bolsa</div>
-                                <div class="panel-subtitle">Cruzamento entre kits entregues, faltantes e saldo físico disponível no balcão</div>
+                                <div class="panel-subtitle">Cruzamento entre bolsas entregues, faltantes e saldo físico disponível no balcão</div>
                             </div>
                         </div>
                         <div style="overflow-x: auto; max-height: 380px;">
@@ -728,10 +885,44 @@
     <script>
         let dashDadosGlobais = null;
         let chartsInstances = {};
+        let ultimaVersaoConhecida = null;
+        let realtimeTimer = null;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            carregarMetricasDashboard();
+        // Estado do Modal de Auditoria / Titulares
+        let audModalTipoAtual = null;
+        let audModalDadosBrutos = [];
+        let audModalDadosFiltrados = [];
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await carregarMetricasDashboard(true);
+            iniciarMonitoramentoTempoReal();
         });
+
+        /* =========================================================================
+           MOTOR DE TEMPO REAL (POLLING LEVE DE 4s COM DETECÇÃO DE MUDANÇA)
+           ========================================================================= */
+        function iniciarMonitoramentoTempoReal() {
+            if (realtimeTimer) clearInterval(realtimeTimer);
+
+            realtimeTimer = setInterval(async () => {
+                if (document.visibilityState !== 'visible') return;
+
+                try {
+                    const res = await fetch('/api/dashboard/versao');
+                    if (!res.ok) return;
+                    const data = await res.json();
+
+                    if (data.sucesso && data.versao) {
+                        if (ultimaVersaoConhecida && ultimaVersaoConhecida !== data.versao) {
+                            ultimaVersaoConhecida = data.versao;
+                            await carregarMetricasDashboard(false);
+                        } else if (!ultimaVersaoConhecida) {
+                            ultimaVersaoConhecida = data.versao;
+                        }
+                    }
+                } catch (e) {}
+            }, 4000);
+        }
 
         /* NAVEGAÇÃO DO MENU LATERAL */
         function alternarAbaDashboard(aba) {
@@ -748,7 +939,7 @@
             };
 
             const titulos = {
-                VISAO_GERAL: ["Visão Geral do Projeto", "Acompanhamento consolidado de entregas, médias operacionais e qualidade"],
+                VISAO_GERAL: ["Visão Geral do Projeto", "Monitoramento automático em tempo real das entregas no balcão"],
                 RITMO_EXPEDICAO: ["Ritmo de Expedição", "Evolução diária de baixas, horários de pico e produtividade por login"],
                 GRAFICO_EXECUCAO: ["Gráfico de Execução", "Bolsas entregues vs. faltantes por etapa escolar e por modelo"]
             };
@@ -761,47 +952,42 @@
             document.getElementById("dash-titulo-secao").innerText = titulos[aba][0];
             document.getElementById("dash-subtitulo-secao").innerText = titulos[aba][1];
 
-            // Força redimensionamento dos gráficos ApexCharts ao tornar a aba visível
             window.dispatchEvent(new Event('resize'));
         }
 
-        async function carregarMetricasDashboard() {
+        async function carregarMetricasDashboard(primeiraCarga = false) {
             const statusEl = document.getElementById("dash-ultima-atualizacao");
-            statusEl.innerText = "Atualizando...";
 
             try {
                 const res = await fetch('/api/dashboard/metricas');
                 const data = await res.json();
 
                 if (!data.sucesso) {
-                    statusEl.innerText = "Erro ao carregar.";
+                    statusEl.innerText = "Erro ao sincronizar.";
                     return;
                 }
 
                 dashDadosGlobais = data;
-                renderizarVisaoGeral(data);
-                renderizarRitmoExpedicao(data);
-                renderizarGraficoExecucao(data);
+                renderizarVisaoGeral(data, primeiraCarga);
+                renderizarRitmoExpedicao(data, primeiraCarga);
+                renderizarGraficoExecucao(data, primeiraCarga);
+
+                if (audModalTipoAtual) {
+                    atualizarDadosModalAuditoria();
+                }
 
                 const agora = new Date();
-                statusEl.innerText = `Atualizado às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+                statusEl.innerText = `Última sync: ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             } catch (err) {
                 console.error("Erro no dashboard:", err);
-                statusEl.innerText = "Falha de comunicação.";
-            }
-        }
-
-        function destruirGraficoSeExistir(id) {
-            if (chartsInstances[id]) {
-                chartsInstances[id].destroy();
-                delete chartsInstances[id];
+                statusEl.innerText = "Reconectando...";
             }
         }
 
         /* =========================================================================
            RENDERIZAÇÃO ABA 1: VISÃO GERAL
            ========================================================================= */
-        function renderizarVisaoGeral(data) {
+        function renderizarVisaoGeral(data, primeiraCarga) {
             const k = data.kpis;
             const ex = data.execucao;
 
@@ -820,16 +1006,19 @@
             document.getElementById("kpi-total-logins").innerText = `${k.operadores_ativos} operador(es) ativo(s)`;
 
             document.getElementById("kpi-projecao-dias").innerText = k.dias_projecao !== null ? `${k.dias_projecao} dias` : "N/A";
-            document.getElementById("kpi-recontato-rh").innerText = k.total_recontato_rh;
 
-            // Auditoria
-            document.getElementById("aud-entregues").innerText = k.beneficiarios_entregues;
-            document.getElementById("aud-parciais").innerText = k.beneficiarios_parciais;
-            document.getElementById("aud-pendentes").innerText = k.beneficiarios_pendentes;
-            document.getElementById("aud-correcoes").innerText = k.correcoes_modelo;
-            document.getElementById("aud-revogacoes").innerText = k.revogacoes_admin;
+            document.getElementById("aud-entregues").innerText = `${k.beneficiarios_entregues} →`;
+            document.getElementById("sub-aud-entregues").innerText = `Corresponde a ${k.bolsas_titulares_entregues} bolsas entregues`;
 
-            // Divergências
+            document.getElementById("aud-parciais").innerText = `${k.beneficiarios_parciais} →`;
+            document.getElementById("sub-aud-parciais").innerText = `Faltam ${k.bolsas_titulares_parciais} bolsas para concluir`;
+
+            document.getElementById("aud-pendentes").innerText = `${k.beneficiarios_pendentes} →`;
+            document.getElementById("sub-aud-pendentes").innerText = `Aguardando retirada de ${k.bolsas_titulares_pendentes} bolsas`;
+
+            document.getElementById("aud-correcoes").innerText = `${k.correcoes_modelo} →`;
+            document.getElementById("aud-revogacoes").innerText = `${k.revogacoes_admin} →`;
+
             document.getElementById("badge-pct-divergencia").innerText = `${k.pct_divergencia}% das saídas (${k.total_divergencias})`;
             const tbodyTrocas = document.getElementById("tbody-top-trocas");
             tbodyTrocas.innerHTML = "";
@@ -846,63 +1035,131 @@
                 });
             }
 
-            // Gráfico Donut 1: Público
-            destruirGraficoSeExistir("publico");
-            chartsInstances["publico"] = new ApexCharts(document.querySelector("#chart-publico-donut"), {
-                chart: { type: 'donut', height: 255, fontFamily: 'inherit' },
-                labels: Object.keys(ex.publico),
-                series: Object.values(ex.publico),
-                colors: ['#10b981', '#0284c7'],
-                legend: { position: 'bottom' },
-                dataLabels: { enabled: true }
-            });
-            chartsInstances["publico"].render();
+            const pubSeries = Object.values(ex.publico);
+            const pubLabels = Object.keys(ex.publico);
+            if (chartsInstances["publico"] && !primeiraCarga) {
+                chartsInstances["publico"].updateSeries(pubSeries);
+            } else {
+                if (chartsInstances["publico"]) chartsInstances["publico"].destroy();
+                chartsInstances["publico"] = new ApexCharts(document.querySelector("#chart-publico-donut"), {
+                    chart: { type: 'donut', height: 260, fontFamily: 'inherit', animations: { enabled: true } },
+                    labels: pubLabels,
+                    series: pubSeries,
+                    colors: ['#10b981', '#0284c7'],
+                    legend: { position: 'bottom', fontWeight: 600 },
+                    dataLabels: { enabled: true }
+                });
+                chartsInstances["publico"].render();
+            }
 
-            // Gráfico Donut 2: Tipo de Cota
-            destruirGraficoSeExistir("cota");
-            chartsInstances["cota"] = new ApexCharts(document.querySelector("#chart-cota-donut"), {
-                chart: { type: 'donut', height: 255, fontFamily: 'inherit' },
-                labels: Object.keys(ex.tipo_cota),
-                series: Object.values(ex.tipo_cota),
-                colors: ['#f59e0b', '#6366f1'],
-                legend: { position: 'bottom' },
-                dataLabels: { enabled: true }
-            });
-            chartsInstances["cota"].render();
+            const cotaSeries = Object.values(ex.tipo_cota);
+            const cotaLabels = Object.keys(ex.tipo_cota);
+            if (chartsInstances["cota"] && !primeiraCarga) {
+                chartsInstances["cota"].updateSeries(cotaSeries);
+            } else {
+                if (chartsInstances["cota"]) chartsInstances["cota"].destroy();
+                chartsInstances["cota"] = new ApexCharts(document.querySelector("#chart-cota-donut"), {
+                    chart: { type: 'donut', height: 260, fontFamily: 'inherit', animations: { enabled: true } },
+                    labels: cotaLabels,
+                    series: cotaSeries,
+                    colors: ['#f59e0b', '#6366f1'],
+                    legend: { position: 'bottom', fontWeight: 600 },
+                    dataLabels: { enabled: true }
+                });
+                chartsInstances["cota"].render();
+            }
         }
 
         /* =========================================================================
-           RENDERIZAÇÃO ABA 2: RITMO DE EXPEDIÇÃO
+           RENDERIZAÇÃO ABA 2: RITMO DE EXPEDIÇÃO (BARRA TOTAL + LINHAS POR USUÁRIO)
            ========================================================================= */
-        function renderizarRitmoExpedicao(data) {
+        function renderizarRitmoExpedicao(data, primeiraCarga) {
             const r = data.ritmo;
 
-            // Gráfico Área: Evolução Diária
-            destruirGraficoSeExistir("ritmoDiario");
-            chartsInstances["ritmoDiario"] = new ApexCharts(document.querySelector("#chart-ritmo-diario"), {
-                chart: { type: 'area', height: 280, toolbar: { show: false }, fontFamily: 'inherit' },
-                series: [{ name: 'Kits Entregues', data: r.dias_valores }],
-                xaxis: { categories: r.dias_labels },
-                colors: ['#10b981'],
-                stroke: { curve: 'smooth', width: 3 },
-                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
-                dataLabels: { enabled: true }
-            });
-            chartsInstances["ritmoDiario"].render();
+            // Monta série mista: 1ª série = Coluna (Total Diário), demais séries = Linhas (Cada Operador)
+            const comboSeries = [
+                {
+                    name: 'Total Diário (Geral)',
+                    type: 'column',
+                    data: r.dias_valores || []
+                }
+            ];
 
-            // Gráfico Colunas: Horários de Pico
-            destruirGraficoSeExistir("horariosPico");
-            chartsInstances["horariosPico"] = new ApexCharts(document.querySelector("#chart-horarios-pico"), {
-                chart: { type: 'bar', height: 270, toolbar: { show: false }, fontFamily: 'inherit' },
-                series: [{ name: 'Atendimentos', data: r.horas_valores }],
-                xaxis: { categories: r.horas_labels },
-                colors: ['#0284c7'],
-                plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
-                dataLabels: { enabled: false }
+            (r.series_operadores || []).forEach(op => {
+                comboSeries.push({
+                    name: op.nome,
+                    type: 'line',
+                    data: op.dados || []
+                });
             });
-            chartsInstances["horariosPico"].render();
 
-            // Tabela Ranking Operadores
+            const paletaCombo = ['#cbd5e1', '#0284c7', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
+            const largurasStroke = [0, ...Array((r.series_operadores || []).length).fill(3)];
+
+            if (chartsInstances["ritmoDiario"] && !primeiraCarga) {
+                chartsInstances["ritmoDiario"].updateOptions({
+                    xaxis: { categories: r.dias_labels },
+                    stroke: { width: largurasStroke }
+                });
+                chartsInstances["ritmoDiario"].updateSeries(comboSeries);
+            } else {
+                if (chartsInstances["ritmoDiario"]) chartsInstances["ritmoDiario"].destroy();
+                chartsInstances["ritmoDiario"] = new ApexCharts(document.querySelector("#chart-ritmo-diario"), {
+                    chart: {
+                        type: 'line',
+                        height: 320,
+                        toolbar: { show: false },
+                        fontFamily: 'inherit'
+                    },
+                    series: comboSeries,
+                    xaxis: { categories: r.dias_labels },
+                    colors: paletaCombo,
+                    stroke: {
+                        width: largurasStroke,
+                        curve: 'smooth'
+                    },
+                    plotOptions: {
+                        bar: {
+                            columnWidth: '38%',
+                            borderRadius: 6
+                        }
+                    },
+                    markers: {
+                        size: 5,
+                        hover: { size: 7 }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        style: { fontSize: '11px', fontWeight: 700 }
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'left',
+                        fontWeight: 700
+                    },
+                    yaxis: {
+                        title: { text: 'Qtd de Bolsas Baixadas' },
+                        min: 0
+                    }
+                });
+                chartsInstances["ritmoDiario"].render();
+            }
+
+            if (chartsInstances["horariosPico"] && !primeiraCarga) {
+                chartsInstances["horariosPico"].updateSeries([{ name: 'Atendimentos', data: r.horas_valores }]);
+            } else {
+                if (chartsInstances["horariosPico"]) chartsInstances["horariosPico"].destroy();
+                chartsInstances["horariosPico"] = new ApexCharts(document.querySelector("#chart-horarios-pico"), {
+                    chart: { type: 'bar', height: 270, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [{ name: 'Atendimentos', data: r.horas_valores }],
+                    xaxis: { categories: r.horas_labels },
+                    colors: ['#0284c7'],
+                    plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
+                    dataLabels: { enabled: false }
+                });
+                chartsInstances["horariosPico"].render();
+            }
+
             const tbodyOp = document.getElementById("tbody-ranking-operadores");
             tbodyOp.innerHTML = "";
             if (!r.ranking_operadores || r.ranking_operadores.length === 0) {
@@ -927,49 +1184,61 @@
         /* =========================================================================
            RENDERIZAÇÃO ABA 3: GRÁFICO DE EXECUÇÃO
            ========================================================================= */
-        function renderizarGraficoExecucao(data) {
+        function renderizarGraficoExecucao(data, primeiraCarga) {
             const ex = data.execucao;
 
-            // 1. Gráfico Barra Empilhada por Etapa Escolar
             const etapasLabels = Object.keys(ex.etapas);
             const etapasEntregues = etapasLabels.map(e => ex.etapas[e].entregues);
             const etapasFaltantes = etapasLabels.map(e => ex.etapas[e].faltantes);
 
-            destruirGraficoSeExistir("execucaoEtapas");
-            chartsInstances["execucaoEtapas"] = new ApexCharts(document.querySelector("#chart-execucao-etapas"), {
-                chart: { type: 'bar', height: 290, stacked: true, toolbar: { show: false }, fontFamily: 'inherit' },
-                series: [
+            if (chartsInstances["execucaoEtapas"] && !primeiraCarga) {
+                chartsInstances["execucaoEtapas"].updateSeries([
                     { name: 'Entregues', data: etapasEntregues },
                     { name: 'Faltam Entregar', data: etapasFaltantes }
-                ],
-                xaxis: { categories: etapasLabels },
-                colors: ['#10b981', '#f59e0b'],
-                plotOptions: { bar: { horizontal: false, borderRadius: 6, columnWidth: '48%' } },
-                legend: { position: 'top' }
-            });
-            chartsInstances["execucaoEtapas"].render();
+                ]);
+            } else {
+                if (chartsInstances["execucaoEtapas"]) chartsInstances["execucaoEtapas"].destroy();
+                chartsInstances["execucaoEtapas"] = new ApexCharts(document.querySelector("#chart-execucao-etapas"), {
+                    chart: { type: 'bar', height: 290, stacked: true, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [
+                        { name: 'Entregues', data: etapasEntregues },
+                        { name: 'Faltam Entregar', data: etapasFaltantes }
+                    ],
+                    xaxis: { categories: etapasLabels },
+                    colors: ['#10b981', '#f59e0b'],
+                    plotOptions: { bar: { horizontal: false, borderRadius: 6, columnWidth: '48%' } },
+                    legend: { position: 'top' }
+                });
+                chartsInstances["execucaoEtapas"].render();
+            }
 
-            // 2. Gráfico Horizontal: Bolsas que Faltam Entregar por Modelo (Top 15 com maior pendência)
             const modelosComFalta = [...ex.modelos]
                 .filter(m => m.faltantes > 0)
                 .sort((a, b) => b.faltantes - a.faltantes)
                 .slice(0, 15);
 
-            destruirGraficoSeExistir("faltantesModelos");
-            chartsInstances["faltantesModelos"] = new ApexCharts(document.querySelector("#chart-faltantes-modelos"), {
-                chart: { type: 'bar', height: 370, toolbar: { show: false }, fontFamily: 'inherit' },
-                series: [
+            if (chartsInstances["faltantesModelos"] && !primeiraCarga) {
+                chartsInstances["faltantesModelos"].updateOptions({ xaxis: { categories: modelosComFalta.map(m => m.modelo) } });
+                chartsInstances["faltantesModelos"].updateSeries([
                     { name: 'Faltam Entregar', data: modelosComFalta.map(m => m.faltantes) },
                     { name: 'Saldo no Balcão', data: modelosComFalta.map(m => m.saldo_balcao) }
-                ],
-                xaxis: { categories: modelosComFalta.map(m => m.modelo) },
-                colors: ['#d97706', '#0284c7'],
-                plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '65%' } },
-                legend: { position: 'top' }
-            });
-            chartsInstances["faltantesModelos"].render();
+                ]);
+            } else {
+                if (chartsInstances["faltantesModelos"]) chartsInstances["faltantesModelos"].destroy();
+                chartsInstances["faltantesModelos"] = new ApexCharts(document.querySelector("#chart-faltantes-modelos"), {
+                    chart: { type: 'bar', height: 370, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [
+                        { name: 'Faltam Entregar', data: modelosComFalta.map(m => m.faltantes) },
+                        { name: 'Saldo no Balcão', data: modelosComFalta.map(m => m.saldo_balcao) }
+                    ],
+                    xaxis: { categories: modelosComFalta.map(m => m.modelo) },
+                    colors: ['#d97706', '#0284c7'],
+                    plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '65%' } },
+                    legend: { position: 'top' }
+                });
+                chartsInstances["faltantesModelos"].render();
+            }
 
-            // 3. Tabela Completa por Modelo
             const tbodyMod = document.getElementById("tbody-execucao-modelos");
             tbodyMod.innerHTML = "";
             ex.modelos.forEach(m => {
@@ -989,33 +1258,139 @@
             });
         }
 
-        /* MODAL RECONTATO RH */
-        function abrirModalRecontato() {
+        /* =========================================================================
+           MODAL DE DETALHAMENTO NOMINAL (AUDITORIA & STATUS DOS TITULARES)
+           ========================================================================= */
+        function abrirModalAuditoria(tipo) {
             if (!dashDadosGlobais) return;
-            const lista = dashDadosGlobais.execucao.lista_recontato_rh || [];
-            const tbody = document.getElementById("tbody-recontato-rh");
+            audModalTipoAtual = tipo;
+            document.getElementById("input-filtro-auditoria").value = "";
+            atualizarDadosModalAuditoria();
+            document.getElementById("modal-auditoria-detalhe").classList.remove("hidden-section");
+        }
+
+        function atualizarDadosModalAuditoria() {
+            if (!dashDadosGlobais || !audModalTipoAtual) return;
+            const listas = dashDadosGlobais.execucao.listas_auditoria || {};
+            const tituloEl = document.getElementById("modal-aud-titulo");
+            const subtituloEl = document.getElementById("modal-aud-subtitulo");
+            const thead = document.getElementById("thead-modal-auditoria");
+
+            if (audModalTipoAtual === 'ENTREGUE') {
+                tituloEl.innerText = "Titulares 100% Entregues";
+                subtituloEl.innerText = "Colaboradores e Jovens Aprendizes que já retiraram todas as suas bolsas";
+                thead.innerHTML = `<tr><th>Crachá / ID</th><th>Titular</th><th>Público</th><th style="text-align:center;">Bolsas</th><th>Resumo dos Kits</th></tr>`;
+                audModalDadosBrutos = listas.ENTREGUE || [];
+            } else if (audModalTipoAtual === 'PARCIAL') {
+                tituloEl.innerText = "Titulares com Entrega Parcial";
+                subtituloEl.innerText = "Retiraram parte das bolsas e ainda possuem saldo pendente";
+                thead.innerHTML = `<tr><th>Crachá / ID</th><th>Titular</th><th>Público</th><th style="text-align:center;">Progresso</th><th>Resumo dos Kits</th></tr>`;
+                audModalDadosBrutos = listas.PARCIAL || [];
+            } else if (audModalTipoAtual === 'PENDENTE') {
+                tituloEl.innerText = "Titulares Pendentes (Não Compareceram)";
+                subtituloEl.innerText = "Beneficiários que ainda não retiraram nenhuma bolsa";
+                thead.innerHTML = `<tr><th>Crachá / ID</th><th>Titular</th><th>Público</th><th style="text-align:center;">Qtd Prevista</th><th>Resumo dos Kits</th></tr>`;
+                audModalDadosBrutos = listas.PENDENTE || [];
+            } else if (audModalTipoAtual === 'CORRECOES') {
+                tituloEl.innerText = "Correções de Modelo (SAIDA_CORRECAO)";
+                subtituloEl.innerText = "Histórico de trocas de modelo corrigidas pela administração";
+                thead.innerHTML = `<tr><th>Data / Hora</th><th>Modelo</th><th>Detalhes da Operação</th></tr>`;
+                audModalDadosBrutos = listas.CORRECOES || [];
+            } else if (audModalTipoAtual === 'REVOGACOES') {
+                tituloEl.innerText = "Revogações Administrativas (REVOGACAO_ADMIN)";
+                subtituloEl.innerText = "Baixas canceladas e estornadas ao estoque";
+                thead.innerHTML = `<tr><th>Data / Hora</th><th>Modelo</th><th>Detalhes da Operação</th></tr>`;
+                audModalDadosBrutos = listas.REVOGACOES || [];
+            }
+
+            filtrarModalAuditoria();
+        }
+
+        function filtrarModalAuditoria() {
+            const termo = document.getElementById("input-filtro-auditoria").value.toLowerCase().trim();
+            const tbody = document.getElementById("tbody-modal-auditoria");
+            const rodape = document.getElementById("rodape-modal-auditoria");
+
+            if (!termo) {
+                audModalDadosFiltrados = [...audModalDadosBrutos];
+            } else {
+                audModalDadosFiltrados = audModalDadosBrutos.filter(item =>
+                    Object.values(item).some(v => String(v || "").toLowerCase().includes(termo))
+                );
+            }
+
             tbody.innerHTML = "";
 
-            if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 18px; color: #64748b;">Nenhum colaborador pendente de recontato RH.</td></tr>`;
-            } else {
-                lista.forEach(item => {
+            if (audModalDadosFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 22px; color: #64748b;">Nenhum registro encontrado.</td></tr>`;
+                rodape.innerText = "0 registros";
+                return;
+            }
+
+            if (['ENTREGUE', 'PARCIAL', 'PENDENTE'].includes(audModalTipoAtual)) {
+                let somaBolsas = 0;
+                audModalDadosFiltrados.forEach(r => {
+                    somaBolsas += (r.qtd_total || 1);
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
-                        <td><strong>${item.id_colaborador}</strong></td>
-                        <td>${item.nome_colaborador}</td>
-                        <td><span class="pill-badge pill-amber">${item.status}</span></td>
-                        <td>${item.motivo}</td>
+                        <td><strong>${r.id_colaborador}</strong></td>
+                        <td><strong>${r.nome_titular}</strong></td>
+                        <td><span class="pill-badge pill-blue">${r.tipo_publico}</span></td>
+                        <td style="text-align:center;"><strong>${r.qtd_entregue} / ${r.qtd_total}</strong></td>
+                        <td><small style="color:#475569;">${r.resumo}</small></td>
                     `;
                     tbody.appendChild(tr);
                 });
+                rodape.innerText = `${audModalDadosFiltrados.length} titulares • Total: ${somaBolsas} bolsas`;
+            } else {
+                audModalDadosFiltrados.forEach(r => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><small>${r.data}</small></td>
+                        <td><span class="pill-badge pill-amber">${r.modelo}</span></td>
+                        <td>${r.observacao}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${audModalDadosFiltrados.length} ocorrências registradas`;
             }
-
-            document.getElementById("modal-recontato-rh").classList.remove("hidden-section");
         }
 
-        function fecharModalRecontato() {
-            document.getElementById("modal-recontato-rh").classList.add("hidden-section");
+        function fecharModalAuditoria() {
+            document.getElementById("modal-auditoria-detalhe").classList.add("hidden-section");
+            audModalTipoAtual = null;
+        }
+
+        function exportarModalAuditoriaExcel() {
+            if (!audModalDadosFiltrados || audModalDadosFiltrados.length === 0) return;
+
+            let filename = `auditoria_${audModalTipoAtual.toLowerCase()}.csv`;
+            let headers = [];
+            let rows = [];
+
+            if (['ENTREGUE', 'PARCIAL', 'PENDENTE'].includes(audModalTipoAtual)) {
+                headers = ["Cracha / ID", "Titular", "Publico", "Bolsas Entregues", "Bolsas Previstas", "Resumo"];
+                rows = audModalDadosFiltrados.map(r => [r.id_colaborador, r.nome_titular, r.tipo_publico, r.qtd_entregue, r.qtd_total, r.resumo]);
+            } else {
+                headers = ["Data / Hora", "Modelo", "Observacao"];
+                rows = audModalDadosFiltrados.map(r => [r.data, r.modelo, r.observacao]);
+            }
+
+            const escaparCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const conteudo = [
+                headers.map(escaparCsv).join(";"),
+                ...rows.map(linha => linha.map(escaparCsv).join(";"))
+            ].join("\r\n");
+
+            const blob = new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>

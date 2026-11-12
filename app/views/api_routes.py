@@ -1285,6 +1285,29 @@ def verificar_sessao_ativa():
     return jsonify({'sucesso': True, 'ativa': True}), 200
 
 
+@api_bp.route('/dashboard/versao', methods=['GET'])
+def dashboard_versao():
+    """
+    Endpoint ultraleve (apenas índices/agregação simples) para detectar mudanças
+    em tempo real sem onerar o pool do PostgreSQL com 12 aparelhos simultâneos.
+    """
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False}), 403
+
+    hb_stats = db.session.query(
+        func.count(HistoricoBaixa.id_historico),
+        func.coalesce(func.max(HistoricoBaixa.id_historico), 0)
+    ).first()
+
+    mov_stats = db.session.query(
+        func.count(MovimentacaoEstoque.id_movimentacao),
+        func.coalesce(func.max(MovimentacaoEstoque.id_movimentacao), 0)
+    ).first()
+
+    assinatura = f"{hb_stats[0]}_{hb_stats[1]}_{mov_stats[0]}_{mov_stats[1]}"
+    return jsonify({'sucesso': True, 'versao': assinatura}), 200
+
+
 @api_bp.route('/dashboard/metricas', methods=['GET'])
 def dashboard_metricas():
     if session.get('usuario_perfil') != 'ADMIN':
@@ -1306,78 +1329,72 @@ def dashboard_metricas():
             return "Ensino Fundamental 2"
         if cod.startswith("EM-"):
             return "Ensino Médio"
-        return "Órfãos / Escolha Livre"
+        return "Sobra / Não Reservado"
 
-    # 1. Consulta enxuta de Dependentes
+    # 1. Consulta colunar enxuta de Dependentes
     deps = RetiradaDependente.query.with_entities(
         RetiradaDependente.id_colaborador,
         RetiradaDependente.nome_colaborador,
-        RetiradaDependente.status,
         RetiradaDependente.qtd_kits,
         RetiradaDependente.resumo_kits,
-        RetiradaDependente.detalhes_entregas,
-        RetiradaDependente.necessita_recontato,
-        RetiradaDependente.motivo_recontato
+        RetiradaDependente.detalhes_entregas
     ).all()
 
-    # 2. Consulta enxuta de Jovens Aprendizes
+    # 2. Consulta colunar enxuta de Jovens Aprendizes
     jovens = RetiradaJovemAprendiz.query.with_entities(
         RetiradaJovemAprendiz.id_colaborador,
-        RetiradaJovemAprendiz.status,
         RetiradaJovemAprendiz.qtd_kits,
         RetiradaJovemAprendiz.resumo_kits,
         RetiradaJovemAprendiz.detalhes_entregas
     ).all()
 
     total_beneficiarios = len(deps) + len(jovens)
-    status_cards = {'ENTREGUE': 0, 'PENDENTE': 0, 'ENTREGA PARCIAL': 0}
 
     kits_previstos_total = 0
     kits_entregues_total = 0
     kits_faltantes_total = 0
 
     publico_kits = {'Dependentes': 0, 'Jovens Aprendizes': 0}
-    tipo_cota_kits = {'Reservados (Modelo Definido)': 0, 'Órfãos (Escolha Livre)': 0}
+    tipo_cota_kits = {'Reservados': 0, 'Não Reservado': 0}
 
     etapas_stats = {
         "Educação Infantil": {"entregues": 0, "faltantes": 0},
         "Ensino Fundamental 1": {"entregues": 0, "faltantes": 0},
         "Ensino Fundamental 2": {"entregues": 0, "faltantes": 0},
         "Ensino Médio": {"entregues": 0, "faltantes": 0},
-        "Órfãos / Escolha Livre": {"entregues": 0, "faltantes": 0}
+        "Sobra / Não Reservado": {"entregues": 0, "faltantes": 0}
     }
 
     faltantes_por_modelo = {m: 0 for m in MODELOS_OFICIAIS}
     entregues_por_modelo = {m: 0 for m in MODELOS_OFICIAIS}
-    lista_recontato_rh = []
+
+    listas_titulares = {
+        'ENTREGUE': [],
+        'PARCIAL': [],
+        'PENDENTE': []
+    }
+    bolsas_por_status_titular = {
+        'ENTREGUE': 0,
+        'PARCIAL': 0,
+        'PENDENTE': 0
+    }
 
     # Processamento de Dependentes
-    for id_colab, nome_colab, status, qtd_kits, resumo, detalhes, nec_rec, mot_rec in deps:
-        st = (status or 'PENDENTE').upper()
-        if st in status_cards:
-            status_cards[st] += 1
-
-        if str(nec_rec or '').strip().upper() in ['SIM', 'S', 'TRUE', '1', 'YES']:
-            lista_recontato_rh.append({
-                'id_colaborador': id_colab,
-                'nome_colaborador': nome_colab or 'NÃO INFORMADO',
-                'status': st,
-                'motivo': mot_rec or 'Pendência cadastral RH'
-            })
-
+    for id_colab, nome_colab, qtd_kits, resumo, detalhes in deps:
         qtd = qtd_kits or 1
         kits_previstos_total += qtd
         publico_kits['Dependentes'] += qtd
 
         resumo_str = str(resumo or "")
-        is_orfeo = any(t in resumo_str.upper() for t in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
-        if is_orfeo:
-            tipo_cota_kits['Órfãos (Escolha Livre)'] += qtd
+        is_sobra = any(t in resumo_str.upper() for t in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
+        if is_sobra:
+            tipo_cota_kits['Não Reservado'] += qtd
         else:
-            tipo_cota_kits['Reservados (Modelo Definido)'] += qtd
+            tipo_cota_kits['Reservados'] += qtd
 
         det = detalhes or {}
         partes = resumo_str.split('|')
+        entregues_neste_cartao = 0
 
         for i in range(qtd):
             chave = f"kit_{i}"
@@ -1386,6 +1403,7 @@ def dashboard_metricas():
 
             if entregue:
                 kits_entregues_total += 1
+                entregues_neste_cartao += 1
                 mod_entregue = (info_kit.get('modelo') or '').strip()
                 etapa = classificar_etapa(mod_entregue)
                 etapas_stats[etapa]["entregues"] += 1
@@ -1393,8 +1411,8 @@ def dashboard_metricas():
                     entregues_por_modelo[mod_entregue] += 1
             else:
                 kits_faltantes_total += 1
-                if is_orfeo:
-                    etapas_stats["Órfãos / Escolha Livre"]["faltantes"] += 1
+                if is_sobra:
+                    etapas_stats["Sobra / Não Reservado"]["faltantes"] += 1
                 else:
                     texto_parte = partes[i] if i < len(partes) else resumo_str
                     mod_esperado = "---"
@@ -1407,19 +1425,36 @@ def dashboard_metricas():
                     if mod_esperado in faltantes_por_modelo:
                         faltantes_por_modelo[mod_esperado] += 1
 
-    # Processamento de Jovens Aprendizes
-    for id_colab, status, qtd_kits, resumo, detalhes in jovens:
-        st = (status or 'PENDENTE').upper()
-        if st in status_cards:
-            status_cards[st] += 1
+        if entregues_neste_cartao >= qtd:
+            cat_titular = 'ENTREGUE'
+        elif entregues_neste_cartao > 0:
+            cat_titular = 'PARCIAL'
+        else:
+            cat_titular = 'PENDENTE'
 
+        bolsas_por_status_titular[cat_titular] += entregues_neste_cartao if cat_titular == 'ENTREGUE' else (qtd - entregues_neste_cartao)
+        listas_titulares[cat_titular].append({
+            'id_colaborador': id_colab,
+            'nome_titular': nome_colab or 'NÃO INFORMADO',
+            'tipo_publico': 'Dependente',
+            'qtd_total': qtd,
+            'qtd_entregue': entregues_neste_cartao,
+            'resumo': resumo_str
+        })
+
+    # Processamento de Jovens Aprendizes
+    for id_colab, qtd_kits, resumo, detalhes in jovens:
         qtd = qtd_kits or 1
         kits_previstos_total += qtd
         publico_kits['Jovens Aprendizes'] += qtd
-        tipo_cota_kits['Reservados (Modelo Definido)'] += qtd
+        tipo_cota_kits['Reservados'] += qtd
 
         resumo_str = str(resumo or "")
+        primeira_parte = resumo_str.split('|')[0].strip()
+        nome_jovem = primeira_parte.split('-')[0].strip() if '-' in primeira_parte else f"Jovem Aprendiz (ID {id_colab})"
+
         det = detalhes or {}
+        entregues_neste_cartao = 0
 
         mod_esperado = "---"
         for m in modelos_ordenados:
@@ -1434,6 +1469,7 @@ def dashboard_metricas():
 
             if entregue:
                 kits_entregues_total += 1
+                entregues_neste_cartao += 1
                 mod_entregue = (info_kit.get('modelo') or mod_esperado).strip()
                 etapa = classificar_etapa(mod_entregue)
                 etapas_stats[etapa]["entregues"] += 1
@@ -1446,7 +1482,24 @@ def dashboard_metricas():
                 if mod_esperado in faltantes_por_modelo:
                     faltantes_por_modelo[mod_esperado] += 1
 
-    # 3. Consulta enxuta de Histórico de Baixas (Ritmo diário, Horários, Operadores e Divergências)
+        if entregues_neste_cartao >= qtd:
+            cat_titular = 'ENTREGUE'
+        elif entregues_neste_cartao > 0:
+            cat_titular = 'PARCIAL'
+        else:
+            cat_titular = 'PENDENTE'
+
+        bolsas_por_status_titular[cat_titular] += entregues_neste_cartao if cat_titular == 'ENTREGUE' else (qtd - entregues_neste_cartao)
+        listas_titulares[cat_titular].append({
+            'id_colaborador': id_colab,
+            'nome_titular': nome_jovem,
+            'tipo_publico': 'Jovem Aprendiz',
+            'qtd_total': qtd,
+            'qtd_entregue': entregues_neste_cartao,
+            'resumo': resumo_str
+        })
+
+    # 3. Consulta enxuta de Histórico de Baixas (Total Diário + Desempenho Diário por Operador)
     baixas = HistoricoBaixa.query.with_entities(
         HistoricoBaixa.id_usuario,
         HistoricoBaixa.nome_operador,
@@ -1471,6 +1524,7 @@ def dashboard_metricas():
                 'nome': op_nome,
                 'total': 0,
                 'dias_ativos': set(),
+                'por_dia': {},
                 'ultima_baixa': None
             }
 
@@ -1479,7 +1533,6 @@ def dashboard_metricas():
         if dt_utc:
             dt_br = dt_utc - timedelta(hours=3)
             dia_chave = dt_br.strftime("%d/%m/%Y")
-            dia_curto = dt_br.strftime("%d/%m")
             hora_chave = f"{dt_br.hour:02d}h"
 
             entregas_por_dia[dia_chave] = entregas_por_dia.get(dia_chave, 0) + 1
@@ -1487,6 +1540,7 @@ def dashboard_metricas():
                 entregas_por_hora[hora_chave] += 1
 
             operadores_map[op_key]['dias_ativos'].add(dia_chave)
+            operadores_map[op_key]['por_dia'][dia_chave] = operadores_map[op_key]['por_dia'].get(dia_chave, 0) + 1
             operadores_map[op_key]['ultima_baixa'] = dt_br.strftime("%d/%m/%Y %H:%M")
 
         if div_mod:
@@ -1494,29 +1548,47 @@ def dashboard_metricas():
             par_label = f"{mod_esp or '?'} → {mod_baixa}"
             trocas_pares[par_label] = trocas_pares.get(par_label, 0) + 1
 
-    # 4. Estoque Físico e Movimentações de Auditoria
+    # 4. Estoque Físico e Movimentações de Auditoria Detalhadas
     estoques = EstoqueKit.query.with_entities(
         EstoqueKit.codigo_kit,
         EstoqueKit.quantidade_disponivel,
         EstoqueKit.quantidade_baixada
     ).all()
 
-    saldo_balcao_mapa = {}
-    for cod, disp, baix in estoques:
-        saldo_balcao_mapa[cod] = max(0, (disp or 0) - (baix or 0))
+    saldo_balcao_mapa = {
+        cod: max(0, (disp or 0) - (baix or 0))
+        for cod, disp, baix in estoques
+    }
 
     movs_auditoria = db.session.query(
+        MovimentacaoEstoque.data_movimentacao,
+        EstoqueKit.codigo_kit,
         MovimentacaoEstoque.tipo_movimentacao,
-        func.count(MovimentacaoEstoque.id_movimentacao)
+        MovimentacaoEstoque.observacao
+    ).join(
+        EstoqueKit, MovimentacaoEstoque.id_estoque == EstoqueKit.id_estoque
     ).filter(
         MovimentacaoEstoque.tipo_movimentacao.in_(['REVOGACAO_ADMIN', 'SAIDA_CORRECAO'])
-    ).group_by(MovimentacaoEstoque.tipo_movimentacao).all()
+    ).order_by(
+        MovimentacaoEstoque.data_movimentacao.desc()
+    ).all()
 
-    auditoria_counts = {'REVOGACAO_ADMIN': 0, 'SAIDA_CORRECAO': 0}
-    for tipo_m, qtd_m in movs_auditoria:
-        auditoria_counts[tipo_m] = qtd_m
+    lista_correcoes = []
+    lista_revogacoes = []
 
-    # 5. Cálculo de Médias e Projeção
+    for dt_m, cod_k, tipo_m, obs_m in movs_auditoria:
+        dt_str = (dt_m - timedelta(hours=3)).strftime("%d/%m/%Y %H:%M") if dt_m else "---"
+        reg_aud = {
+            'data': dt_str,
+            'modelo': cod_k,
+            'observacao': obs_m or '---'
+        }
+        if tipo_m == 'SAIDA_CORRECAO':
+            lista_correcoes.append(reg_aud)
+        elif tipo_m == 'REVOGACAO_ADMIN':
+            lista_revogacoes.append(reg_aud)
+
+    # 5. Cálculo de Médias, Projeção e Séries do Gráfico Misto (Barra + Linhas por Usuário)
     dias_operacao = len(entregas_por_dia)
     total_baixas_registradas = len(baixas)
     media_por_dia = round(total_baixas_registradas / dias_operacao, 1) if dias_operacao > 0 else 0.0
@@ -1528,11 +1600,14 @@ def dashboard_metricas():
     pct_conclusao = round((kits_entregues_total / kits_previstos_total) * 100, 1) if kits_previstos_total > 0 else 0.0
     pct_divergencia = round((total_divergencias / total_baixas_registradas) * 100, 1) if total_baixas_registradas > 0 else 0.0
 
-    # Formatação Ranking de Operadores
+    dias_ordenados_chaves = list(entregas_por_dia.keys())
+    series_operadores_diarias = []
     ranking_operadores = []
-    for op in operadores_map.values():
+
+    for op in sorted(operadores_map.values(), key=lambda x: x['total'], reverse=True):
         dias_op = len(op['dias_ativos']) or 1
         part_pct = round((op['total'] / total_baixas_registradas) * 100, 1) if total_baixas_registradas > 0 else 0.0
+
         ranking_operadores.append({
             'nome': op['nome'],
             'total': op['total'],
@@ -1540,9 +1615,12 @@ def dashboard_metricas():
             'media_dia': round(op['total'] / dias_op, 1),
             'ultima_baixa': op['ultima_baixa'] or '---'
         })
-    ranking_operadores.sort(key=lambda x: x['total'], reverse=True)
 
-    # Formatação Modelos Faltantes vs Saldo Balcão
+        series_operadores_diarias.append({
+            'nome': op['nome'],
+            'dados': [op['por_dia'].get(d, 0) for d in dias_ordenados_chaves]
+        })
+
     modelos_execucao = []
     for m in MODELOS_OFICIAIS:
         faltam = faltantes_por_modelo.get(m, 0)
@@ -1576,18 +1654,21 @@ def dashboard_metricas():
             'operadores_ativos': qtd_operadores_ativos,
             'dias_projecao': dias_projecao,
             'total_beneficiarios': total_beneficiarios,
-            'beneficiarios_entregues': status_cards['ENTREGUE'],
-            'beneficiarios_parciais': status_cards['ENTREGA PARCIAL'],
-            'beneficiarios_pendentes': status_cards['PENDENTE'],
+            'beneficiarios_entregues': len(listas_titulares['ENTREGUE']),
+            'bolsas_titulares_entregues': bolsas_por_status_titular['ENTREGUE'],
+            'beneficiarios_parciais': len(listas_titulares['PARCIAL']),
+            'bolsas_titulares_parciais': bolsas_por_status_titular['PARCIAL'],
+            'beneficiarios_pendentes': len(listas_titulares['PENDENTE']),
+            'bolsas_titulares_pendentes': bolsas_por_status_titular['PENDENTE'],
             'total_divergencias': total_divergencias,
             'pct_divergencia': pct_divergencia,
-            'revogacoes_admin': auditoria_counts['REVOGACAO_ADMIN'],
-            'correcoes_modelo': auditoria_counts['SAIDA_CORRECAO'],
-            'total_recontato_rh': len(lista_recontato_rh)
+            'revogacoes_admin': len(lista_revogacoes),
+            'correcoes_modelo': len(lista_correcoes)
         },
         'ritmo': {
-            'dias_labels': [d[:5] for d in entregas_por_dia.keys()],
-            'dias_valores': list(entregas_por_dia.values()),
+            'dias_labels': [d[:5] for d in dias_ordenados_chaves],
+            'dias_valores': [entregas_por_dia[d] for d in dias_ordenados_chaves],
+            'series_operadores': series_operadores_diarias,
             'horas_labels': list(entregas_por_hora.keys()),
             'horas_valores': list(entregas_por_hora.values()),
             'ranking_operadores': ranking_operadores
@@ -1598,7 +1679,13 @@ def dashboard_metricas():
             'publico': publico_kits,
             'tipo_cota': tipo_cota_kits,
             'top_trocas': top_trocas,
-            'lista_recontato_rh': lista_recontato_rh
+            'listas_auditoria': {
+                'ENTREGUE': listas_titulares['ENTREGUE'],
+                'PARCIAL': listas_titulares['PARCIAL'],
+                'PENDENTE': listas_titulares['PENDENTE'],
+                'CORRECOES': lista_correcoes,
+                'REVOGACOES': lista_revogacoes
+            }
         }
     }), 200
 
