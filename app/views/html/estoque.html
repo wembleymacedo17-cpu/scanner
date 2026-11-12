@@ -70,7 +70,7 @@
             box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
         }
 
-        /* CARDS DE MÉTRICAS */
+        /* CARDS DE MÉTRICAS CLICÁVEIS */
         .cards-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -88,12 +88,19 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
         .card-stat-modern:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+            transform: translateY(-3px);
+            border-color: #94a3b8;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
+        }
+
+        .card-stat-modern:active {
+            transform: translateY(-1px);
         }
 
         .card-stat-modern::before {
@@ -108,6 +115,12 @@
         .stat-balcao::before { background: #16a34a; }
         .stat-reservas::before { background: #d97706; }
         .stat-orfaos::before { background: #6366f1; }
+
+        .stat-lote:hover { border-color: #64748b; }
+        .stat-saidas:hover { border-color: #0284c7; }
+        .stat-balcao:hover { border-color: #16a34a; }
+        .stat-reservas:hover { border-color: #d97706; }
+        .stat-orfaos:hover { border-color: #6366f1; }
 
         .stat-top {
             display: flex;
@@ -145,12 +158,33 @@
         .stat-reservas .stat-icon-wrapper { background: #fef3c7; color: #d97706; }
         .stat-orfaos .stat-icon-wrapper { background: #ede9fe; color: #6366f1; }
 
+        .stat-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
         .stat-value {
             font-size: 1.8rem;
             font-weight: 800;
             line-height: 1.1;
             color: #0f172a;
             font-variant-numeric: tabular-nums;
+        }
+
+        .stat-hint {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            opacity: 0;
+            transform: translateX(-4px);
+            transition: all 0.2s ease;
+        }
+
+        .card-stat-modern:hover .stat-hint {
+            opacity: 1;
+            transform: translateX(0);
+            color: #475569;
         }
 
         /* BARRA DE PESQUISA */
@@ -207,11 +241,11 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* TABELA */
+        /* TABELA PRINCIPAL ENXUTA (KIT | BALCÃO | AÇÕES) */
         .saas-table-container {
             background: #ffffff;
             border-radius: 14px;
-            padding: 4px 12px;
+            padding: 4px 16px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03);
             overflow-x: auto;
@@ -220,7 +254,7 @@
         .table-saas {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
         }
 
         .table-saas th {
@@ -228,15 +262,15 @@
             color: #64748b;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 0.5px;
-            padding: 12px 10px;
+            font-size: 0.72rem;
+            letter-spacing: 0.6px;
+            padding: 14px 12px;
             border-bottom: 2px solid #f1f5f9;
             white-space: nowrap;
         }
 
         .table-saas td {
-            padding: 12px 10px;
+            padding: 13px 12px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
@@ -257,14 +291,14 @@
         .cell-kit-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             cursor: pointer;
         }
 
         .kit-icon-badge {
-            width: 30px;
-            height: 30px;
-            border-radius: 7px;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
             background: #f1f5f9;
             color: #475569;
             display: flex;
@@ -280,126 +314,43 @@
         }
 
         .kit-icon-badge svg {
-            width: 15px;
-            height: 15px;
+            width: 16px;
+            height: 16px;
             stroke-width: 2.2;
         }
 
         .kit-nome-texto {
-            font-size: 0.93rem;
+            font-size: 0.98rem;
             font-weight: 800;
             color: #0f172a;
+            display: block;
         }
 
         .kit-lote-sub {
-            font-size: 0.72rem;
+            font-size: 0.74rem;
             color: #94a3b8;
             font-weight: 600;
         }
 
         .saas-saldo-main {
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 800;
             line-height: 1;
             font-variant-numeric: tabular-nums;
         }
 
         .saas-saldo-unit {
-            font-size: 0.76rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: #64748b;
         }
 
-        /* BARRA DE DISTRIBUIÇÃO MAIS GROSSA E REFINADA */
-        .saas-dist-box {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            min-width: 230px;
-            max-width: 320px;
-        }
-
-        .saas-multi-bar {
-            width: 100%;
-            height: 12px;
-            background: #e2e8f0;
-            border-radius: 999px;
-            overflow: hidden;
-            display: flex;
-            gap: 2px;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
-        }
-
-        .saas-seg-saidas { 
-            background: #10b981; 
-            border-radius: 999px 0 0 999px; 
-            transition: width 0.3s ease; 
-        }
-
-        .saas-seg-reservas { 
-            background: #f59e0b; 
-            transition: width 0.3s ease; 
-        }
-
-        .saas-seg-sobra { 
-            background: #0284c7; 
-            border-radius: 0 999px 999px 0; 
-            transition: width 0.3s ease; 
-        }
-
-        .saas-dist-legend {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.72rem;
-            color: #64748b;
-        }
-
-        .legend-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .legend-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .dot-saida { background: #10b981; }
-        .dot-reserva { background: #f59e0b; }
-        .dot-sobra { background: #0284c7; }
-
-        /* SELO DE PORCENTAGEM NO ESPAÇO CENTRAL */
-        .badge-pct-entregue {
-            font-size: 0.76rem;
-            font-weight: 800;
-            padding: 5px 11px;
-            border-radius: 20px;
-            background: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            box-shadow: 0 1px 2px rgba(16, 185, 129, 0.08);
-        }
-
-        .badge-pct-entregue.pct-zero {
-            background: #f1f5f9;
-            color: #64748b;
-            border-color: #cbd5e1;
-            box-shadow: none;
-        }
-
-        /* AÇÕES */
+        /* AÇÕES DA TABELA */
         .cell-saas-actions {
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 5px;
+            gap: 7px;
             white-space: nowrap;
         }
 
@@ -407,14 +358,14 @@
             background: #f8fafc;
             color: #334155;
             border: 1px solid #cbd5e1;
-            padding: 6px 9px;
-            border-radius: 7px;
-            font-size: 0.76rem;
+            padding: 7px 11px;
+            border-radius: 8px;
+            font-size: 0.78rem;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             transition: all 0.15s ease;
         }
 
@@ -424,10 +375,32 @@
             border-color: #0284c7;
         }
 
+        .btn-saas-analise {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-saas-analise:hover {
+            background: #1d4ed8;
+            color: #ffffff;
+            border-color: #1d4ed8;
+            box-shadow: 0 3px 10px rgba(29, 78, 216, 0.25);
+        }
+
         .btn-saas-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 7px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -445,6 +418,163 @@
 
         .btn-saas-ativar { background: #dcfce7; color: #166534; border-color: #86efac; }
         .btn-saas-ativar:hover { background: #22c55e; color: #ffffff; }
+
+        /* =========================================================================
+           BENTO GRID ANALÍTICO DA BOLSA (MODAL ANÁLISE)
+           ========================================================================= */
+        .modal-bento-card {
+            max-width: 880px !important;
+            width: 94% !important;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1;
+        }
+
+        .bento-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 14px;
+            margin-top: 8px;
+        }
+
+        .bento-tile {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bento-span-12 { grid-column: span 12; }
+        .bento-span-6 { grid-column: span 6; }
+        .bento-span-4 { grid-column: span 4; }
+        .bento-span-8 { grid-column: span 8; }
+
+        @media (max-width: 768px) {
+            .bento-span-6, .bento-span-4, .bento-span-8 { grid-column: span 12; }
+        }
+
+        .bento-tile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .bento-tile-title {
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bento-multi-bar {
+            width: 100%;
+            height: 16px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            display: flex;
+            gap: 3px;
+            margin: 8px 0 14px 0;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .bento-seg-saidas { background: #10b981; transition: width 0.4s ease; }
+        .bento-seg-reservas { background: #f59e0b; transition: width 0.4s ease; }
+        .bento-seg-sobra { background: #0284c7; transition: width 0.4s ease; }
+
+        .bento-breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 560px) {
+            .bento-breakdown-grid { grid-template-columns: 1fr; }
+        }
+
+        .bento-mini-stat {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .bento-mini-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+
+        .bento-mini-val {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .bento-pct-pill {
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 12px;
+        }
+
+        .pill-verde { background: #dcfce7; color: #15803d; }
+        .pill-laranja { background: #fef3c7; color: #b45309; }
+        .pill-azul { background: #e0f2fe; color: #0369a1; }
+
+        .bento-kpi-big {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+            margin: 4px 0;
+        }
+
+        .bento-kpi-desc {
+            font-size: 0.76rem;
+            color: #64748b;
+            line-height: 1.35;
+        }
+
+        .bento-single-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .bento-single-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        .bento-alert-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .alert-ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        .alert-warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .alert-danger { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
         .btn-export-svg {
             background: #ffffff;
@@ -473,6 +603,39 @@
             height: 15px;
             stroke-width: 2.2;
             color: #0284c7;
+        }
+
+        /* TABELAS DOS MODAIS */
+        .modal-table-clean {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .modal-table-clean thead th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            padding: 12px 14px;
+            border-bottom: 2px solid #e2e8f0;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .modal-table-clean tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+
+        .modal-table-clean tbody tr:hover {
+            background: #f8fafc;
         }
 
         /* UPLOAD & BARRA DE PROGRESSO */
@@ -523,12 +686,12 @@
             position: relative;
         }
 
-        .modal-estratificado-card { max-width: 920px !important; max-height: 88vh; display: flex; flex-direction: column; }
+        .modal-estratificado-card { max-width: 860px !important; max-height: 88vh; display: flex; flex-direction: column; }
         .modal-header-estrat { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 14px; }
         .modal-filter-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
         .input-filtro-modal { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none; }
         .input-filtro-modal:focus { border-color: #0284c7; }
-        .modal-body-scroll { overflow-y: auto; max-height: 54vh; }
+        .modal-body-scroll { overflow-y: auto; max-height: 54vh; border: 1px solid #e2e8f0; border-radius: 10px; }
         .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
         .btn-modal-cancel, .btn-voltar-modal { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-modal-confirm, .btn-confirm-action { background: #0284c7; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -536,14 +699,16 @@
         .modal-alert { padding: 8px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; display: none; }
         .modal-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
-        .tr-data-divider { background: #f1f5f9 !important; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; }
-        .tr-data-divider td { padding: 8px 14px !important; font-size: 0.8rem !important; font-weight: 800 !important; color: #1e293b !important; text-transform: uppercase; }
+        .tr-data-divider { background: #f1f5f9 !important; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; }
+        .tr-data-divider td { padding: 8px 14px !important; font-size: 0.78rem !important; font-weight: 800 !important; color: #1e293b !important; text-transform: uppercase; }
         .data-divider-badge { display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 20px; color: #0f172a; }
 
-        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
-        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-roxo { background: #ede9fe; color: #5b21b6; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-neutro { background: #f1f5f9; color: #0f172a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
         .badge-revogacao-admin { background: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca; padding: 4px 9px; border-radius: 6px; font-weight: 800; font-size: 0.76rem; }
 
         .hidden { display: none !important; }
@@ -559,6 +724,77 @@
 </head>
 <body>
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL BENTO GRID DE ANÁLISE INDIVIDUAL DA BOLSA -->
+    <div class="custom-modal-overlay hidden" id="modal-analise-bento">
+        <div class="custom-modal-card modal-bento-card">
+            <div class="modal-header-estrat" style="margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="kit-icon-badge" style="background: #dbeafe; color: #1d4ed8; width: 36px; height: 36px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.2rem; color: #0f172a;">Análise de Estoque — <span id="bento-kit-nome" style="color: #1d4ed8;">---</span></h3>
+                        <p style="font-size: 0.8rem; color: #64748b;" id="bento-kit-subtitulo">Indicadores de distribuição, cobertura e giro operacional</p>
+                    </div>
+                </div>
+                <span style="font-size: 1.25rem; cursor: pointer; color: #64748b; font-weight: 700;" onclick="fecharModalAnaliseBento()">✕</span>
+            </div>
+
+            <!-- GRID BENTO -->
+            <div class="bento-grid-layout" id="bento-grid-conteudo">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button type="button" class="btn-saas-extrato" id="bento-btn-ver-extrato">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Abrir Extrato de Entregas
+                </button>
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalAnaliseBento()">Fechar Análise</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL UNIVERSAL DE DETALHAMENTO DOS CARDS -->
+    <div class="custom-modal-overlay hidden" id="modal-detalhe-card">
+        <div class="custom-modal-card modal-estratificado-card">
+            <div class="modal-header-estrat">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button type="button" id="btn-voltar-reservas" class="btn-modal-cancel hidden" style="padding: 6px 12px; font-size: 0.8rem;" onclick="abrirDetalheCard('RESERVAS')">← Voltar</button>
+                    <div>
+                        <h3 style="font-size: 1.15rem; color: #0f172a;" id="card-modal-titulo">Detalhamento</h3>
+                        <p style="font-size: 0.8rem; color: #64748b;" id="card-modal-subtitulo">Resumo detalhado</p>
+                    </div>
+                </div>
+                <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalDetalheCard()">✕</span>
+            </div>
+
+            <div class="modal-filter-bar">
+                <input type="text" id="input-filtro-card-modal" class="input-filtro-modal" placeholder="Pesquisar..." oninput="filtrarModalDetalheCard()" />
+                <button type="button" id="btn-export-card-excel" class="btn-export-svg" onclick="exportarCardAtualExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Exportar Excel
+                </button>
+            </div>
+
+            <div class="modal-body-scroll">
+                <table class="modal-table-clean">
+                    <thead id="card-modal-thead"></thead>
+                    <tbody id="card-modal-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions">
+                <span id="card-modal-rodape-info" style="margin-right: auto; align-self: center; font-size: 0.8rem; font-weight: 700; color: #64748b;"></span>
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalDetalheCard()">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 1. MODAL ENTRADA MANUAL -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-manual">
@@ -662,7 +898,7 @@
             </div>
 
             <div class="modal-body-scroll">
-                <table>
+                <table class="modal-table-clean">
                     <thead>
                         <tr>
                             <th style="width: 90px;">Hora</th>
@@ -684,7 +920,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS -->
+    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS POR KIT -->
     <div class="custom-modal-overlay hidden" id="modal-estratificado">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
@@ -708,7 +944,7 @@
             </div>
 
             <div class="modal-body-scroll">
-                <table>
+                <table class="modal-table-clean">
                     <thead>
                         <tr>
                             <th>Data / Hora</th>
@@ -769,7 +1005,7 @@
     </div>
 
     <div class="main-container">
-        <!-- 1. CABEÇALHO COM TÍTULO E BOTÕES NO TOPO (COR NORMAL) -->
+        <!-- 1. CABEÇALHO COM TÍTULO E BOTÕES NO TOPO -->
         <header class="app-header-top">
             <div class="header-title-box">
                 <h2>Controle de Estoque</h2>
@@ -806,56 +1042,71 @@
             </div>
         </header>
 
-        <!-- CARDS DE RESUMO (ABAIXO DO MENU E ACIMA DA BUSCA) -->
+        <!-- 2. CARDS DE RESUMO CLICÁVEIS -->
         <div class="cards-summary">
-            <div class="card-stat-modern stat-lote">
+            <div class="card-stat-modern stat-lote" onclick="abrirDetalheCard('LOTE_TOTAL')" title="Clique para ver o lote recebido por bolsa">
                 <div class="stat-top">
                     <span class="stat-label">Lote Total</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                     </div>
                 </div>
-                <div class="stat-value" id="stat-lote-total">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" id="stat-lote-total">0</div>
+                    <span class="stat-hint">Ver lote →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-saidas">
+            <div class="card-stat-modern stat-saidas" onclick="abrirDetalheCard('SAIDAS')" title="Clique para ver o extrato diário de saídas">
                 <div class="stat-top">
                     <span class="stat-label">Saídas</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+                    <span class="stat-hint">Extrato →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-balcao">
+            <div class="card-stat-modern stat-balcao" onclick="abrirDetalheCard('SALDO_BALCAO')" title="Clique para ver o saldo disponível por bolsa">
                 <div class="stat-top">
                     <span class="stat-label">Saldo Balcão</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+                    <span class="stat-hint">Ver saldo →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-reservas">
+            <div class="card-stat-modern stat-reservas" onclick="abrirDetalheCard('RESERVAS')" title="Clique para ver as reservas por bolsa e dependente">
                 <div class="stat-top">
                     <span class="stat-label">Reservas</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #d97706;" id="stat-total-reservado">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #d97706;" id="stat-total-reservado">0</div>
+                    <span class="stat-hint">Ver reservas →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-orfaos">
+            <div class="card-stat-modern stat-orfaos" onclick="abrirDetalheCard('SOBRA_ORFAOS')" title="Clique para ver a sobra livre por bolsa">
                 <div class="stat-top">
                     <span class="stat-label">Sobra (Órfãos)</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4-4-4 4"></path><path d="M12 16V8"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
+                    <span class="stat-hint">Ver sobra →</span>
+                </div>
             </div>
         </div>
 
@@ -868,19 +1119,18 @@
             <span class="saas-counter" id="contador-kits-visiveis">Carregando...</span>
         </div>
 
-        <!-- TABELA COM BARRA DE DISTRIBUIÇÃO MAIS GROSSA E PORCENTAGEM NO ESPAÇO À DIREITA -->
+        <!-- TABELA PRINCIPAL ENXUTA: SOMENTE KIT, BALCÃO E AÇÕES -->
         <div class="saas-table-container">
             <table class="table-saas">
                 <thead>
                     <tr>
-                        <th style="min-width: 160px;">Kit</th>
-                        <th style="min-width: 100px;">Balcão</th>
-                        <th style="min-width: 380px;">Distribuição & Progresso</th>
-                        <th style="text-align: right; min-width: 140px;">Ações</th>
+                        <th style="width: 40%;">Kit</th>
+                        <th style="width: 25%;">Balcão</th>
+                        <th style="text-align: right; width: 35%;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-estoque-saas">
-                    <tr><td colspan="4" style="text-align: center; padding: 25px; color: #64748b;">Carregando...</td></tr>
+                    <tr><td colspan="3" style="text-align: center; padding: 25px; color: #64748b;">Carregando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -896,6 +1146,7 @@
 
         const SVG_ICONS = {
             search: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+            chart: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
             edit: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
             block: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`,
             check: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
@@ -908,10 +1159,543 @@
         let acaoPendenteCallback = null;
         let progressoInterval = null;
 
+        // Estado do Modal Universal dos Cards
+        let cardModalTipoAtual = null;
+        let cardModalModeloSelecionado = null;
+        let cardModalDadosBrutos = [];
+        let cardModalDadosFiltrados = [];
+
         document.addEventListener("DOMContentLoaded", () => {
             carregarEstoque();
         });
 
+        /* =========================================================================
+           MODAL BENTO GRID DE ANÁLISE INDIVIDUAL DA BOLSA
+           ========================================================================= */
+        function abrirModalAnaliseBento(codigoKit) {
+            const item = dadosEstoqueGlobal.find(x => x.codigo_kit === codigoKit);
+            if (!item) return;
+
+            const saidas = item.quantidade_baixada || 0;
+            const saldoBalcao = item.quantidade_disponivel || 0;
+            const loteTotal = item.quantidade_total_entrada || (saldoBalcao + saidas);
+            const reservas = item.quantidade_reservada || 0;
+            const sobraOrfaos = Math.max(0, saldoBalcao - reservas);
+            const deficit = Math.max(0, reservas - saldoBalcao);
+            const isAtivo = item.ativo !== false;
+
+            // Percentuais sobre o Lote Total
+            const pctSai = loteTotal > 0 ? Math.round((saidas / loteTotal) * 100) : 0;
+            const pctRes = loteTotal > 0 ? Math.round((reservas / loteTotal) * 100) : 0;
+            const pctSob = loteTotal > 0 ? Math.round((sobraOrfaos / loteTotal) * 100) : 0;
+
+            // Larguras proporcionais exatas para a barra
+            const barSai = loteTotal > 0 ? (saidas / loteTotal) * 100 : 0;
+            const barRes = loteTotal > 0 ? (reservas / loteTotal) * 100 : 0;
+            const barSob = loteTotal > 0 ? (sobraOrfaos / loteTotal) * 100 : 0;
+
+            // Indicador Extra 1: Cobertura de Reservas (Saldo Balcão vs Reservas)
+            let pctCobertura = 100;
+            if (reservas > 0) {
+                pctCobertura = Math.min(100, Math.round((saldoBalcao / reservas) * 100));
+            }
+
+            // Indicador Extra 2: Demanda Total Comprometida (Saídas + Reservas vs Lote)
+            const totalComprometido = saidas + reservas;
+            const pctComprometido = loteTotal > 0 ? Math.min(100, Math.round((totalComprometido / loteTotal) * 100)) : 0;
+
+            // Diagnóstico Operacional Inteligente
+            let bannerClass = "alert-ok";
+            let bannerTexto = `Estoque saudável: todas as ${reservas} reservas estão 100% garantidas e há ${sobraOrfaos} unidades livres para escolha presencial.`;
+
+            if (!isAtivo) {
+                bannerClass = "alert-danger";
+                bannerTexto = `Modelo bloqueado/inativado pelo Administrador. Novas baixas estão suspensas.`;
+            } else if (deficit > 0) {
+                bannerClass = "alert-danger";
+                bannerTexto = `Alerta de ruptura: faltam ${deficit} unidades físicas no balcão para cobrir as reservas garantidas.`;
+            } else if (sobraOrfaos === 0 && reservas > 0) {
+                bannerClass = "alert-warn";
+                bannerTexto = `Sobra esgotada: todo o saldo em balcão (${saldoBalcao} und) está comprometido exclusivamente com reservas.`;
+            } else if (sobraOrfaos > 0 && sobraOrfaos <= 10) {
+                bannerClass = "alert-warn";
+                bannerTexto = `Atenção: restam apenas ${sobraOrfaos} unidades livres para órfãos ou trocas de modelo no balcão.`;
+            }
+
+            document.getElementById("bento-kit-nome").innerText = item.codigo_kit;
+            document.getElementById("bento-kit-subtitulo").innerText = `Lote Total: ${loteTotal} und • Saldo em Balcão: ${saldoBalcao} und`;
+            document.getElementById("bento-btn-ver-extrato").onclick = () => {
+                fecharModalAnaliseBento();
+                abrirModalEstratificado(item.codigo_kit);
+            };
+
+            const grid = document.getElementById("bento-grid-conteudo");
+            grid.innerHTML = `
+                <!-- BLOCO 1 (LARGURA TOTAL): BARRA DE PROGRESSO E PORCENTAGENS SAI / RES / SOB -->
+                <div class="bento-tile bento-span-12">
+                    <div class="bento-tile-header">
+                        <span class="bento-tile-title">Distribuição & Progresso do Lote (${loteTotal} und)</span>
+                        <span style="font-size: 0.78rem; font-weight: 800; color: #0f172a;">Saldo Atual: <strong style="color: #16a34a;">${saldoBalcao} und</strong></span>
+                    </div>
+
+                    <div class="bento-multi-bar" title="Saídas: ${pctSai}% | Reservas: ${pctRes}% | Sobra: ${pctSob}%">
+                        <div class="bento-seg-saidas" style="width: ${barSai}%;"></div>
+                        <div class="bento-seg-reservas" style="width: ${barRes}%;"></div>
+                        <div class="bento-seg-sobra" style="width: ${barSob}%;"></div>
+                    </div>
+
+                    <div class="bento-breakdown-grid">
+                        <div class="bento-mini-stat">
+                            <div class="bento-mini-top">
+                                <span>● Saídas (Sai)</span>
+                                <span class="bento-pct-pill pill-verde">${pctSai}% entregue</span>
+                            </div>
+                            <div class="bento-mini-val" style="color: #10b981;">${saidas} <small style="font-size:0.75rem; color:#64748b;">und</small></div>
+                        </div>
+
+                        <div class="bento-mini-stat">
+                            <div class="bento-mini-top">
+                                <span>● Reservas (Res)</span>
+                                <span class="bento-pct-pill pill-laranja">${pctRes}% reservado</span>
+                            </div>
+                            <div class="bento-mini-val" style="color: #f59e0b;">${reservas} <small style="font-size:0.75rem; color:#64748b;">und</small></div>
+                        </div>
+
+                        <div class="bento-mini-stat">
+                            <div class="bento-mini-top">
+                                <span>● Sobra Livre (Sob)</span>
+                                <span class="bento-pct-pill pill-azul">${pctSob}% livre</span>
+                            </div>
+                            <div class="bento-mini-val" style="color: #0284c7;">${sobraOrfaos} <small style="font-size:0.75rem; color:#64748b;">und</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOCO 2 (4 COLUNAS): COBERTURA DE RESERVAS -->
+                <div class="bento-tile bento-span-4">
+                    <div>
+                        <div class="bento-tile-header">
+                            <span class="bento-tile-title">Garantia de Reservas</span>
+                        </div>
+                        <div class="bento-kpi-big" style="color: ${pctCobertura === 100 ? '#16a34a' : '#dc2626'};">${pctCobertura}%</div>
+                        <p class="bento-kpi-desc">
+                            ${reservas > 0 ? `${Math.min(saldoBalcao, reservas)} de ${reservas} reservas cobertas pelo saldo físico.` : 'Nenhuma reserva pendente para este modelo.'}
+                        </p>
+                    </div>
+                    <div class="bento-single-bar">
+                        <div class="bento-single-fill" style="width: ${pctCobertura}%; background: ${pctCobertura === 100 ? '#16a34a' : '#dc2626'};"></div>
+                    </div>
+                </div>
+
+                <!-- BLOCO 3 (4 COLUNAS): COMPROMETIMENTO DO LOTE -->
+                <div class="bento-tile bento-span-4">
+                    <div>
+                        <div class="bento-tile-header">
+                            <span class="bento-tile-title">Demanda Comprometida</span>
+                        </div>
+                        <div class="bento-kpi-big" style="color: #0284c7;">${pctComprometido}%</div>
+                        <p class="bento-kpi-desc">
+                            <strong>${totalComprometido} und</strong> já entregues ou vinculadas a titulares do lote de ${loteTotal}.
+                        </p>
+                    </div>
+                    <div class="bento-single-bar">
+                        <div class="bento-single-fill" style="width: ${pctComprometido}%; background: #0284c7;"></div>
+                    </div>
+                </div>
+
+                <!-- BLOCO 4 (4 COLUNAS): RELAÇÃO SOBRA VS RESERVA -->
+                <div class="bento-tile bento-span-4">
+                    <div>
+                        <div class="bento-tile-header">
+                            <span class="bento-tile-title">Margem de Troca</span>
+                        </div>
+                        <div class="bento-kpi-big" style="color: #6366f1;">${sobraOrfaos} <small style="font-size:0.85rem; color:#64748b;">und</small></div>
+                        <p class="bento-kpi-desc">
+                            Unidades disponíveis para órfãos e trocas de modelo no balcão sem afetar reservas.
+                        </p>
+                    </div>
+                    <div class="bento-single-bar">
+                        <div class="bento-single-fill" style="width: ${pctSob}%; background: #6366f1;"></div>
+                    </div>
+                </div>
+
+                <!-- BLOCO 5 (LARGURA TOTAL): DIAGNÓSTICO OPERACIONAL -->
+                <div class="bento-span-12">
+                    <div class="bento-alert-banner ${bannerClass}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>${bannerTexto}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("modal-analise-bento").classList.remove("hidden");
+        }
+
+        function fecharModalAnaliseBento() {
+            document.getElementById("modal-analise-bento").classList.add("hidden");
+        }
+
+        /* =========================================================================
+           LÓGICA DOS CARDS CLICÁVEIS (LOTE, SAÍDAS, BALCÃO, RESERVAS, SOBRA)
+           ========================================================================= */
+        async function abrirDetalheCard(tipo) {
+            cardModalTipoAtual = tipo;
+            cardModalModeloSelecionado = null;
+            cardModalDadosBrutos = [];
+            cardModalDadosFiltrados = [];
+
+            const modal = document.getElementById("modal-detalhe-card");
+            const tituloEl = document.getElementById("card-modal-titulo");
+            const subtituloEl = document.getElementById("card-modal-subtitulo");
+            const inputFiltro = document.getElementById("input-filtro-card-modal");
+            const thead = document.getElementById("card-modal-thead");
+            const tbody = document.getElementById("card-modal-tbody");
+            const rodape = document.getElementById("card-modal-rodape-info");
+            const btnVoltar = document.getElementById("btn-voltar-reservas");
+
+            btnVoltar.classList.add("hidden");
+            inputFiltro.value = "";
+            rodape.innerText = "";
+            modal.classList.remove("hidden");
+
+            if (tipo === 'LOTE_TOTAL') {
+                tituloEl.innerText = "Resumo de Lote Total";
+                subtituloEl.innerText = "Quantidade total recebida por modelo de bolsa";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Modelo da Bolsa</th>
+                        <th style="text-align: right;">Lote Recebido</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => {
+                    const saidas = item.quantidade_baixada || 0;
+                    const balcao = item.quantidade_disponivel || 0;
+                    const lote = item.quantidade_total_entrada || (balcao + saidas);
+                    return { modelo_kit: item.codigo_kit, lote_total: lote };
+                }).filter(x => x.lote_total > 0);
+                filtrarModalDetalheCard();
+            }
+            else if (tipo === 'SALDO_BALCAO') {
+                tituloEl.innerText = "Saldo Físico no Balcão";
+                subtituloEl.innerText = "Unidades disponíveis no balcão por modelo de bolsa";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Modelo da Bolsa</th>
+                        <th style="text-align: right;">Quantidade em Balcão</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => ({
+                    modelo_kit: item.codigo_kit,
+                    saldo_balcao: item.quantidade_disponivel || 0
+                })).filter(x => x.saldo_balcao > 0);
+                filtrarModalDetalheCard();
+            }
+            else if (tipo === 'SOBRA_ORFAOS') {
+                tituloEl.innerText = "Sobra Livre (Órfãos)";
+                subtituloEl.innerText = "Unidades livres disponíveis por modelo de bolsa";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Modelo da Bolsa</th>
+                        <th style="text-align: right;">QTD Sobra</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => {
+                    const balcao = item.quantidade_disponivel || 0;
+                    const reservas = item.quantidade_reservada || 0;
+                    const sobra = Math.max(0, balcao - reservas);
+                    return { modelo_kit: item.codigo_kit, sobra: sobra };
+                }).filter(x => x.sobra > 0);
+                filtrarModalDetalheCard();
+            }
+            else if (tipo === 'RESERVAS') {
+                tituloEl.innerText = "Reservas por Bolsa";
+                subtituloEl.innerText = "Clique em Extrato para ver os dependentes e colaboradores vinculados";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Nome da Bolsa</th>
+                        <th style="text-align: center;">QTD Reserva</th>
+                        <th style="text-align: right;">Detalhamento</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => ({
+                    modelo_kit: item.codigo_kit,
+                    qtd_reserva: item.quantidade_reservada || 0
+                })).filter(x => x.qtd_reserva > 0);
+                filtrarModalDetalheCard();
+            }
+            else if (tipo === 'SAIDAS') {
+                tituloEl.innerText = "Extrato Geral de Saídas";
+                subtituloEl.innerText = "Histórico limpo de entregas agrupado por dia";
+                inputFiltro.placeholder = "Filtrar por data (ex: 12/11), bolsa, beneficiário ou operador...";
+                thead.innerHTML = `
+                    <tr>
+                        <th style="width: 90px;">Hora</th>
+                        <th style="width: 125px;">Bolsa</th>
+                        <th>Beneficiário</th>
+                        <th style="width: 120px;">Público</th>
+                        <th>Operador</th>
+                    </tr>
+                `;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #64748b;">Carregando saídas...</td></tr>`;
+
+                try {
+                    const res = await fetch('/api/estoque/saidas-gerais');
+                    const data = await res.json();
+                    if (data.sucesso) {
+                        cardModalDadosBrutos = data.saidas || [];
+                        filtrarModalDetalheCard();
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: #dc2626;">${data.mensagem || 'Erro ao carregar saídas.'}</td></tr>`;
+                    }
+                } catch (err) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: #dc2626;">Erro de conexão com o servidor.</td></tr>`;
+                }
+            }
+        }
+
+        async function abrirExtratoReservasBolsa(modeloKit) {
+            cardModalTipoAtual = 'RESERVAS_DETALHE';
+            cardModalModeloSelecionado = modeloKit;
+            cardModalDadosBrutos = [];
+            cardModalDadosFiltrados = [];
+
+            const tituloEl = document.getElementById("card-modal-titulo");
+            const subtituloEl = document.getElementById("card-modal-subtitulo");
+            const inputFiltro = document.getElementById("input-filtro-card-modal");
+            const thead = document.getElementById("card-modal-thead");
+            const tbody = document.getElementById("card-modal-tbody");
+            const rodape = document.getElementById("card-modal-rodape-info");
+            const btnVoltar = document.getElementById("btn-voltar-reservas");
+
+            btnVoltar.classList.remove("hidden");
+            tituloEl.innerText = `Reservas — ${modeloKit}`;
+            subtituloEl.innerText = "Dependentes e colaboradores titulares com reserva ativa";
+            inputFiltro.value = "";
+            inputFiltro.placeholder = "Filtrar por dependente, colaborador ou crachá...";
+            rodape.innerText = "";
+
+            thead.innerHTML = `
+                <tr>
+                    <th>Dependente / Beneficiário</th>
+                    <th>Colaborador Titular</th>
+                    <th style="width: 130px;">Público</th>
+                </tr>
+            `;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 24px; color: #64748b;">Carregando reservas de ${modeloKit}...</td></tr>`;
+
+            try {
+                const res = await fetch(`/api/estoque/reservas-modelo/${encodeURIComponent(modeloKit)}`);
+                const data = await res.json();
+                if (data.sucesso) {
+                    cardModalDadosBrutos = data.reservas || [];
+                    filtrarModalDetalheCard();
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 20px; color: #dc2626;">${data.mensagem || 'Erro ao carregar reservas.'}</td></tr>`;
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 20px; color: #dc2626;">Erro de conexão com o servidor.</td></tr>`;
+            }
+        }
+
+        function fecharModalDetalheCard() {
+            document.getElementById("modal-detalhe-card").classList.add("hidden");
+            cardModalTipoAtual = null;
+            cardModalModeloSelecionado = null;
+        }
+
+        function filtrarModalDetalheCard() {
+            const termo = document.getElementById("input-filtro-card-modal").value.toLowerCase().trim();
+            const tbody = document.getElementById("card-modal-tbody");
+            const rodape = document.getElementById("card-modal-rodape-info");
+
+            if (!termo) {
+                cardModalDadosFiltrados = [...cardModalDadosBrutos];
+            } else {
+                cardModalDadosFiltrados = cardModalDadosBrutos.filter(row => {
+                    return Object.values(row).some(val => String(val || "").toLowerCase().includes(termo));
+                });
+            }
+
+            tbody.innerHTML = "";
+
+            if (cardModalDadosFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 22px; color: #64748b;">Nenhum registro encontrado.</td></tr>`;
+                rodape.innerText = "0 registros";
+                return;
+            }
+
+            if (cardModalTipoAtual === 'LOTE_TOTAL') {
+                let somaLote = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaLote += r.lote_total;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: right;"><span class="badge-neutro">${r.lote_total} und</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total: ${somaLote} und`;
+            }
+            else if (cardModalTipoAtual === 'SALDO_BALCAO') {
+                let somaBalcao = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaBalcao += r.saldo_balcao;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: right;"><span class="badge-sobra">${r.saldo_balcao} und</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total no balcão: ${somaBalcao} und`;
+            }
+            else if (cardModalTipoAtual === 'SOBRA_ORFAOS') {
+                let somaSobra = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaSobra += r.sobra;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: right;"><span class="badge-roxo">${r.sobra} und</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total de sobra livre: ${somaSobra} und`;
+            }
+            else if (cardModalTipoAtual === 'RESERVAS') {
+                let somaRes = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaRes += r.qtd_reserva;
+                    const tr = document.createElement("tr");
+                    tr.style.cursor = "pointer";
+                    tr.onclick = () => abrirExtratoReservasBolsa(r.modelo_kit);
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: center;"><span class="badge-reserva">${r.qtd_reserva} und</span></td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn-saas-extrato" onclick="event.stopPropagation(); abrirExtratoReservasBolsa('${r.modelo_kit}')">
+                                ${SVG_ICONS.search} Extrato
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total reservado: ${somaRes} und`;
+            }
+            else if (cardModalTipoAtual === 'RESERVAS_DETALHE') {
+                cardModalDadosFiltrados.forEach(r => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.nome_dependente}</strong></td>
+                        <td>${r.nome_titular} <small style="color:#64748b;">(ID: ${r.id_colaborador})</small></td>
+                        <td><span class="badge-saida" style="font-size:0.72rem;">${r.tipo_publico}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} reservas vinculadas para ${cardModalModeloSelecionado}`;
+            }
+            else if (cardModalTipoAtual === 'SAIDAS') {
+                let diaAnterior = null;
+                cardModalDadosFiltrados.forEach(s => {
+                    const partes = (s.data_baixa || '').split(' ');
+                    const dataApenas = partes[0] || 'Sem Data';
+                    const horaApenas = partes[1] || s.data_baixa;
+
+                    if (dataApenas !== diaAnterior) {
+                        diaAnterior = dataApenas;
+                        const trDivider = document.createElement("tr");
+                        trDivider.className = "tr-data-divider";
+                        trDivider.innerHTML = `
+                            <td colspan="5">
+                                <span class="data-divider-badge">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    ${dataApenas}
+                                </span>
+                            </td>
+                        `;
+                        tbody.appendChild(trDivider);
+                    }
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><small style="font-weight: 600; color: #475569;">${horaApenas}</small></td>
+                        <td><span class="badge-sobra">${s.modelo_kit}</span></td>
+                        <td><strong>${s.nome_beneficiario}</strong> <small style="color:#64748b;">(ID: ${s.id_colaborador})</small></td>
+                        <td><span class="badge-saida" style="font-size:0.72rem;">${s.tipo_publico}</span></td>
+                        <td style="color: #0284c7; font-weight: 700;">${s.nome_operador}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `Total exibido: ${cardModalDadosFiltrados.length} saídas`;
+            }
+        }
+
+        function exportarCardAtualExcel() {
+            if (!cardModalDadosFiltrados || cardModalDadosFiltrados.length === 0) {
+                mostrarToast("Não há dados para exportar.", "error");
+                return;
+            }
+
+            let filename = "relatorio_estoque.csv";
+            let headers = [];
+            let rows = [];
+
+            if (cardModalTipoAtual === 'LOTE_TOTAL') {
+                filename = "lote_total_bolsas.csv";
+                headers = ["Modelo da Bolsa", "Lote Recebido"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.lote_total]);
+            }
+            else if (cardModalTipoAtual === 'SALDO_BALCAO') {
+                filename = "saldo_balcao_bolsas.csv";
+                headers = ["Modelo da Bolsa", "Quantidade em Balcao"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.saldo_balcao]);
+            }
+            else if (cardModalTipoAtual === 'SOBRA_ORFAOS') {
+                filename = "sobra_orfaos_bolsas.csv";
+                headers = ["Modelo da Bolsa", "QTD Sobra"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.sobra]);
+            }
+            else if (cardModalTipoAtual === 'RESERVAS') {
+                filename = "resumo_reservas_por_bolsa.csv";
+                headers = ["Nome da Bolsa", "QTD Reserva"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.qtd_reserva]);
+            }
+            else if (cardModalTipoAtual === 'RESERVAS_DETALHE') {
+                filename = `reservas_dependentes_${cardModalModeloSelecionado}.csv`;
+                headers = ["Bolsa", "Dependente / Beneficiario", "ID Colaborador", "Colaborador Titular", "Publico"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.nome_dependente, r.id_colaborador, r.nome_titular, r.tipo_publico]);
+            }
+            else if (cardModalTipoAtual === 'SAIDAS') {
+                filename = "extrato_saidas_por_dia.csv";
+                headers = ["Data / Hora", "Bolsa", "ID Colaborador", "Beneficiario", "Publico", "Operador"];
+                rows = cardModalDadosFiltrados.map(s => [s.data_baixa, s.modelo_kit, s.id_colaborador, s.nome_beneficiario, s.tipo_publico, s.nome_operador]);
+            }
+
+            const escaparCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const conteudo = [
+                headers.map(escaparCsv).join(";"),
+                ...rows.map(linha => linha.map(escaparCsv).join(";"))
+            ].join("\r\n");
+
+            const blob = new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        /* =========================================================================
+           FUNÇÕES DOS DEMAIS MODAIS E TABELA PRINCIPAL ENXUTA
+           ========================================================================= */
         function abrirModalEntradaManual() {
             document.getElementById("input-qtd").value = "";
             document.getElementById("modal-entrada-manual").classList.remove("hidden");
@@ -1236,7 +2020,7 @@
             });
         }
 
-        /* RENDERIZAÇÃO DA TABELA COM BARRA MAIS GROSSA E PORCENTAGEM NO ESPAÇO À DIREITA */
+        /* RENDERIZAÇÃO DA TABELA PRINCIPAL ENXUTA: KIT | BALCÃO | AÇÕES (COM BOTÃO ANÁLISE) */
         function renderizarTabelaSaas(lista) {
             const tbody = document.getElementById("tabela-estoque-saas");
             tbody.innerHTML = "";
@@ -1244,7 +2028,7 @@
             let totalLoteGlobal = 0, totalSaidasGlobal = 0, totalBalcaoGlobal = 0, totalReservaGlobal = 0, totalSobraOrfaosGlobal = 0;
 
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 25px; color: #64748b;">Nenhum kit encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 25px; color: #64748b;">Nenhum kit encontrado.</td></tr>`;
                 document.getElementById("contador-kits-visiveis").innerText = "0 modelos";
                 return;
             }
@@ -1263,21 +2047,6 @@
                 totalReservaGlobal += reservas;
                 if (sobraOrfaos > 0) totalSobraOrfaosGlobal += sobraOrfaos;
 
-                // Cálculo da porcentagem entregue do kit
-                const pctEntregue = loteEntregue > 0 ? Math.round((saidas / loteEntregue) * 100) : 0;
-                const badgePctClass = pctEntregue > 0 ? 'badge-pct-entregue' : 'badge-pct-entregue pct-zero';
-
-                // Percentuais da barra proporcional
-                let pctSaidas = 0;
-                let pctReservas = 0;
-                let pctSobra = 0;
-
-                if (loteEntregue > 0) {
-                    pctSaidas = (saidas / loteEntregue) * 100;
-                    pctReservas = (reservas / loteEntregue) * 100;
-                    pctSobra = (Math.max(0, sobraOrfaos) / loteEntregue) * 100;
-                }
-
                 const corSaldo = !isAtivo ? '#94a3b8' : (saldoBalcao > 0 ? '#16a34a' : '#dc2626');
 
                 const btnStatusHtml = isAtivo
@@ -1293,11 +2062,11 @@
 
                 tr.innerHTML = `
                     <td>
-                        <div class="cell-kit-info" onclick="abrirModalEstratificado('${item.codigo_kit}')">
+                        <div class="cell-kit-info" onclick="abrirModalAnaliseBento('${item.codigo_kit}')">
                             <div class="kit-icon-badge">${SVG_ICONS.backpack}</div>
                             <div>
                                 <span class="kit-nome-texto">${item.codigo_kit}</span>
-                                <span class="kit-lote-sub">Lote: ${loteEntregue}</span>
+                                <span class="kit-lote-sub">Lote: ${loteEntregue} und</span>
                             </div>
                         </div>
                     </td>
@@ -1305,31 +2074,10 @@
                         <div class="saas-saldo-main" style="color: ${corSaldo};">${saldoBalcao} <span class="saas-saldo-unit">und</span></div>
                     </td>
                     <td>
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 18px;">
-                            <div class="saas-dist-box">
-                                <div class="saas-multi-bar" title="Saídas: ${saidas} | Reservas: ${reservas} | Sobra: ${sobraOrfaos > 0 ? sobraOrfaos : 0}">
-                                    <div class="saas-seg-saidas" style="width: ${pctSaidas}%;"></div>
-                                    <div class="saas-seg-reservas" style="width: ${pctReservas}%;"></div>
-                                    <div class="saas-seg-sobra" style="width: ${pctSobra}%;"></div>
-                                </div>
-                                <div class="saas-dist-legend">
-                                    <span class="legend-item"><span class="legend-dot dot-saida"></span> Sai: <strong style="color: #10b981;">${saidas}</strong></span>
-                                    <span class="legend-item"><span class="legend-dot dot-reserva"></span> Res: <strong style="color: #f59e0b;">${reservas}</strong></span>
-                                    <span class="legend-item">
-                                        <span class="legend-dot dot-sobra"></span> 
-                                        Sob: <strong style="color: #0284c7;">${sobraOrfaos > 0 ? sobraOrfaos : 0}</strong>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- PORCENTAGEM NO ESPAÇO À DIREITA DA DISTRIBUIÇÃO -->
-                            <div class="${badgePctClass}">
-                                ${pctEntregue}% entregue
-                            </div>
-                        </div>
-                    </td>
-                    <td>
                         <div class="cell-saas-actions">
+                            <button type="button" class="btn-saas-analise" onclick="abrirModalAnaliseBento('${item.codigo_kit}')">
+                                ${SVG_ICONS.chart} Análise
+                            </button>
                             <button type="button" class="btn-saas-extrato" onclick="abrirModalEstratificado('${item.codigo_kit}')">
                                 ${SVG_ICONS.search} Extrato
                             </button>
@@ -1372,7 +2120,7 @@
             document.getElementById("btn-download-csv").href = `/api/estoque/exportar/${encodeURIComponent(modeloKit)}`;
 
             const bodyTabela = document.getElementById("tabela-estratificada-body");
-            bodyTabela.innerHTML = "<tr><td colspan='4'>Carregando registros...</td></tr>";
+            bodyTabela.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #64748b;'>Carregando registros...</td></tr>";
             
             document.getElementById("modal-estratificado").classList.remove("hidden");
 
@@ -1388,7 +2136,7 @@
                     bodyTabela.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">Nenhuma saída realizada.</td></tr>`;
                 }
             } catch (err) {
-                bodyTabela.innerHTML = "<tr><td colspan='4' style='color:red;'>Erro ao carregar dados.</td></tr>";
+                bodyTabela.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color:red;'>Erro ao carregar dados.</td></tr>";
             }
         }
 
