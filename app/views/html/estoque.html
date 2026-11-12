@@ -70,7 +70,7 @@
             box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
         }
 
-        /* CARDS DE MÉTRICAS */
+        /* CARDS DE MÉTRICAS CLICÁVEIS */
         .cards-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -88,12 +88,19 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
         .card-stat-modern:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+            transform: translateY(-3px);
+            border-color: #94a3b8;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
+        }
+
+        .card-stat-modern:active {
+            transform: translateY(-1px);
         }
 
         .card-stat-modern::before {
@@ -108,6 +115,12 @@
         .stat-balcao::before { background: #16a34a; }
         .stat-reservas::before { background: #d97706; }
         .stat-orfaos::before { background: #6366f1; }
+
+        .stat-lote:hover { border-color: #64748b; }
+        .stat-saidas:hover { border-color: #0284c7; }
+        .stat-balcao:hover { border-color: #16a34a; }
+        .stat-reservas:hover { border-color: #d97706; }
+        .stat-orfaos:hover { border-color: #6366f1; }
 
         .stat-top {
             display: flex;
@@ -145,12 +158,33 @@
         .stat-reservas .stat-icon-wrapper { background: #fef3c7; color: #d97706; }
         .stat-orfaos .stat-icon-wrapper { background: #ede9fe; color: #6366f1; }
 
+        .stat-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
         .stat-value {
             font-size: 1.8rem;
             font-weight: 800;
             line-height: 1.1;
             color: #0f172a;
             font-variant-numeric: tabular-nums;
+        }
+
+        .stat-hint {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            opacity: 0;
+            transform: translateX(-4px);
+            transition: all 0.2s ease;
+        }
+
+        .card-stat-modern:hover .stat-hint {
+            opacity: 1;
+            transform: translateX(0);
+            color: #475569;
         }
 
         /* BARRA DE PESQUISA */
@@ -207,7 +241,7 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* TABELA */
+        /* TABELA PRINCIPAL */
         .saas-table-container {
             background: #ffffff;
             border-radius: 14px;
@@ -310,7 +344,7 @@
             color: #64748b;
         }
 
-        /* BARRA DE DISTRIBUIÇÃO MAIS GROSSA E REFINADA */
+        /* BARRA DE DISTRIBUIÇÃO */
         .saas-dist-box {
             display: flex;
             flex-direction: column;
@@ -330,22 +364,9 @@
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
-        .saas-seg-saidas { 
-            background: #10b981; 
-            border-radius: 999px 0 0 999px; 
-            transition: width 0.3s ease; 
-        }
-
-        .saas-seg-reservas { 
-            background: #f59e0b; 
-            transition: width 0.3s ease; 
-        }
-
-        .saas-seg-sobra { 
-            background: #0284c7; 
-            border-radius: 0 999px 999px 0; 
-            transition: width 0.3s ease; 
-        }
+        .saas-seg-saidas { background: #10b981; border-radius: 999px 0 0 999px; transition: width 0.3s ease; }
+        .saas-seg-reservas { background: #f59e0b; transition: width 0.3s ease; }
+        .saas-seg-sobra { background: #0284c7; border-radius: 0 999px 999px 0; transition: width 0.3s ease; }
 
         .saas-dist-legend {
             display: flex;
@@ -372,7 +393,6 @@
         .dot-reserva { background: #f59e0b; }
         .dot-sobra { background: #0284c7; }
 
-        /* SELO DE PORCENTAGEM NO ESPAÇO CENTRAL */
         .badge-pct-entregue {
             font-size: 0.76rem;
             font-weight: 800;
@@ -475,6 +495,45 @@
             color: #0284c7;
         }
 
+        /* =========================================================================
+           ESTILIZAÇÃO LIMPA E ALINHADA PARA TODAS AS TABELAS DENTRO DOS MODAIS
+           ========================================================================= */
+        .modal-table-clean {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .modal-table-clean thead th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            padding: 12px 14px;
+            border-bottom: 2px solid #e2e8f0;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .modal-table-clean tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+
+        .modal-table-clean tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .modal-table-clean tbody tr:last-child td {
+            border-bottom: none;
+        }
+
         /* UPLOAD & BARRA DE PROGRESSO */
         .upload-dropzone {
             border: 2px dashed #94a3b8;
@@ -523,12 +582,12 @@
             position: relative;
         }
 
-        .modal-estratificado-card { max-width: 920px !important; max-height: 88vh; display: flex; flex-direction: column; }
+        .modal-estratificado-card { max-width: 860px !important; max-height: 88vh; display: flex; flex-direction: column; }
         .modal-header-estrat { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 14px; }
         .modal-filter-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
         .input-filtro-modal { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none; }
         .input-filtro-modal:focus { border-color: #0284c7; }
-        .modal-body-scroll { overflow-y: auto; max-height: 54vh; }
+        .modal-body-scroll { overflow-y: auto; max-height: 54vh; border: 1px solid #e2e8f0; border-radius: 10px; }
         .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
         .btn-modal-cancel, .btn-voltar-modal { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-modal-confirm, .btn-confirm-action { background: #0284c7; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -536,14 +595,16 @@
         .modal-alert { padding: 8px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; display: none; }
         .modal-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
-        .tr-data-divider { background: #f1f5f9 !important; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; }
-        .tr-data-divider td { padding: 8px 14px !important; font-size: 0.8rem !important; font-weight: 800 !important; color: #1e293b !important; text-transform: uppercase; }
+        .tr-data-divider { background: #f1f5f9 !important; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; }
+        .tr-data-divider td { padding: 8px 14px !important; font-size: 0.78rem !important; font-weight: 800 !important; color: #1e293b !important; text-transform: uppercase; }
         .data-divider-badge { display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 20px; color: #0f172a; }
 
-        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
-        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
-        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; }
+        .badge-saida { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-sobra { background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-reserva { background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-esgotado { background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-roxo { background: #ede9fe; color: #5b21b6; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
+        .badge-neutro { background: #f1f5f9; color: #0f172a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; display: inline-block; }
         .badge-revogacao-admin { background: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca; padding: 4px 9px; border-radius: 6px; font-weight: 800; font-size: 0.76rem; }
 
         .hidden { display: none !important; }
@@ -559,6 +620,46 @@
 </head>
 <body>
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL UNIVERSAL DE DETALHAMENTO DOS CARDS -->
+    <div class="custom-modal-overlay hidden" id="modal-detalhe-card">
+        <div class="custom-modal-card modal-estratificado-card">
+            <div class="modal-header-estrat">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button type="button" id="btn-voltar-reservas" class="btn-modal-cancel hidden" style="padding: 6px 12px; font-size: 0.8rem;" onclick="abrirDetalheCard('RESERVAS')">← Voltar</button>
+                    <div>
+                        <h3 style="font-size: 1.15rem; color: #0f172a;" id="card-modal-titulo">Detalhamento</h3>
+                        <p style="font-size: 0.8rem; color: #64748b;" id="card-modal-subtitulo">Resumo detalhado</p>
+                    </div>
+                </div>
+                <span style="font-size: 1.2rem; cursor: pointer; color: #64748b;" onclick="fecharModalDetalheCard()">✕</span>
+            </div>
+
+            <div class="modal-filter-bar">
+                <input type="text" id="input-filtro-card-modal" class="input-filtro-modal" placeholder="Pesquisar..." oninput="filtrarModalDetalheCard()" />
+                <button type="button" id="btn-export-card-excel" class="btn-export-svg" onclick="exportarCardAtualExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Exportar Excel
+                </button>
+            </div>
+
+            <div class="modal-body-scroll">
+                <table class="modal-table-clean">
+                    <thead id="card-modal-thead"></thead>
+                    <tbody id="card-modal-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions">
+                <span id="card-modal-rodape-info" style="margin-right: auto; align-self: center; font-size: 0.8rem; font-weight: 700; color: #64748b;"></span>
+                <button type="button" class="btn-modal-cancel" onclick="fecharModalDetalheCard()">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 1. MODAL ENTRADA MANUAL -->
     <div class="custom-modal-overlay hidden" id="modal-entrada-manual">
@@ -662,7 +763,7 @@
             </div>
 
             <div class="modal-body-scroll">
-                <table>
+                <table class="modal-table-clean">
                     <thead>
                         <tr>
                             <th style="width: 90px;">Hora</th>
@@ -684,7 +785,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS -->
+    <!-- MODAL DE ESTRATIFICAÇÃO DAS BAIXAS POR KIT -->
     <div class="custom-modal-overlay hidden" id="modal-estratificado">
         <div class="custom-modal-card modal-estratificado-card">
             <div class="modal-header-estrat">
@@ -708,7 +809,7 @@
             </div>
 
             <div class="modal-body-scroll">
-                <table>
+                <table class="modal-table-clean">
                     <thead>
                         <tr>
                             <th>Data / Hora</th>
@@ -769,7 +870,7 @@
     </div>
 
     <div class="main-container">
-        <!-- 1. CABEÇALHO COM TÍTULO E BOTÕES NO TOPO (COR NORMAL) -->
+        <!-- 1. CABEÇALHO COM TÍTULO E BOTÕES NO TOPO -->
         <header class="app-header-top">
             <div class="header-title-box">
                 <h2>Controle de Estoque</h2>
@@ -806,56 +907,71 @@
             </div>
         </header>
 
-        <!-- CARDS DE RESUMO (ABAIXO DO MENU E ACIMA DA BUSCA) -->
+        <!-- 2. CARDS DE RESUMO CLICÁVEIS -->
         <div class="cards-summary">
-            <div class="card-stat-modern stat-lote">
+            <div class="card-stat-modern stat-lote" onclick="abrirDetalheCard('LOTE_TOTAL')" title="Clique para ver o lote recebido por bolsa">
                 <div class="stat-top">
                     <span class="stat-label">Lote Total</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                     </div>
                 </div>
-                <div class="stat-value" id="stat-lote-total">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" id="stat-lote-total">0</div>
+                    <span class="stat-hint">Ver lote →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-saidas">
+            <div class="card-stat-modern stat-saidas" onclick="abrirDetalheCard('SAIDAS')" title="Clique para ver o extrato diário de saídas">
                 <div class="stat-top">
                     <span class="stat-label">Saídas</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #0284c7;" id="stat-total-saidas">0</div>
+                    <span class="stat-hint">Extrato →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-balcao">
+            <div class="card-stat-modern stat-balcao" onclick="abrirDetalheCard('SALDO_BALCAO')" title="Clique para ver o saldo disponível por bolsa">
                 <div class="stat-top">
                     <span class="stat-label">Saldo Balcão</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #16a34a;" id="stat-saldo-balcao">0</div>
+                    <span class="stat-hint">Ver saldo →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-reservas">
+            <div class="card-stat-modern stat-reservas" onclick="abrirDetalheCard('RESERVAS')" title="Clique para ver as reservas por bolsa e dependente">
                 <div class="stat-top">
                     <span class="stat-label">Reservas</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #d97706;" id="stat-total-reservado">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #d97706;" id="stat-total-reservado">0</div>
+                    <span class="stat-hint">Ver reservas →</span>
+                </div>
             </div>
 
-            <div class="card-stat-modern stat-orfaos">
+            <div class="card-stat-modern stat-orfaos" onclick="abrirDetalheCard('SOBRA_ORFAOS')" title="Clique para ver a sobra livre por bolsa">
                 <div class="stat-top">
                     <span class="stat-label">Sobra (Órfãos)</span>
                     <div class="stat-icon-wrapper">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4-4-4 4"></path><path d="M12 16V8"></path></svg>
                     </div>
                 </div>
-                <div class="stat-value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
+                <div class="stat-bottom-row">
+                    <div class="stat-value" style="color: #6366f1;" id="stat-total-orfaos">0</div>
+                    <span class="stat-hint">Ver sobra →</span>
+                </div>
             </div>
         </div>
 
@@ -868,7 +984,7 @@
             <span class="saas-counter" id="contador-kits-visiveis">Carregando...</span>
         </div>
 
-        <!-- TABELA COM BARRA DE DISTRIBUIÇÃO MAIS GROSSA E PORCENTAGEM NO ESPAÇO À DIREITA -->
+        <!-- TABELA PRINCIPAL -->
         <div class="saas-table-container">
             <table class="table-saas">
                 <thead>
@@ -908,10 +1024,383 @@
         let acaoPendenteCallback = null;
         let progressoInterval = null;
 
+        // Estado do Modal Universal dos Cards
+        let cardModalTipoAtual = null;
+        let cardModalModeloSelecionado = null;
+        let cardModalDadosBrutos = [];
+        let cardModalDadosFiltrados = [];
+
         document.addEventListener("DOMContentLoaded", () => {
             carregarEstoque();
         });
 
+        /* =========================================================================
+           1, 2, 3, 4 e 5: LÓGICA DOS CARDS CLICÁVEIS
+           ========================================================================= */
+        async function abrirDetalheCard(tipo) {
+            cardModalTipoAtual = tipo;
+            cardModalModeloSelecionado = null;
+            cardModalDadosBrutos = [];
+            cardModalDadosFiltrados = [];
+
+            const modal = document.getElementById("modal-detalhe-card");
+            const tituloEl = document.getElementById("card-modal-titulo");
+            const subtituloEl = document.getElementById("card-modal-subtitulo");
+            const inputFiltro = document.getElementById("input-filtro-card-modal");
+            const thead = document.getElementById("card-modal-thead");
+            const tbody = document.getElementById("card-modal-tbody");
+            const rodape = document.getElementById("card-modal-rodape-info");
+            const btnVoltar = document.getElementById("btn-voltar-reservas");
+
+            btnVoltar.classList.add("hidden");
+            inputFiltro.value = "";
+            rodape.innerText = "";
+            modal.classList.remove("hidden");
+
+            // 1. LOTE TOTAL: Somente Modelo da Bolsa e Lote Recebido
+            if (tipo === 'LOTE_TOTAL') {
+                tituloEl.innerText = "Resumo de Lote Total";
+                subtituloEl.innerText = "Quantidade total recebida por modelo de bolsa";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Modelo da Bolsa</th>
+                        <th style="text-align: right;">Lote Recebido</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => {
+                    const saidas = item.quantidade_baixada || 0;
+                    const balcao = item.quantidade_disponivel || 0;
+                    const lote = item.quantidade_total_entrada || (balcao + saidas);
+                    return { modelo_kit: item.codigo_kit, lote_total: lote };
+                }).filter(x => x.lote_total > 0);
+                filtrarModalDetalheCard();
+            }
+            // 3. SALDO BALCÃO: Somente Modelo da Bolsa e Quantidade em Balcão
+            else if (tipo === 'SALDO_BALCAO') {
+                tituloEl.innerText = "Saldo Físico no Balcão";
+                subtituloEl.innerText = "Unidades disponíveis no balcão por modelo de bolsa";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Modelo da Bolsa</th>
+                        <th style="text-align: right;">Quantidade em Balcão</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => ({
+                    modelo_kit: item.codigo_kit,
+                    saldo_balcao: item.quantidade_disponivel || 0
+                })).filter(x => x.saldo_balcao > 0);
+                filtrarModalDetalheCard();
+            }
+            // 5. SOBRA ÓRFÃOS: Somente Modelo da Bolsa e QTD Sobra
+            else if (tipo === 'SOBRA_ORFAOS') {
+                tituloEl.innerText = "Sobra Livre (Órfãos)";
+                subtituloEl.innerText = "Unidades livres disponíveis por modelo de bolsa";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Modelo da Bolsa</th>
+                        <th style="text-align: right;">QTD Sobra</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => {
+                    const balcao = item.quantidade_disponivel || 0;
+                    const reservas = item.quantidade_reservada || 0;
+                    const sobra = Math.max(0, balcao - reservas);
+                    return { modelo_kit: item.codigo_kit, sobra: sobra };
+                }).filter(x => x.sobra > 0);
+                filtrarModalDetalheCard();
+            }
+            // 4. RESERVAS (NÍVEL 1): Nome da Bolsa + QTD Reserva + Botão Extrato da Bolsa
+            else if (tipo === 'RESERVAS') {
+                tituloEl.innerText = "Reservas por Bolsa";
+                subtituloEl.innerText = "Clique em Extrato para ver os dependentes e colaboradores vinculados";
+                inputFiltro.placeholder = "Filtrar por nome da bolsa...";
+                thead.innerHTML = `
+                    <tr>
+                        <th>Nome da Bolsa</th>
+                        <th style="text-align: center;">QTD Reserva</th>
+                        <th style="text-align: right;">Detalhamento</th>
+                    </tr>
+                `;
+                cardModalDadosBrutos = dadosEstoqueGlobal.map(item => ({
+                    modelo_kit: item.codigo_kit,
+                    qtd_reserva: item.quantidade_reservada || 0
+                })).filter(x => x.qtd_reserva > 0);
+                filtrarModalDetalheCard();
+            }
+            // 2. SAÍDAS: Extrato limpo agrupado por dias
+            else if (tipo === 'SAIDAS') {
+                tituloEl.innerText = "Extrato Geral de Saídas";
+                subtituloEl.innerText = "Histórico limpo de entregas agrupado por dia";
+                inputFiltro.placeholder = "Filtrar por data (ex: 12/11), bolsa, beneficiário ou operador...";
+                thead.innerHTML = `
+                    <tr>
+                        <th style="width: 90px;">Hora</th>
+                        <th style="width: 125px;">Bolsa</th>
+                        <th>Beneficiário</th>
+                        <th style="width: 120px;">Público</th>
+                        <th>Operador</th>
+                    </tr>
+                `;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #64748b;">Carregando saídas...</td></tr>`;
+
+                try {
+                    const res = await fetch('/api/estoque/saidas-gerais');
+                    const data = await res.json();
+                    if (data.sucesso) {
+                        cardModalDadosBrutos = data.saidas || [];
+                        filtrarModalDetalheCard();
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: #dc2626;">${data.mensagem || 'Erro ao carregar saídas.'}</td></tr>`;
+                    }
+                } catch (err) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: #dc2626;">Erro de conexão com o servidor.</td></tr>`;
+                }
+            }
+        }
+
+        // 4. RESERVAS (NÍVEL 2 - DRILL-DOWN): Exibir nome do dependente e colaborador daquela bolsa
+        async function abrirExtratoReservasBolsa(modeloKit) {
+            cardModalTipoAtual = 'RESERVAS_DETALHE';
+            cardModalModeloSelecionado = modeloKit;
+            cardModalDadosBrutos = [];
+            cardModalDadosFiltrados = [];
+
+            const tituloEl = document.getElementById("card-modal-titulo");
+            const subtituloEl = document.getElementById("card-modal-subtitulo");
+            const inputFiltro = document.getElementById("input-filtro-card-modal");
+            const thead = document.getElementById("card-modal-thead");
+            const tbody = document.getElementById("card-modal-tbody");
+            const rodape = document.getElementById("card-modal-rodape-info");
+            const btnVoltar = document.getElementById("btn-voltar-reservas");
+
+            btnVoltar.classList.remove("hidden");
+            tituloEl.innerText = `Reservas — ${modeloKit}`;
+            subtituloEl.innerText = "Dependentes e colaboradores titulares com reserva ativa";
+            inputFiltro.value = "";
+            inputFiltro.placeholder = "Filtrar por dependente, colaborador ou crachá...";
+            rodape.innerText = "";
+
+            thead.innerHTML = `
+                <tr>
+                    <th>Dependente / Beneficiário</th>
+                    <th>Colaborador Titular</th>
+                    <th style="width: 130px;">Público</th>
+                </tr>
+            `;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 24px; color: #64748b;">Carregando reservas de ${modeloKit}...</td></tr>`;
+
+            try {
+                const res = await fetch(`/api/estoque/reservas-modelo/${encodeURIComponent(modeloKit)}`);
+                const data = await res.json();
+                if (data.sucesso) {
+                    cardModalDadosBrutos = data.reservas || [];
+                    filtrarModalDetalheCard();
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 20px; color: #dc2626;">${data.mensagem || 'Erro ao carregar reservas.'}</td></tr>`;
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 20px; color: #dc2626;">Erro de conexão com o servidor.</td></tr>`;
+            }
+        }
+
+        function fecharModalDetalheCard() {
+            document.getElementById("modal-detalhe-card").classList.add("hidden");
+            cardModalTipoAtual = null;
+            cardModalModeloSelecionado = null;
+        }
+
+        function filtrarModalDetalheCard() {
+            const termo = document.getElementById("input-filtro-card-modal").value.toLowerCase().trim();
+            const tbody = document.getElementById("card-modal-tbody");
+            const rodape = document.getElementById("card-modal-rodape-info");
+
+            if (!termo) {
+                cardModalDadosFiltrados = [...cardModalDadosBrutos];
+            } else {
+                cardModalDadosFiltrados = cardModalDadosBrutos.filter(row => {
+                    return Object.values(row).some(val => String(val || "").toLowerCase().includes(termo));
+                });
+            }
+
+            tbody.innerHTML = "";
+
+            if (cardModalDadosFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 22px; color: #64748b;">Nenhum registro encontrado.</td></tr>`;
+                rodape.innerText = "0 registros";
+                return;
+            }
+
+            if (cardModalTipoAtual === 'LOTE_TOTAL') {
+                let somaLote = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaLote += r.lote_total;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: right;"><span class="badge-neutro">${r.lote_total} und</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total: ${somaLote} und`;
+            }
+            else if (cardModalTipoAtual === 'SALDO_BALCAO') {
+                let somaBalcao = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaBalcao += r.saldo_balcao;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: right;"><span class="badge-sobra">${r.saldo_balcao} und</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total no balcão: ${somaBalcao} und`;
+            }
+            else if (cardModalTipoAtual === 'SOBRA_ORFAOS') {
+                let somaSobra = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaSobra += r.sobra;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: right;"><span class="badge-roxo">${r.sobra} und</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total de sobra livre: ${somaSobra} und`;
+            }
+            else if (cardModalTipoAtual === 'RESERVAS') {
+                let somaRes = 0;
+                cardModalDadosFiltrados.forEach(r => {
+                    somaRes += r.qtd_reserva;
+                    const tr = document.createElement("tr");
+                    tr.style.cursor = "pointer";
+                    tr.onclick = () => abrirExtratoReservasBolsa(r.modelo_kit);
+                    tr.innerHTML = `
+                        <td><strong>${r.modelo_kit}</strong></td>
+                        <td style="text-align: center;"><span class="badge-reserva">${r.qtd_reserva} und</span></td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn-saas-extrato" onclick="event.stopPropagation(); abrirExtratoReservasBolsa('${r.modelo_kit}')">
+                                ${SVG_ICONS.search} Extrato
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} modelos • Total reservado: ${somaRes} und`;
+            }
+            else if (cardModalTipoAtual === 'RESERVAS_DETALHE') {
+                cardModalDadosFiltrados.forEach(r => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${r.nome_dependente}</strong></td>
+                        <td>${r.nome_titular} <small style="color:#64748b;">(ID: ${r.id_colaborador})</small></td>
+                        <td><span class="badge-saida" style="font-size:0.72rem;">${r.tipo_publico}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `${cardModalDadosFiltrados.length} reservas vinculadas para ${cardModalModeloSelecionado}`;
+            }
+            else if (cardModalTipoAtual === 'SAIDAS') {
+                let diaAnterior = null;
+                cardModalDadosFiltrados.forEach(s => {
+                    const partes = (s.data_baixa || '').split(' ');
+                    const dataApenas = partes[0] || 'Sem Data';
+                    const horaApenas = partes[1] || s.data_baixa;
+
+                    if (dataApenas !== diaAnterior) {
+                        diaAnterior = dataApenas;
+                        const trDivider = document.createElement("tr");
+                        trDivider.className = "tr-data-divider";
+                        trDivider.innerHTML = `
+                            <td colspan="5">
+                                <span class="data-divider-badge">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    ${dataApenas}
+                                </span>
+                            </td>
+                        `;
+                        tbody.appendChild(trDivider);
+                    }
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><small style="font-weight: 600; color: #475569;">${horaApenas}</small></td>
+                        <td><span class="badge-sobra">${s.modelo_kit}</span></td>
+                        <td><strong>${s.nome_beneficiario}</strong> <small style="color:#64748b;">(ID: ${s.id_colaborador})</small></td>
+                        <td><span class="badge-saida" style="font-size:0.72rem;">${s.tipo_publico}</span></td>
+                        <td style="color: #0284c7; font-weight: 700;">${s.nome_operador}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                rodape.innerText = `Total exibido: ${cardModalDadosFiltrados.length} saídas`;
+            }
+        }
+
+        function exportarCardAtualExcel() {
+            if (!cardModalDadosFiltrados || cardModalDadosFiltrados.length === 0) {
+                mostrarToast("Não há dados para exportar.", "error");
+                return;
+            }
+
+            let filename = "relatorio_estoque.csv";
+            let headers = [];
+            let rows = [];
+
+            if (cardModalTipoAtual === 'LOTE_TOTAL') {
+                filename = "lote_total_bolsas.csv";
+                headers = ["Modelo da Bolsa", "Lote Recebido"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.lote_total]);
+            }
+            else if (cardModalTipoAtual === 'SALDO_BALCAO') {
+                filename = "saldo_balcao_bolsas.csv";
+                headers = ["Modelo da Bolsa", "Quantidade em Balcao"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.saldo_balcao]);
+            }
+            else if (cardModalTipoAtual === 'SOBRA_ORFAOS') {
+                filename = "sobra_orfaos_bolsas.csv";
+                headers = ["Modelo da Bolsa", "QTD Sobra"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.sobra]);
+            }
+            else if (cardModalTipoAtual === 'RESERVAS') {
+                filename = "resumo_reservas_por_bolsa.csv";
+                headers = ["Nome da Bolsa", "QTD Reserva"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.qtd_reserva]);
+            }
+            else if (cardModalTipoAtual === 'RESERVAS_DETALHE') {
+                filename = `reservas_dependentes_${cardModalModeloSelecionado}.csv`;
+                headers = ["Bolsa", "Dependente / Beneficiario", "ID Colaborador", "Colaborador Titular", "Publico"];
+                rows = cardModalDadosFiltrados.map(r => [r.modelo_kit, r.nome_dependente, r.id_colaborador, r.nome_titular, r.tipo_publico]);
+            }
+            else if (cardModalTipoAtual === 'SAIDAS') {
+                filename = "extrato_saidas_por_dia.csv";
+                headers = ["Data / Hora", "Bolsa", "ID Colaborador", "Beneficiario", "Publico", "Operador"];
+                rows = cardModalDadosFiltrados.map(s => [s.data_baixa, s.modelo_kit, s.id_colaborador, s.nome_beneficiario, s.tipo_publico, s.nome_operador]);
+            }
+
+            const escaparCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const conteudo = [
+                headers.map(escaparCsv).join(";"),
+                ...rows.map(linha => linha.map(escaparCsv).join(";"))
+            ].join("\r\n");
+
+            const blob = new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        /* =========================================================================
+           FUNÇÕES DOS DEMAIS MODAIS E TABELA PRINCIPAL
+           ========================================================================= */
         function abrirModalEntradaManual() {
             document.getElementById("input-qtd").value = "";
             document.getElementById("modal-entrada-manual").classList.remove("hidden");
@@ -1236,7 +1725,6 @@
             });
         }
 
-        /* RENDERIZAÇÃO DA TABELA COM BARRA MAIS GROSSA E PORCENTAGEM NO ESPAÇO À DIREITA */
         function renderizarTabelaSaas(lista) {
             const tbody = document.getElementById("tabela-estoque-saas");
             tbody.innerHTML = "";
@@ -1263,11 +1751,9 @@
                 totalReservaGlobal += reservas;
                 if (sobraOrfaos > 0) totalSobraOrfaosGlobal += sobraOrfaos;
 
-                // Cálculo da porcentagem entregue do kit
                 const pctEntregue = loteEntregue > 0 ? Math.round((saidas / loteEntregue) * 100) : 0;
                 const badgePctClass = pctEntregue > 0 ? 'badge-pct-entregue' : 'badge-pct-entregue pct-zero';
 
-                // Percentuais da barra proporcional
                 let pctSaidas = 0;
                 let pctReservas = 0;
                 let pctSobra = 0;
@@ -1322,7 +1808,6 @@
                                 </div>
                             </div>
 
-                            <!-- PORCENTAGEM NO ESPAÇO À DIREITA DA DISTRIBUIÇÃO -->
                             <div class="${badgePctClass}">
                                 ${pctEntregue}% entregue
                             </div>
@@ -1372,7 +1857,7 @@
             document.getElementById("btn-download-csv").href = `/api/estoque/exportar/${encodeURIComponent(modeloKit)}`;
 
             const bodyTabela = document.getElementById("tabela-estratificada-body");
-            bodyTabela.innerHTML = "<tr><td colspan='4'>Carregando registros...</td></tr>";
+            bodyTabela.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #64748b;'>Carregando registros...</td></tr>";
             
             document.getElementById("modal-estratificado").classList.remove("hidden");
 
@@ -1388,7 +1873,7 @@
                     bodyTabela.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: #64748b;">Nenhuma saída realizada.</td></tr>`;
                 }
             } catch (err) {
-                bodyTabela.innerHTML = "<tr><td colspan='4' style='color:red;'>Erro ao carregar dados.</td></tr>";
+                bodyTabela.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color:red;'>Erro ao carregar dados.</td></tr>";
             }
         }
 

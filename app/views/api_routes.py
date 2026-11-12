@@ -1335,3 +1335,138 @@ def dashboard_metricas():
         },
         'modelos_ranking': distribuicao_modelos
     }), 200
+
+
+@api_bp.route('/estoque/saidas-gerais', methods=['GET'])
+def listar_saidas_gerais():
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    try:
+        baixas = db.session.query(
+            HistoricoBaixa.data_baixa,
+            HistoricoBaixa.modelo_baixa,
+            HistoricoBaixa.nome_beneficiario,
+            HistoricoBaixa.id_colaborador,
+            HistoricoBaixa.tipo_publico,
+            HistoricoBaixa.nome_operador
+        ).order_by(
+            HistoricoBaixa.data_baixa.desc()
+        ).limit(500).all()
+
+        lista = []
+        for b in baixas:
+            dt_str = ""
+            if b.data_baixa:
+                data_brasilia = b.data_baixa - timedelta(hours=3)
+                dt_str = data_brasilia.strftime("%d/%m/%Y %H:%M:%S")
+
+            lista.append({
+                'data_baixa': dt_str,
+                'modelo_kit': b.modelo_baixa or '---',
+                'nome_beneficiario': b.nome_beneficiario or 'NÃO INFORMADO',
+                'id_colaborador': b.id_colaborador or '',
+                'tipo_publico': b.tipo_publico or 'Dependente',
+                'nome_operador': b.nome_operador or 'Sistema'
+            })
+
+        return jsonify({'sucesso': True, 'saidas': lista}), 200
+    except Exception as e:
+        return jsonify({'sucesso': False, 'mensagem': f'Erro ao consultar saídas: {str(e)}'}), 500
+
+
+@api_bp.route('/estoque/reservas-modelo/<string:modelo_kit>', methods=['GET'])
+def listar_reservas_por_modelo(modelo_kit):
+    if session.get('usuario_perfil') != 'ADMIN':
+        return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
+
+    modelo_alvo = str(modelo_kit).strip()
+    termo_like = f"%{modelo_alvo}%"
+    padrao_modelo = re.compile(r'\b' + re.escape(modelo_alvo) + r'\b', re.IGNORECASE)
+    reservas_lista = []
+
+    try:
+        # 1. Consulta enxuta apenas nas colunas necessárias de RetiradaDependente
+        deps = RetiradaDependente.query.with_entities(
+            RetiradaDependente.id_colaborador,
+            RetiradaDependente.nome_colaborador,
+            RetiradaDependente.resumo_kits,
+            RetiradaDependente.detalhes_entregas
+        ).filter(
+            RetiradaDependente.status != 'ENTREGUE',
+            RetiradaDependente.resumo_kits.ilike(termo_like)
+        ).all()
+
+        for id_colab, nome_colab, resumo, detalhes in deps:
+            resumo_str = str(resumo or "")
+            resumo_upper = resumo_str.upper()
+            if any(t in resumo_upper for t in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"]):
+                continue
+
+            det = detalhes or {}
+            partes = resumo_str.split('|')
+
+            for idx, parte in enumerate(partes):
+                chave = f"kit_{idx}"
+                if isinstance(det.get(chave), dict) and det[chave].get('entregue') is True:
+                    continue
+
+                parte_limpa = parte.strip()
+                if not parte_limpa:
+                    continue
+
+                if padrao_modelo.search(parte_limpa):
+                    nome_dep = parte_limpa.split('-')[0].strip() if '-' in parte_limpa else parte_limpa
+                    reservas_lista.append({
+                        'modelo_kit': modelo_alvo,
+                        'nome_dependente': nome_dep,
+                        'nome_titular': nome_colab or 'NÃO INFORMADO',
+                        'id_colaborador': id_colab,
+                        'tipo_publico': 'Dependente'
+                    })
+
+        # 2. Consulta enxuta apenas nas colunas necessárias de RetiradaJovemAprendiz
+        jovens = RetiradaJovemAprendiz.query.with_entities(
+            RetiradaJovemAprendiz.id_colaborador,
+            RetiradaJovemAprendiz.qtd_kits,
+            RetiradaJovemAprendiz.resumo_kits,
+            RetiradaJovemAprendiz.detalhes_entregas
+        ).filter(
+            RetiradaJovemAprendiz.status != 'ENTREGUE',
+            RetiradaJovemAprendiz.resumo_kits.ilike(termo_like)
+        ).all()
+
+        for id_colab, qtd_kits, resumo, detalhes in jovens:
+            resumo_str = str(resumo or "")
+            if not padrao_modelo.search(resumo_str):
+                continue
+
+            det = detalhes or {}
+            qtd = qtd_kits or 1
+            primeira_parte = resumo_str.split('|')[0].strip()
+            nome_jovem = primeira_parte.split('-')[0].strip() if '-' in primeira_parte else f"Jovem Aprendiz (ID {id_colab})"
+
+            for idx in range(qtd):
+                chave = f"kit_{idx}"
+                if isinstance(det.get(chave), dict) and det[chave].get('entregue') is True:
+                    continue
+
+                reservas_lista.append({
+                    'modelo_kit': modelo_alvo,
+                    'nome_dependente': nome_jovem,
+                    'nome_titular': nome_jovem,
+                    'id_colaborador': id_colab,
+                    'tipo_publico': 'Jovem Aprendiz'
+                })
+
+        reservas_lista.sort(key=lambda x: x['nome_dependente'])
+
+        return jsonify({
+            'sucesso': True,
+            'modelo': modelo_alvo,
+            'total': len(reservas_lista),
+            'reservas': reservas_lista
+        }), 200
+
+    except Exception as e:
+        return jsonify({'sucesso': False, 'mensagem': f'Erro ao consultar reservas: {str(e)}'}), 500
