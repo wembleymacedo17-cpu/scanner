@@ -11,7 +11,7 @@ import re
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 import copy
 from sqlalchemy.orm.attributes import flag_modified
-
+import math
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -1290,50 +1290,316 @@ def dashboard_metricas():
     if session.get('usuario_perfil') != 'ADMIN':
         return jsonify({'sucesso': False, 'mensagem': 'Acesso negado.'}), 403
 
-    # Conta status em RetiradaDependente
-    deps = db.session.query(RetiradaDependente.status, RetiradaDependente.qtd_kits, RetiradaDependente.detalhes_entregas).all()
-    # Conta status em RetiradaJovemAprendiz
-    jovens = db.session.query(RetiradaJovemAprendiz.status, RetiradaJovemAprendiz.qtd_kits, RetiradaJovemAprendiz.detalhes_entregas).all()
+    modelos_ordenados = sorted(MODELOS_OFICIAIS, key=len, reverse=True)
+    padroes_modelos = {
+        m: re.compile(r'\b' + re.escape(m) + r'\b', re.IGNORECASE)
+        for m in modelos_ordenados
+    }
 
-    total_entregue_kits = 0
-    total_pendente_kits = 0
-    total_parcial_kits = 0
+    def classificar_etapa(modelo_str):
+        cod = (modelo_str or "").strip().upper()
+        if cod in ["ABELHA", "BORBOLETA", "CACHORRO", "DINOSSAURO", "UNICORNIO", "UNICÓRNIO"]:
+            return "Educação Infantil"
+        if cod.startswith("EFI-"):
+            return "Ensino Fundamental 1"
+        if cod.startswith("EFII-"):
+            return "Ensino Fundamental 2"
+        if cod.startswith("EM-"):
+            return "Ensino Médio"
+        return "Órfãos / Escolha Livre"
 
-    status_geral_contador = {'ENTREGUE': 0, 'PENDENTE': 0, 'ENTREGA PARCIAL': 0}
+    # 1. Consulta enxuta de Dependentes
+    deps = RetiradaDependente.query.with_entities(
+        RetiradaDependente.id_colaborador,
+        RetiradaDependente.nome_colaborador,
+        RetiradaDependente.status,
+        RetiradaDependente.qtd_kits,
+        RetiradaDependente.resumo_kits,
+        RetiradaDependente.detalhes_entregas,
+        RetiradaDependente.necessita_recontato,
+        RetiradaDependente.motivo_recontato
+    ).all()
 
-    todos_registros = list(deps) + list(jovens)
+    # 2. Consulta enxuta de Jovens Aprendizes
+    jovens = RetiradaJovemAprendiz.query.with_entities(
+        RetiradaJovemAprendiz.id_colaborador,
+        RetiradaJovemAprendiz.status,
+        RetiradaJovemAprendiz.qtd_kits,
+        RetiradaJovemAprendiz.resumo_kits,
+        RetiradaJovemAprendiz.detalhes_entregas
+    ).all()
 
-    for status, qtd_kits, detalhes in todos_registros:
+    total_beneficiarios = len(deps) + len(jovens)
+    status_cards = {'ENTREGUE': 0, 'PENDENTE': 0, 'ENTREGA PARCIAL': 0}
+
+    kits_previstos_total = 0
+    kits_entregues_total = 0
+    kits_faltantes_total = 0
+
+    publico_kits = {'Dependentes': 0, 'Jovens Aprendizes': 0}
+    tipo_cota_kits = {'Reservados (Modelo Definido)': 0, 'Órfãos (Escolha Livre)': 0}
+
+    etapas_stats = {
+        "Educação Infantil": {"entregues": 0, "faltantes": 0},
+        "Ensino Fundamental 1": {"entregues": 0, "faltantes": 0},
+        "Ensino Fundamental 2": {"entregues": 0, "faltantes": 0},
+        "Ensino Médio": {"entregues": 0, "faltantes": 0},
+        "Órfãos / Escolha Livre": {"entregues": 0, "faltantes": 0}
+    }
+
+    faltantes_por_modelo = {m: 0 for m in MODELOS_OFICIAIS}
+    entregues_por_modelo = {m: 0 for m in MODELOS_OFICIAIS}
+    lista_recontato_rh = []
+
+    # Processamento de Dependentes
+    for id_colab, nome_colab, status, qtd_kits, resumo, detalhes, nec_rec, mot_rec in deps:
         st = (status or 'PENDENTE').upper()
-        if st in status_geral_contador:
-            status_geral_contador[st] += 1
+        if st in status_cards:
+            status_cards[st] += 1
+
+        if str(nec_rec or '').strip().upper() in ['SIM', 'S', 'TRUE', '1', 'YES']:
+            lista_recontato_rh.append({
+                'id_colaborador': id_colab,
+                'nome_colaborador': nome_colab or 'NÃO INFORMADO',
+                'status': st,
+                'motivo': mot_rec or 'Pendência cadastral RH'
+            })
+
+        qtd = qtd_kits or 1
+        kits_previstos_total += qtd
+        publico_kits['Dependentes'] += qtd
+
+        resumo_str = str(resumo or "")
+        is_orfeo = any(t in resumo_str.upper() for t in ["ÓRFÃOS", "ORFAOS", "AUTOMÁTICOS", "AUTOMATICOS"])
+        if is_orfeo:
+            tipo_cota_kits['Órfãos (Escolha Livre)'] += qtd
+        else:
+            tipo_cota_kits['Reservados (Modelo Definido)'] += qtd
 
         det = detalhes or {}
-        for i in range(qtd_kits or 1):
+        partes = resumo_str.split('|')
+
+        for i in range(qtd):
             chave = f"kit_{i}"
-            if det.get(chave, {}).get('entregue') is True:
-                total_entregue_kits += 1
+            info_kit = det.get(chave) if isinstance(det.get(chave), dict) else {}
+            entregue = info_kit.get('entregue') is True
+
+            if entregue:
+                kits_entregues_total += 1
+                mod_entregue = (info_kit.get('modelo') or '').strip()
+                etapa = classificar_etapa(mod_entregue)
+                etapas_stats[etapa]["entregues"] += 1
+                if mod_entregue in entregues_por_modelo:
+                    entregues_por_modelo[mod_entregue] += 1
             else:
-                total_pendente_kits += 1
+                kits_faltantes_total += 1
+                if is_orfeo:
+                    etapas_stats["Órfãos / Escolha Livre"]["faltantes"] += 1
+                else:
+                    texto_parte = partes[i] if i < len(partes) else resumo_str
+                    mod_esperado = "---"
+                    for m in modelos_ordenados:
+                        if padroes_modelos[m].search(texto_parte):
+                            mod_esperado = m
+                            break
+                    etapa = classificar_etapa(mod_esperado)
+                    etapas_stats[etapa]["faltantes"] += 1
+                    if mod_esperado in faltantes_por_modelo:
+                        faltantes_por_modelo[mod_esperado] += 1
 
-    # Distribuição por modelo baixado (Histórico)
-    modelos_db = db.session.query(
+    # Processamento de Jovens Aprendizes
+    for id_colab, status, qtd_kits, resumo, detalhes in jovens:
+        st = (status or 'PENDENTE').upper()
+        if st in status_cards:
+            status_cards[st] += 1
+
+        qtd = qtd_kits or 1
+        kits_previstos_total += qtd
+        publico_kits['Jovens Aprendizes'] += qtd
+        tipo_cota_kits['Reservados (Modelo Definido)'] += qtd
+
+        resumo_str = str(resumo or "")
+        det = detalhes or {}
+
+        mod_esperado = "---"
+        for m in modelos_ordenados:
+            if padroes_modelos[m].search(resumo_str):
+                mod_esperado = m
+                break
+
+        for i in range(qtd):
+            chave = f"kit_{i}"
+            info_kit = det.get(chave) if isinstance(det.get(chave), dict) else {}
+            entregue = info_kit.get('entregue') is True
+
+            if entregue:
+                kits_entregues_total += 1
+                mod_entregue = (info_kit.get('modelo') or mod_esperado).strip()
+                etapa = classificar_etapa(mod_entregue)
+                etapas_stats[etapa]["entregues"] += 1
+                if mod_entregue in entregues_por_modelo:
+                    entregues_por_modelo[mod_entregue] += 1
+            else:
+                kits_faltantes_total += 1
+                etapa = classificar_etapa(mod_esperado)
+                etapas_stats[etapa]["faltantes"] += 1
+                if mod_esperado in faltantes_por_modelo:
+                    faltantes_por_modelo[mod_esperado] += 1
+
+    # 3. Consulta enxuta de Histórico de Baixas (Ritmo diário, Horários, Operadores e Divergências)
+    baixas = HistoricoBaixa.query.with_entities(
+        HistoricoBaixa.id_usuario,
+        HistoricoBaixa.nome_operador,
         HistoricoBaixa.modelo_baixa,
-        func.count(HistoricoBaixa.id_historico)
-    ).group_by(HistoricoBaixa.modelo_baixa).all()
+        HistoricoBaixa.divergencia_modelo,
+        HistoricoBaixa.modelo_esperado,
+        HistoricoBaixa.data_baixa
+    ).order_by(HistoricoBaixa.data_baixa.asc()).all()
 
-    distribuicao_modelos = {m: q for m, q in modelos_db}
+    entregas_por_dia = {}
+    entregas_por_hora = {f"{h:02d}h": 0 for h in range(7, 21)}
+    operadores_map = {}
+    total_divergencias = 0
+    trocas_pares = {}
+
+    for id_u, nome_op, mod_baixa, div_mod, mod_esp, dt_utc in baixas:
+        op_nome = (nome_op or "Sistema").strip()
+        op_key = str(id_u) if id_u else op_nome
+
+        if op_key not in operadores_map:
+            operadores_map[op_key] = {
+                'nome': op_nome,
+                'total': 0,
+                'dias_ativos': set(),
+                'ultima_baixa': None
+            }
+
+        operadores_map[op_key]['total'] += 1
+
+        if dt_utc:
+            dt_br = dt_utc - timedelta(hours=3)
+            dia_chave = dt_br.strftime("%d/%m/%Y")
+            dia_curto = dt_br.strftime("%d/%m")
+            hora_chave = f"{dt_br.hour:02d}h"
+
+            entregas_por_dia[dia_chave] = entregas_por_dia.get(dia_chave, 0) + 1
+            if hora_chave in entregas_por_hora:
+                entregas_por_hora[hora_chave] += 1
+
+            operadores_map[op_key]['dias_ativos'].add(dia_chave)
+            operadores_map[op_key]['ultima_baixa'] = dt_br.strftime("%d/%m/%Y %H:%M")
+
+        if div_mod:
+            total_divergencias += 1
+            par_label = f"{mod_esp or '?'} → {mod_baixa}"
+            trocas_pares[par_label] = trocas_pares.get(par_label, 0) + 1
+
+    # 4. Estoque Físico e Movimentações de Auditoria
+    estoques = EstoqueKit.query.with_entities(
+        EstoqueKit.codigo_kit,
+        EstoqueKit.quantidade_disponivel,
+        EstoqueKit.quantidade_baixada
+    ).all()
+
+    saldo_balcao_mapa = {}
+    for cod, disp, baix in estoques:
+        saldo_balcao_mapa[cod] = max(0, (disp or 0) - (baix or 0))
+
+    movs_auditoria = db.session.query(
+        MovimentacaoEstoque.tipo_movimentacao,
+        func.count(MovimentacaoEstoque.id_movimentacao)
+    ).filter(
+        MovimentacaoEstoque.tipo_movimentacao.in_(['REVOGACAO_ADMIN', 'SAIDA_CORRECAO'])
+    ).group_by(MovimentacaoEstoque.tipo_movimentacao).all()
+
+    auditoria_counts = {'REVOGACAO_ADMIN': 0, 'SAIDA_CORRECAO': 0}
+    for tipo_m, qtd_m in movs_auditoria:
+        auditoria_counts[tipo_m] = qtd_m
+
+    # 5. Cálculo de Médias e Projeção
+    dias_operacao = len(entregas_por_dia)
+    total_baixas_registradas = len(baixas)
+    media_por_dia = round(total_baixas_registradas / dias_operacao, 1) if dias_operacao > 0 else 0.0
+
+    qtd_operadores_ativos = len(operadores_map)
+    media_por_login = round(total_baixas_registradas / qtd_operadores_ativos, 1) if qtd_operadores_ativos > 0 else 0.0
+
+    dias_projecao = math.ceil(kits_faltantes_total / media_por_dia) if media_por_dia > 0 else None
+    pct_conclusao = round((kits_entregues_total / kits_previstos_total) * 100, 1) if kits_previstos_total > 0 else 0.0
+    pct_divergencia = round((total_divergencias / total_baixas_registradas) * 100, 1) if total_baixas_registradas > 0 else 0.0
+
+    # Formatação Ranking de Operadores
+    ranking_operadores = []
+    for op in operadores_map.values():
+        dias_op = len(op['dias_ativos']) or 1
+        part_pct = round((op['total'] / total_baixas_registradas) * 100, 1) if total_baixas_registradas > 0 else 0.0
+        ranking_operadores.append({
+            'nome': op['nome'],
+            'total': op['total'],
+            'participacao_pct': part_pct,
+            'media_dia': round(op['total'] / dias_op, 1),
+            'ultima_baixa': op['ultima_baixa'] or '---'
+        })
+    ranking_operadores.sort(key=lambda x: x['total'], reverse=True)
+
+    # Formatação Modelos Faltantes vs Saldo Balcão
+    modelos_execucao = []
+    for m in MODELOS_OFICIAIS:
+        faltam = faltantes_por_modelo.get(m, 0)
+        entreg = entregues_por_modelo.get(m, 0)
+        balcao = saldo_balcao_mapa.get(m, 0)
+        if faltam > 0 or entreg > 0 or balcao > 0:
+            modelos_execucao.append({
+                'modelo': m,
+                'entregues': entreg,
+                'faltantes': faltam,
+                'saldo_balcao': balcao,
+                'cobertura_ok': balcao >= faltam
+            })
+
+    top_trocas = sorted(
+        [{'troca': k, 'qtd': v} for k, v in trocas_pares.items()],
+        key=lambda x: x['qtd'],
+        reverse=True
+    )[:6]
 
     return jsonify({
         'sucesso': True,
-        'cards': {
-            'total_cadastrados': len(todos_registros),
-            'entregues': status_geral_contador['ENTREGUE'],
-            'pendentes': status_geral_contador['PENDENTE'],
-            'parciais': status_geral_contador['ENTREGA PARCIAL'],
-            'kits_entregues_individual': total_entregue_kits
+        'kpis': {
+            'kits_previstos': kits_previstos_total,
+            'kits_entregues': kits_entregues_total,
+            'kits_faltantes': kits_faltantes_total,
+            'pct_conclusao': pct_conclusao,
+            'media_por_dia': media_por_dia,
+            'dias_operacao': dias_operacao,
+            'media_por_login': media_por_login,
+            'operadores_ativos': qtd_operadores_ativos,
+            'dias_projecao': dias_projecao,
+            'total_beneficiarios': total_beneficiarios,
+            'beneficiarios_entregues': status_cards['ENTREGUE'],
+            'beneficiarios_parciais': status_cards['ENTREGA PARCIAL'],
+            'beneficiarios_pendentes': status_cards['PENDENTE'],
+            'total_divergencias': total_divergencias,
+            'pct_divergencia': pct_divergencia,
+            'revogacoes_admin': auditoria_counts['REVOGACAO_ADMIN'],
+            'correcoes_modelo': auditoria_counts['SAIDA_CORRECAO'],
+            'total_recontato_rh': len(lista_recontato_rh)
         },
-        'modelos_ranking': distribuicao_modelos
+        'ritmo': {
+            'dias_labels': [d[:5] for d in entregas_por_dia.keys()],
+            'dias_valores': list(entregas_por_dia.values()),
+            'horas_labels': list(entregas_por_hora.keys()),
+            'horas_valores': list(entregas_por_hora.values()),
+            'ranking_operadores': ranking_operadores
+        },
+        'execucao': {
+            'etapas': etapas_stats,
+            'modelos': modelos_execucao,
+            'publico': publico_kits,
+            'tipo_cota': tipo_cota_kits,
+            'top_trocas': top_trocas,
+            'lista_recontato_rh': lista_recontato_rh
+        }
     }), 200
 
 
