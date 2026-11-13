@@ -12,38 +12,48 @@
         }
 
         .dash-wrapper {
-            max-width: 1360px;
-            width: 96%;
+            max-width: 1400px;
+            width: 97%;
             margin: 18px auto 95px auto;
             display: grid;
-            grid-template-columns: 255px 1fr;
-            gap: 24px;
+            grid-template-columns: 285px 1fr;
+            gap: 22px;
             align-items: start;
         }
 
-        @media (max-width: 960px) {
+        @media (max-width: 980px) {
             .dash-wrapper {
                 grid-template-columns: 1fr;
             }
         }
 
         /* =========================================================================
-           SIDEBAR EXECUTIVA DARK SLATE (MANTIDA COMO APROVADA)
+           SIDEBAR EXECUTIVA DARK SLATE + PAINEL DE SEGMENTADORES (ESTILO POWER BI)
            ========================================================================= */
         .dash-sidebar {
             background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
             border-radius: 18px;
-            padding: 20px 14px;
+            padding: 18px 14px;
             box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.25);
             position: sticky;
-            top: 18px;
+            top: 16px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
             color: #f8fafc;
         }
 
+        .dash-sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .dash-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
         .sidebar-brand-box {
-            padding: 4px 10px 16px 10px;
+            padding: 4px 10px 14px 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .sidebar-brand-title {
@@ -65,19 +75,21 @@
         .sidebar-nav-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .sidebar-nav-btn {
             width: 100%;
             background: transparent;
             border: 1px solid transparent;
-            padding: 12px 14px;
-            border-radius: 12px;
+            padding: 10px 12px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
-            gap: 11px;
-            font-size: 0.86rem;
+            gap: 10px;
+            font-size: 0.84rem;
             font-weight: 700;
             color: #94a3b8;
             cursor: pointer;
@@ -86,8 +98,8 @@
         }
 
         .sidebar-nav-btn svg {
-            width: 18px;
-            height: 18px;
+            width: 17px;
+            height: 17px;
             flex-shrink: 0;
             stroke-width: 2.2;
             color: #64748b;
@@ -114,9 +126,187 @@
             color: #34d399;
         }
 
+        /* =========================================================================
+           PAINEL DE FILTROS INTERATIVOS (SLICERS PBI) NA SIDEBAR
+           ========================================================================= */
+        .pbi-slicers-section {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pbi-slicers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+        }
+
+        .pbi-slicers-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-pbi-clear {
+            background: #ef4444;
+            border: 1px solid #f87171;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-pbi-clear:hover {
+            background: #dc2626;
+        }
+
+        .pbi-slicer-card {
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 11px;
+        }
+
+        .pbi-slicer-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 6px;
+        }
+
+        .pbi-slicer-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #cbd5e1;
+        }
+
+        /* AJUSTE PRINT 2: BOTÃO DE MODO DE DATA CLARO, SÓLIDO E IDENTIFICÁVEL */
+        .pbi-mode-toggle {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid #38bdf8;
+            padding: 4px 9px;
+            border-radius: 7px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+            transition: all 0.15s ease;
+        }
+
+        .pbi-mode-toggle:hover {
+            background: #0ea5e9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.45);
+        }
+
+        /* FLAGS DE DATA POR DIA (ESTILO PBI) */
+        .pbi-date-flags-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-height: 155px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .pbi-date-flags-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+        .pbi-date-flags-grid::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+        }
+
+        .date-flag-btn {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            color: #cbd5e1;
+            border-radius: 7px;
+            padding: 5px 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.15;
+        }
+
+        .date-flag-btn:hover {
+            border-color: #38bdf8;
+            color: #ffffff;
+            background: rgba(2, 132, 199, 0.25);
+        }
+
+        .date-flag-btn.flag-in-range {
+            background: rgba(2, 132, 199, 0.28);
+            border-color: rgba(56, 189, 248, 0.6);
+            color: #e0f2fe;
+        }
+
+        .date-flag-btn.flag-selected {
+            background: linear-gradient(135deg, #0284c7, #10b981);
+            border-color: #34d399;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+        }
+
+        .date-flag-day-num {
+            font-size: 0.6rem;
+            opacity: 0.82;
+            font-weight: 600;
+        }
+
+        /* AJUSTE PRINT 1: CONTRASTE ALTO NOS SELECTS E OPTIONS DO FILTRO */
+        .pbi-select {
+            width: 100%;
+            background-color: #0f172a;
+            color: #f8fafc;
+            color-scheme: dark;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .pbi-select option {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 8px;
+            font-weight: 600;
+        }
+
+        .pbi-select:focus, .pbi-select.has-value {
+            border-color: #38bdf8;
+            background-color: #1e293b;
+        }
+
         .sidebar-live-box {
-            margin-top: 20px;
-            padding: 12px;
+            margin-top: 14px;
+            padding: 10px 12px;
             border-radius: 12px;
             background: rgba(15, 23, 42, 0.55);
             border: 1px solid rgba(255, 255, 255, 0.07);
@@ -126,12 +316,12 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 800;
             color: #34d399;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .live-dot-pulse {
@@ -150,13 +340,13 @@
         }
 
         .live-sub-text {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: #94a3b8;
             display: block;
         }
 
         /* =========================================================================
-           ÁREA PRINCIPAL DO DASHBOARD
+           ÁREA PRINCIPAL DO DASHBOARD + BARRA DE FILTROS ATIVOS (PBI CHIPS)
            ========================================================================= */
         .dash-main {
             min-width: 0;
@@ -166,7 +356,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -198,7 +388,50 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         }
 
-        /* BARRA DE PROGRESSO GLOBAL CLEAN LIGHT (VISUAL CLARO E LEVE) */
+        /* BARRA DE FILTROS APLICADOS NO TOPO */
+        .active-filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            padding: 9px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .active-filters-label {
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: #0369a1;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .filter-chip-pbi {
+            background: #ffffff;
+            border: 1px solid #7dd3fc;
+            color: #0f172a;
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(2, 132, 199, 0.08);
+        }
+
+        .filter-chip-close {
+            color: #ef4444;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 0.82rem;
+            line-height: 1;
+        }
+
+        /* BARRA DE PROGRESSO GLOBAL */
         .hero-progress-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -270,7 +503,7 @@
             width: 0%;
             background: linear-gradient(90deg, #10b981 0%, #0284c7 100%);
             border-radius: 999px;
-            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* 4 CARDS KPI EQUILIBRADOS */
@@ -404,6 +637,57 @@
             margin-top: 2px;
         }
 
+        .pbi-hint-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #0284c7;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 3px 8px;
+            border-radius: 8px;
+        }
+
+        /* AJUSTE PRINT 3: RODAPÉ DO CARD RANKING FILIAL COM BOTÃO DE TROCA DE GRÁFICO */
+        .chart-card-footer-left {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-switch-chart-type {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            padding: 7px 13px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            transition: all 0.18s ease;
+        }
+
+        .btn-switch-chart-type svg {
+            width: 15px;
+            height: 15px;
+            color: #0284c7;
+            stroke-width: 2.2;
+        }
+
+        .btn-switch-chart-type:hover {
+            background: #e0f2fe;
+            border-color: #0284c7;
+            color: #0369a1;
+            transform: translateY(-1px);
+        }
+
         /* TABELAS INTERNAS DO DASHBOARD */
         .dash-table {
             width: 100%;
@@ -412,6 +696,8 @@
         }
 
         .dash-table th {
+            position: sticky;
+            top: 0;
             background: #f8fafc;
             color: #475569;
             font-weight: 700;
@@ -421,6 +707,7 @@
             padding: 11px 12px;
             border-bottom: 1px solid #e2e8f0;
             text-align: left;
+            z-index: 2;
         }
 
         .dash-table td {
@@ -429,23 +716,19 @@
             color: #1e293b;
         }
 
-        .tr-auditoria-clicavel {
-            cursor: pointer;
-            transition: background 0.15s ease;
-        }
-
-        .tr-auditoria-clicavel:hover td {
-            background: #f0f9ff;
+        .dash-table tbody tr:hover td {
+            background: #f8fafc;
         }
 
         .pill-badge {
             padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             font-weight: 800;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
         }
 
         .pill-green { background: #dcfce7; color: #15803d; }
@@ -457,60 +740,39 @@
             display: none !important;
         }
 
-        /* =========================================================================
-           MODAL DE DETALHAMENTO DE TITULARES / AUDITORIA
-           ========================================================================= */
-        .modal-overlay-dash {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 99999;
+        /* AJUSTE PRINT 4: BARRA DE FERRAMENTAS DO EXIBIDOR DE NOMES */
+        .nomes-viewer-toolbar {
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
-
-        .modal-card-dash {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 24px;
-            width: 92%;
-            max-width: 840px;
-            max-height: 86vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.25);
-        }
-
-        .modal-filter-row {
-            display: flex;
             gap: 10px;
-            margin-bottom: 14px;
-            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .modal-input-search {
-            flex: 1;
-            padding: 9px 14px;
+        .input-busca-nomes-inline {
+            padding: 7px 12px;
             border-radius: 9px;
             border: 1px solid #cbd5e1;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            min-width: 240px;
             outline: none;
+            background: #f8fafc;
+            transition: all 0.15s ease;
         }
 
-        .modal-input-search:focus {
+        .input-busca-nomes-inline:focus {
             border-color: #0284c7;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
         }
 
         .btn-export-excel-dash {
             background: #ffffff;
             color: #334155;
             border: 1px solid #cbd5e1;
-            padding: 8px 14px;
+            padding: 7px 13px;
             border-radius: 9px;
             font-weight: 700;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -521,47 +783,14 @@
         .btn-export-excel-dash:hover {
             border-color: #0284c7;
             color: #0284c7;
-            background: #f8fafc;
+            background: #f0f9ff;
         }
     </style>
 </head>
 <body>
 
-    <!-- MODAL DE RESUMO DETALHADO (TITULARES ENTREGUES / PARCIAIS / PENDENTES / AJUSTES) -->
-    <div class="modal-overlay-dash hidden-section" id="modal-auditoria-detalhe">
-        <div class="modal-card-dash">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 14px;">
-                <div>
-                    <h3 style="font-size: 1.15rem; color: #0f172a;" id="modal-aud-titulo">Detalhamento</h3>
-                    <p style="font-size: 0.8rem; color: #64748b;" id="modal-aud-subtitulo">Relação nominal</p>
-                </div>
-                <span style="font-size: 1.25rem; cursor: pointer; color: #64748b; font-weight: 700;" onclick="fecharModalAuditoria()">✕</span>
-            </div>
-
-            <div class="modal-filter-row">
-                <input type="text" id="input-filtro-auditoria" class="modal-input-search" placeholder="Filtrar por nome, crachá ou bolsa..." oninput="filtrarModalAuditoria()" />
-                <button type="button" class="btn-export-excel-dash" onclick="exportarModalAuditoriaExcel()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Exportar Excel
-                </button>
-            </div>
-
-            <div style="overflow-y: auto; max-height: 54vh; border: 1px solid #e2e8f0; border-radius: 10px;">
-                <table class="dash-table">
-                    <thead id="thead-modal-auditoria"></thead>
-                    <tbody id="tbody-modal-auditoria"></tbody>
-                </table>
-            </div>
-
-            <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-                <span id="rodape-modal-auditoria" style="font-size: 0.8rem; font-weight: 700; color: #64748b;"></span>
-                <button type="button" class="btn-export-excel-dash" onclick="fecharModalAuditoria()">Fechar</button>
-            </div>
-        </div>
-    </div>
-
     <div class="dash-wrapper">
-        <!-- MENU LATERAL (FLEGADO EM VISÃO GERAL) -->
+        <!-- MENU LATERAL + SEGMENTADORES POWER BI -->
         <aside class="dash-sidebar">
             <div class="sidebar-brand-box">
                 <span class="sidebar-brand-title">Painel Gerencial</span>
@@ -585,6 +814,60 @@
                 </button>
             </nav>
 
+            <!-- SEGMENTADORES INTERATIVOS (ESTILO POWER BI) -->
+            <div class="pbi-slicers-section">
+                <div class="pbi-slicers-header">
+                    <span class="pbi-slicers-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                        Filtros Interativos
+                    </span>
+                    <button type="button" id="btn-limpar-filtros" class="btn-pbi-clear hidden-section" onclick="limparTodosFiltros()">Limpar</button>
+                </div>
+
+                <!-- 1. FILTRO DE DATA (FLAGS POR DIA DE INSCRIÇÃO) -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Data Inscrição</span>
+                        <button type="button" id="btn-modo-data" class="pbi-mode-toggle" onclick="alternarModoData()" title="Clique para alternar entre acumulado até o dia ou somente o dia exato">
+                            ⇄ Até o dia
+                        </button>
+                    </div>
+                    <div id="pbi-date-flags-container" class="pbi-date-flags-grid">
+                        <span style="font-size:0.7rem; color:#64748b; grid-column: span 3;">Carregando dias...</span>
+                    </div>
+                </div>
+
+                <!-- 2. FILTRO POR FILIAL -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Filial</span>
+                    </div>
+                    <select id="select-filtro-filial" class="pbi-select" onchange="aplicarFiltroSelect('filial', this.value)">
+                        <option value="">Todas as Filiais</option>
+                    </select>
+                </div>
+
+                <!-- 3. FILTRO POR CENTRO DE CUSTO -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Centro de Custo</span>
+                    </div>
+                    <select id="select-filtro-cc" class="pbi-select" onchange="aplicarFiltroSelect('cc', this.value)">
+                        <option value="">Todos os Centros de Custo</option>
+                    </select>
+                </div>
+
+                <!-- 4. FILTRO POR CARGO -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Cargo</span>
+                    </div>
+                    <select id="select-filtro-cargo" class="pbi-select" onchange="aplicarFiltroSelect('cargo', this.value)">
+                        <option value="">Todos os Cargos</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="sidebar-live-box">
                 <div class="live-indicator-row">
                     <span class="live-dot-pulse"></span>
@@ -607,15 +890,18 @@
                 </div>
             </div>
 
+            <!-- BARRA DE CHIPS DOS FILTROS ATIVOS -->
+            <div id="active-filters-bar" class="active-filters-bar hidden-section"></div>
+
             <!-- =========================================================================
-                 ABA 1: VISÃO GERAL (FLEGADA POR PADRÃO)
+                 ABA 1: VISÃO GERAL
                  ========================================================================= -->
             <section id="sec-visao-geral">
-                <!-- Hero Card de Execução Global (VISUAL CLARO E LIMPO) -->
+                <!-- Hero Card de Execução Global -->
                 <div class="hero-progress-card">
                     <div class="hero-progress-top">
                         <div>
-                            <span class="hero-label">Andamento Global da Execução</span>
+                            <span class="hero-label">Andamento da Execução (Recorte Atual)</span>
                             <div class="hero-numbers">
                                 <span class="highlight-green" id="vg-entregues-txt">0</span> de <span id="vg-previstos-txt">0</span> bolsas entregues
                             </div>
@@ -627,7 +913,7 @@
                     </div>
                 </div>
 
-                <!-- 4 KPIs Principais -->
+                <!-- 4 KPIs Principais (Mantidos e Reativos aos Filtros) -->
                 <div class="kpi-grid-4">
                     <div class="kpi-card kpi-amber">
                         <div class="kpi-card-top">
@@ -674,106 +960,121 @@
                     </div>
                 </div>
 
-                <!-- Gráficos de Composição & Indicadores de Qualidade -->
+                <!-- LINHA 1 DE GRÁFICOS: 2 GRÁFICOS DE PIZZA -->
                 <div class="dash-grid-2">
                     <div class="panel-card col-6">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Público Cadastrado (Colaboradores vs. Jovem Aprendiz)</div>
-                                
+                                <div class="panel-title">Retirada Esperada vs. Baixas Efetuadas</div>
+                                <div class="panel-subtitle">Comparativo entre kits previstos e baixados no filtro selecionado</div>
                             </div>
                         </div>
-                        <div id="chart-publico-donut" style="min-height: 265px;"></div>
+                        <div id="chart-esperado-vs-baixas" style="min-height: 270px;"></div>
                     </div>
 
                     <div class="panel-card col-6">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Modalidade de Cota (Reservados vs. Não Reservado)</div>
-                                <div class="panel-subtitle">Bolsas com modelo pré-definido vs. escolha livre no balcão</div>
+                                <div class="panel-title">Adesão ao Programa (Inscritos vs. 9.600 Funcionários)</div>
+                                <div class="panel-subtitle">Proporção de colaboradores inscritos frente ao quadro total (9.600)</div>
                             </div>
                         </div>
-                        <div id="chart-cota-donut" style="min-height: 265px;"></div>
+                        <div id="chart-inscritos-vs-quadro" style="min-height: 270px;"></div>
                     </div>
 
-                    <!-- Auditoria & Status dos Titulares -->
+                    <!-- LINHA 2: GRÁFICO TEMPORAL DE INSCRIÇÕES POR DIA -->
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Evolução Temporal de Inscrições por Dia</div>
+                                <div class="panel-subtitle" id="sub-evolucao-temporal">Quantidade de inscrições registradas por dia (clique em uma flag de data à esquerda para ver o retrato da época)</div>
+                            </div>
+                        </div>
+                        <div id="chart-inscricoes-temporal" style="min-height: 290px;"></div>
+                    </div>
+
+                    <!-- LINHA 3: RANKING CARGO & RANKING CENTRO DE CUSTO (BARRAS DUPLAS) -->
                     <div class="panel-card col-6">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Auditoria & Status dos Titulares</div>
-                                <div class="panel-subtitle">Clique em qualquer linha para abrir a relação nominal</div>
+                                <div class="panel-title">Ranking por Cargo (Top 10)</div>
+                                <div class="panel-subtitle">Colaboradores inscritos vs. retiradas efetuadas por cargo</div>
                             </div>
+                            <span class="pbi-hint-badge">Clique na barra p/ filtrar</span>
                         </div>
-                        <table class="dash-table">
-                            <tbody>
-                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('ENTREGUE')">
-                                    <td>
-                                        <strong>Titulares 100% Entregues</strong>
-                                        <div style="font-size: 0.72rem; color: #64748b;" id="sub-aud-entregues">Corresponde a 0 bolsas entregues</div>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <span class="pill-badge pill-green" id="aud-entregues">0 →</span>
-                                    </td>
-                                </tr>
-                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('PARCIAL')">
-                                    <td>
-                                        <strong>Titulares com Entrega Parcial</strong>
-                                        <div style="font-size: 0.72rem; color: #64748b;" id="sub-aud-parciais">Faltam 0 bolsas para concluir</div>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <span class="pill-badge pill-blue" id="aud-parciais">0 →</span>
-                                    </td>
-                                </tr>
-                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('PENDENTE')">
-                                    <td>
-                                        <strong>Titulares Pendentes (Não compareceram)</strong>
-                                        <div style="font-size: 0.72rem; color: #64748b;" id="sub-aud-pendentes">Aguardando retirada de 0 bolsas</div>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <span class="pill-badge pill-amber" id="aud-pendentes">0 →</span>
-                                    </td>
-                                </tr>
-                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('CORRECOES')">
-                                    <td>
-                                        <strong>Correções de Modelo (SAIDA_CORRECAO)</strong>
-                                        <div style="font-size: 0.72rem; color: #64748b;">Alterações de kit registradas no histórico</div>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <span class="pill-badge pill-blue" id="aud-correcoes">0 →</span>
-                                    </td>
-                                </tr>
-                                <tr class="tr-auditoria-clicavel" onclick="abrirModalAuditoria('REVOGACOES')">
-                                    <td>
-                                        <strong>Revogações Administrativas (REVOGACAO_ADMIN)</strong>
-                                        <div style="font-size: 0.72rem; color: #64748b;">Estornos efetuados pela gestão</div>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <span class="pill-badge pill-red" id="aud-revogacoes">0 →</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div id="chart-ranking-cargo" style="min-height: 360px;"></div>
                     </div>
 
-                    <!-- Qualidade Operacional: Divergências de Modelo -->
                     <div class="panel-card col-6">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Trocas de Modelo no Balcão (Divergências)</div>
-                                <div class="panel-subtitle">Entregas onde o modelo retirado diferiu do escolhido</div>
+                                <div class="panel-title">Ranking por Centro de Custo (Top 10)</div>
+                                <div class="panel-subtitle">Colaboradores inscritos vs. retiradas efetuadas por centro de custo</div>
                             </div>
-                            <span class="pill-badge pill-amber" id="badge-pct-divergencia">0% das saídas</span>
+                            <span class="pbi-hint-badge">Clique na barra p/ filtrar</span>
                         </div>
-                        <div style="overflow-x: auto;">
+                        <div id="chart-ranking-cc" style="min-height: 360px;"></div>
+                    </div>
+
+                    <!-- LINHA 4: RANKING FILIAL COM BOTÃO DE TROCA DE VISUALIZAÇÃO NO CANTO INFERIOR ESQUERDO (PRINT 3) -->
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Ranking por Filial</div>
+                                <div class="panel-subtitle" id="sub-ranking-filial">Colaboradores inscritos vs. retiradas efetuadas por unidade / filial</div>
+                            </div>
+                            <span class="pbi-hint-badge">Clique na fatia ou barra p/ filtrar</span>
+                        </div>
+
+                        <div id="chart-ranking-filial" style="min-height: 330px;"></div>
+
+                        <!-- BOTÃO POSICIONADO NO CANTO INFERIOR ESQUERDO CONFORME PRINT 3 -->
+                        <div class="chart-card-footer-left">
+                            <button type="button" id="btn-toggle-tipo-filial" class="btn-switch-chart-type" onclick="alternarTipoGraficoFilial()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                                    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                                </svg>
+                                <span id="txt-toggle-tipo-filial">Mudar para Gráfico de Pizza</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- LINHA 5: EXIBIDOR NOMINAL DE COLABORADORES FILTRADOS (SUBSTITUINDO OS 2 CARTÕES DO PRINT 4) -->
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <div class="panel-title">Colaboradores no Filtro Selecionado</div>
+                                    <span class="pill-badge pill-blue" id="badge-qtd-nomes-exibidos">0 pessoas</span>
+                                </div>
+                                <div class="panel-subtitle" id="sub-exibidor-nomes">Exibindo os colaboradores inscritos conforme os filtros ativos</div>
+                            </div>
+
+                            <div class="nomes-viewer-toolbar">
+                                <input type="text" id="input-busca-nomes-tabela" class="input-busca-nomes-inline" placeholder="Pesquisar nome, crachá ou cargo..." oninput="filtrarTabelaNomesColaboradores()" />
+                                <button type="button" class="btn-export-excel-dash" onclick="exportarNomesFiltradosExcel()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Exportar Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto; max-height: 410px; border: 1px solid #e2e8f0; border-radius: 12px;">
                             <table class="dash-table">
                                 <thead>
                                     <tr>
-                                        <th>Troca Realizada (Escolhido → Retirado)</th>
-                                        <th style="text-align: right;">Ocorrências</th>
+                                        <th style="width: 95px;">Crachá</th>
+                                        <th>Nome do Colaborador</th>
+                                        <th>Cargo</th>
+                                        <th>Centro de Custo</th>
+                                        <th>Filial</th>
+                                        <th style="text-align: center; width: 110px;">Status</th>
+                                        <th style="text-align: center; width: 95px;">Bolsas</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tbody-top-trocas">
-                                    <tr><td colspan="2" style="text-align:center; color:#64748b;">Nenhuma troca registrada.</td></tr>
+                                <tbody id="tbody-exibidor-nomes">
+                                    <tr><td colspan="7" style="text-align:center; padding: 20px; color: #64748b;">Carregando colaboradores...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -782,7 +1083,7 @@
             </section>
 
             <!-- =========================================================================
-                 ABA 2: RITMO DE EXPEDIÇÃO (BARRA TOTAL DIÁRIA + LINHAS POR USUÁRIO)
+                 ABA 2: RITMO DE EXPEDIÇÃO
                  ========================================================================= -->
             <section id="sec-ritmo-expedicao" class="hidden-section">
                 <div class="dash-grid-2">
@@ -883,24 +1184,34 @@
     </div>
 
     <script>
-        let dashDadosGlobais = null;
+        let dashPayloadBruto = null;
+        let dashCalculadoAtual = null;
         let chartsInstances = {};
         let ultimaVersaoConhecida = null;
         let realtimeTimer = null;
 
-        // Estado do Modal de Auditoria / Titulares
-        let audModalTipoAtual = null;
-        let audModalDadosBrutos = [];
-        let audModalDadosFiltrados = [];
+        // Estado dos Segmentadores Estilo Power BI
+        const filtrosPBI = {
+            data: null,
+            modoData: 'ATE',
+            filial: '',
+            cc: '',
+            cargo: ''
+        };
+
+        // Tipo de visualização do gráfico de Filial ('bar' ou 'pie') - Print 3
+        let tipoGraficoFilialAtual = 'bar';
+
+        // Lista de colaboradores atualmente filtrados para o exibidor nominal - Print 4
+        let listaColaboradoresFiltradosAtual = [];
+
+        let listaDiasDisponiveis = [];
 
         document.addEventListener("DOMContentLoaded", async () => {
             await carregarMetricasDashboard(true);
             iniciarMonitoramentoTempoReal();
         });
 
-        /* =========================================================================
-           MOTOR DE TEMPO REAL (POLLING LEVE DE 4s COM DETECÇÃO DE MUDANÇA)
-           ========================================================================= */
         function iniciarMonitoramentoTempoReal() {
             if (realtimeTimer) clearInterval(realtimeTimer);
 
@@ -924,7 +1235,6 @@
             }, 4000);
         }
 
-        /* NAVEGAÇÃO DO MENU LATERAL */
         function alternarAbaDashboard(aba) {
             const botoes = {
                 VISAO_GERAL: document.getElementById("nav-visao-geral"),
@@ -967,14 +1277,9 @@
                     return;
                 }
 
-                dashDadosGlobais = data;
-                renderizarVisaoGeral(data, primeiraCarga);
-                renderizarRitmoExpedicao(data, primeiraCarga);
-                renderizarGraficoExecucao(data, primeiraCarga);
-
-                if (audModalTipoAtual) {
-                    atualizarDadosModalAuditoria();
-                }
+                dashPayloadBruto = data;
+                popularSegmentadoresSidebar(data.base_analitica || []);
+                recalcularERenderizarTudo(primeiraCarga);
 
                 const agora = new Date();
                 statusEl.innerText = `Última sync: ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
@@ -985,11 +1290,577 @@
         }
 
         /* =========================================================================
+           POPULAÇÃO E CONTROLE DOS FILTROS ESTILO POWER BI
+           ========================================================================= */
+        function popularSegmentadoresSidebar(base) {
+            const mapaDias = new Map();
+            const setFiliais = new Set();
+            const setCCs = new Set();
+            const setCargos = new Set();
+
+            base.forEach(r => {
+                if (r.dt) mapaDias.set(r.dt, r.dt_br);
+                if (r.filial) setFiliais.add(r.filial);
+                if (r.cc) setCCs.add(r.cc);
+                if (r.cargo) setCargos.add(r.cargo);
+            });
+
+            const datasOrdenadas = Array.from(mapaDias.keys()).sort();
+            listaDiasDisponiveis = datasOrdenadas.map((dt, idx) => ({
+                dt: dt,
+                dt_br: mapaDias.get(dt),
+                dia_num: idx + 1
+            }));
+
+            renderizarFlagsData();
+
+            preencherSelectPreservando("select-filtro-filial", "Todas as Filiais", Array.from(setFiliais).sort(), filtrosPBI.filial);
+            preencherSelectPreservando("select-filtro-cc", "Todos os Centros de Custo", Array.from(setCCs).sort(), filtrosPBI.cc);
+            preencherSelectPreservando("select-filtro-cargo", "Todos os Cargos", Array.from(setCargos).sort(), filtrosPBI.cargo);
+        }
+
+        function preencherSelectPreservando(selectId, labelTodos, opcoes, valorAtual) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            sel.innerHTML = `<option value="">${labelTodos}</option>`;
+            opcoes.forEach(op => {
+                const opt = document.createElement("option");
+                opt.value = op;
+                opt.innerText = op;
+                if (op === valorAtual) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            sel.classList.toggle("has-value", Boolean(valorAtual));
+        }
+
+        function renderizarFlagsData() {
+            const container = document.getElementById("pbi-date-flags-container");
+            container.innerHTML = "";
+
+            if (listaDiasDisponiveis.length === 0) {
+                container.innerHTML = `<span style="font-size:0.7rem; color:#64748b; grid-column: span 3;">Sem datas registradas</span>`;
+                return;
+            }
+
+            listaDiasDisponiveis.forEach(d => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "date-flag-btn";
+
+                if (filtrosPBI.data) {
+                    if (d.dt === filtrosPBI.data) {
+                        btn.classList.add("flag-selected");
+                    } else if (filtrosPBI.modoData === 'ATE' && d.dt < filtrosPBI.data) {
+                        btn.classList.add("flag-in-range");
+                    }
+                }
+
+                btn.innerHTML = `
+                    <span class="date-flag-day-num">Dia ${d.dia_num}</span>
+                    <span>${d.dt_br}</span>
+                `;
+                btn.onclick = () => toggleFlagData(d.dt);
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleFlagData(dtIso) {
+            filtrosPBI.data = (filtrosPBI.data === dtIso) ? null : dtIso;
+            renderizarFlagsData();
+            recalcularERenderizarTudo(false);
+        }
+
+        function alternarModoData() {
+            filtrosPBI.modoData = (filtrosPBI.modoData === 'ATE') ? 'EXATO' : 'ATE';
+            document.getElementById("btn-modo-data").innerText = (filtrosPBI.modoData === 'ATE') ? '⇄ Até o dia' : '⇄ Dia exato';
+            renderizarFlagsData();
+            if (filtrosPBI.data) {
+                recalcularERenderizarTudo(false);
+            }
+        }
+
+        function aplicarFiltroSelect(campo, valor) {
+            filtrosPBI[campo] = valor || '';
+            const mapIds = { filial: "select-filtro-filial", cc: "select-filtro-cc", cargo: "select-filtro-cargo" };
+            const el = document.getElementById(mapIds[campo]);
+            if (el) {
+                el.value = filtrosPBI[campo];
+                el.classList.toggle("has-value", Boolean(filtrosPBI[campo]));
+            }
+            recalcularERenderizarTudo(false);
+        }
+
+        function toggleFiltroPorCliqueGrafico(campo, valor) {
+            if (!valor) return;
+            const novoValor = (filtrosPBI[campo] === valor) ? '' : valor;
+            aplicarFiltroSelect(campo, novoValor);
+        }
+
+        function limparTodosFiltros() {
+            filtrosPBI.data = null;
+            filtrosPBI.filial = '';
+            filtrosPBI.cc = '';
+            filtrosPBI.cargo = '';
+
+            document.getElementById("select-filtro-filial").value = "";
+            document.getElementById("select-filtro-filial").classList.remove("has-value");
+            document.getElementById("select-filtro-cc").value = "";
+            document.getElementById("select-filtro-cc").classList.remove("has-value");
+            document.getElementById("select-filtro-cargo").value = "";
+            document.getElementById("select-filtro-cargo").classList.remove("has-value");
+
+            renderizarFlagsData();
+            recalcularERenderizarTudo(false);
+        }
+
+        function atualizarBarraChipsFiltros() {
+            const bar = document.getElementById("active-filters-bar");
+            const btnLimpar = document.getElementById("btn-limpar-filtros");
+            const chips = [];
+
+            if (filtrosPBI.data) {
+                const infoDia = listaDiasDisponiveis.find(x => x.dt === filtrosPBI.data);
+                const prefixo = filtrosPBI.modoData === 'ATE' ? 'Evolução até' : 'Data exata';
+                const labelDia = infoDia ? `Dia ${infoDia.dia_num} (${infoDia.dt_br})` : filtrosPBI.data;
+                chips.push({ label: `${prefixo}: ${labelDia}`, acao: () => toggleFlagData(filtrosPBI.data) });
+            }
+            if (filtrosPBI.filial) {
+                chips.push({ label: `Filial: ${filtrosPBI.filial}`, acao: () => aplicarFiltroSelect('filial', '') });
+            }
+            if (filtrosPBI.cc) {
+                chips.push({ label: `Centro de Custo: ${filtrosPBI.cc}`, acao: () => aplicarFiltroSelect('cc', '') });
+            }
+            if (filtrosPBI.cargo) {
+                chips.push({ label: `Cargo: ${filtrosPBI.cargo}`, acao: () => aplicarFiltroSelect('cargo', '') });
+            }
+
+            if (chips.length === 0) {
+                bar.classList.add("hidden-section");
+                btnLimpar.classList.add("hidden-section");
+                bar.innerHTML = "";
+                return;
+            }
+
+            btnLimpar.classList.remove("hidden-section");
+            bar.classList.remove("hidden-section");
+            bar.innerHTML = `<span class="active-filters-label">Filtros Ativos:</span>`;
+
+            chips.forEach(c => {
+                const span = document.createElement("span");
+                span.className = "filter-chip-pbi";
+                span.innerHTML = `${c.label} <span class="filter-chip-close" title="Remover filtro">✕</span>`;
+                span.querySelector(".filter-chip-close").onclick = c.acao;
+                bar.appendChild(span);
+            });
+        }
+
+        /* =========================================================================
+           AJUSTE PRINT 3: ALTERNAR TIPO DO GRÁFICO DE FILIAL (BARRAS <-> PIZZA)
+           ========================================================================= */
+        function alternarTipoGraficoFilial() {
+            tipoGraficoFilialAtual = (tipoGraficoFilialAtual === 'bar') ? 'pie' : 'bar';
+
+            const btnTexto = document.getElementById("txt-toggle-tipo-filial");
+            const subTitulo = document.getElementById("sub-ranking-filial");
+
+            if (tipoGraficoFilialAtual === 'pie') {
+                btnTexto.innerText = "Mudar para Gráfico de Barras";
+                subTitulo.innerText = "Distribuição proporcional de colaboradores inscritos por unidade / filial (Pizza)";
+            } else {
+                btnTexto.innerText = "Mudar para Gráfico de Pizza";
+                subTitulo.innerText = "Colaboradores inscritos vs. retiradas efetuadas por unidade / filial";
+            }
+
+            if (dashCalculadoAtual) {
+                renderizarGraficoFilialDinamico(dashCalculadoAtual.visao_geral.ranking_filial, true);
+            }
+        }
+
+        function renderizarGraficoFilialDinamico(dadosFilial, forcarRecriar = false) {
+            const labels = dadosFilial?.labels || [];
+            const inscritos = dadosFilial?.inscritos || [];
+            const baixas = dadosFilial?.baixas || [];
+
+            if (tipoGraficoFilialAtual === 'pie') {
+                if (chartsInstances["rankingFilial"]) {
+                    chartsInstances["rankingFilial"].destroy();
+                }
+
+                chartsInstances["rankingFilial"] = new ApexCharts(document.querySelector("#chart-ranking-filial"), {
+                    chart: {
+                        type: 'pie',
+                        height: 340,
+                        fontFamily: 'inherit',
+                        events: {
+                            dataPointSelection: function(event, chartContext, config) {
+                                const filialClicada = config.w.config.labels[config.dataPointIndex];
+                                toggleFiltroPorCliqueGrafico('filial', filialClicada);
+                            }
+                        }
+                    },
+                    labels: labels,
+                    series: inscritos,
+                    colors: ['#0284c7', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#14b8a6', '#f43f5e', '#8b5cf6', '#06b6d4', '#84cc16', '#64748b'],
+                    legend: {
+                        position: 'right',
+                        fontWeight: 700,
+                        fontSize: '12px'
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            const qtd = opts.w.config.series[opts.seriesIndex];
+                            return val >= 3 ? `${qtd} (${val.toFixed(1)}%)` : '';
+                        }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(val, opts) {
+                                const idx = opts.seriesIndex;
+                                const bx = baixas[idx] || 0;
+                                return `${val} inscritos | ${bx} retiradas efetuadas`;
+                            }
+                        }
+                    },
+                    responsive: [{
+                        breakpoint: 768,
+                        options: {
+                            legend: { position: 'bottom' }
+                        }
+                    }]
+                });
+                chartsInstances["rankingFilial"].render();
+            } else {
+                renderizarBarDuplaHorizontal("rankingFilial", "#chart-ranking-filial", dadosFilial, "filial", forcarRecriar, 330);
+            }
+        }
+
+        /* =========================================================================
+           MOTOR DE REAGREGAÇÃO INSTANTÂNEA (CROSS-FILTERING POWER BI)
+           ========================================================================= */
+        function filtrarBaseAnalitica() {
+            const base = dashPayloadBruto?.base_analitica || [];
+            return base.filter(r => {
+                if (filtrosPBI.data) {
+                    if (!r.dt) return false;
+                    if (filtrosPBI.modoData === 'ATE' && r.dt > filtrosPBI.data) return false;
+                    if (filtrosPBI.modoData === 'EXATO' && r.dt !== filtrosPBI.data) return false;
+                }
+                if (filtrosPBI.filial && r.filial !== filtrosPBI.filial) return false;
+                if (filtrosPBI.cc && r.cc !== filtrosPBI.cc) return false;
+                if (filtrosPBI.cargo && r.cargo !== filtrosPBI.cargo) return false;
+                return true;
+            });
+        }
+
+        function recalcularERenderizarTudo(primeiraCarga = false) {
+            if (!dashPayloadBruto) return;
+
+            atualizarBarraChipsFiltros();
+
+            const registrosFiltrados = filtrarBaseAnalitica();
+            listaColaboradoresFiltradosAtual = registrosFiltrados;
+
+            const opStats = dashPayloadBruto.operacao_stats || {};
+            const modelosOficiais = dashPayloadBruto.modelos_oficiais || [];
+            const saldoBalcaoMapa = dashPayloadBruto.saldo_balcao_mapa || {};
+            const totalQuadro = dashPayloadBruto.total_quadro_funcionarios || 9600;
+
+            let kitsPrevistos = 0;
+            let kitsEntregues = 0;
+            let kitsFaltantes = 0;
+            let titularesPendentesOuParciais = 0;
+
+            const colabsUnicos = new Set();
+            const inscricoesPorDia = {};
+
+            const aggCargo = {};
+            const aggCC = {};
+            const aggFilial = {};
+
+            const etapasStats = {
+                "Educação Infantil": { entregues: 0, faltantes: 0 },
+                "Ensino Fundamental 1": { entregues: 0, faltantes: 0 },
+                "Ensino Fundamental 2": { entregues: 0, faltantes: 0 },
+                "Ensino Médio": { entregues: 0, faltantes: 0 },
+                "Sobra / Não Reservado": { entregues: 0, faltantes: 0 }
+            };
+
+            const faltantesPorModelo = {};
+            const entreguesPorModelo = {};
+            modelosOficiais.forEach(m => {
+                faltantesPorModelo[m] = 0;
+                entreguesPorModelo[m] = 0;
+            });
+
+            const registrarDim = (mapa, chave, uid, qtdBaixas) => {
+                const k = chave || "NÃO INFORMADO";
+                if (!mapa[k]) mapa[k] = { colabs: new Set(), baixas: 0 };
+                mapa[k].colabs.add(uid);
+                mapa[k].baixas += qtdBaixas;
+            };
+
+            registrosFiltrados.forEach(r => {
+                kitsPrevistos += r.qtd;
+                kitsEntregues += r.ent;
+                kitsFaltantes += (r.qtd - r.ent);
+
+                if (r.ent < r.qtd) {
+                    titularesPendentesOuParciais += 1;
+                }
+
+                colabsUnicos.add(r.uid);
+
+                if (r.dt) {
+                    inscricoesPorDia[r.dt] = (inscricoesPorDia[r.dt] || 0) + 1;
+                }
+
+                registrarDim(aggCargo, r.cargo, r.uid, r.ent);
+                registrarDim(aggCC, r.cc, r.uid, r.ent);
+                registrarDim(aggFilial, r.filial, r.uid, r.ent);
+
+                (r.kits || []).forEach(kItem => {
+                    const et = etapasStats[kItem.etapa] ? kItem.etapa : "Sobra / Não Reservado";
+                    if (kItem.ok === 1) {
+                        etapasStats[et].entregues += 1;
+                        if (entreguesPorModelo[kItem.mod] !== undefined) {
+                            entreguesPorModelo[kItem.mod] += 1;
+                        }
+                    } else {
+                        etapasStats[et].faltantes += 1;
+                        if (faltantesPorModelo[kItem.mod] !== undefined) {
+                            faltantesPorModelo[kItem.mod] += 1;
+                        }
+                    }
+                });
+            });
+
+            const montarRanking = (mapaDim, limite = 10) => {
+                const arr = Object.entries(mapaDim)
+                    .map(([nome, obj]) => ({
+                        nome,
+                        inscritos: obj.colabs.size,
+                        baixas: obj.baixas
+                    }))
+                    .sort((a, b) => (b.inscritos - a.inscritos) || (b.baixas - a.baixas))
+                    .slice(0, limite);
+
+                return {
+                    labels: arr.map(x => x.nome),
+                    inscritos: arr.map(x => x.inscritos),
+                    baixas: arr.map(x => x.baixas)
+                };
+            };
+
+            const datasOrdenadas = Object.keys(inscricoesPorDia).sort();
+            const temporalLabels = datasOrdenadas.map(dtIso => {
+                const info = listaDiasDisponiveis.find(x => x.dt === dtIso);
+                return info ? info.dt_br : dtIso;
+            });
+            const temporalValores = datasOrdenadas.map(dtIso => inscricoesPorDia[dtIso]);
+
+            const totalInscritos = colabsUnicos.size;
+            const naoInscritos = Math.max(0, totalQuadro - totalInscritos);
+
+            const mediaDia = opStats.media_por_dia || 0;
+            const diasProjecao = mediaDia > 0 ? Math.ceil(kitsFaltantes / mediaDia) : null;
+            const pctConclusao = kitsPrevistos > 0 ? Number(((kitsEntregues / kitsPrevistos) * 100).toFixed(1)) : 0;
+
+            const modelosExecucao = [];
+            modelosOficiais.forEach(m => {
+                const faltam = faltantesPorModelo[m] || 0;
+                const entreg = entreguesPorModelo[m] || 0;
+                const balcao = saldoBalcaoMapa[m] || 0;
+                if (faltam > 0 || entreg > 0 || balcao > 0) {
+                    modelosExecucao.push({
+                        modelo: m,
+                        entregues: entreg,
+                        faltantes: faltam,
+                        saldo_balcao: balcao,
+                        cobertura_ok: balcao >= faltam
+                    });
+                }
+            });
+
+            dashCalculadoAtual = {
+                kpis: {
+                    kits_previstos: kitsPrevistos,
+                    kits_entregues: kitsEntregues,
+                    kits_faltantes: kitsFaltantes,
+                    pct_conclusao: pctConclusao,
+                    media_por_dia: mediaDia,
+                    dias_operacao: opStats.dias_operacao || 0,
+                    media_por_login: opStats.media_por_login || 0,
+                    operadores_ativos: opStats.operadores_ativos || 0,
+                    dias_projecao: diasProjecao,
+                    titulares_pendentes_total: titularesPendentesOuParciais
+                },
+                visao_geral: {
+                    esperado_vs_baixas: [kitsPrevistos, kitsEntregues],
+                    inscritos_vs_quadro: [totalInscritos, naoInscritos],
+                    temporal_labels: temporalLabels,
+                    temporal_valores: temporalValores,
+                    ranking_cargo: montarRanking(aggCargo, 10),
+                    ranking_cc: montarRanking(aggCC, 10),
+                    ranking_filial: montarRanking(aggFilial, 15)
+                },
+                execucao: {
+                    etapas: etapasStats,
+                    modelos: modelosExecucao
+                }
+            };
+
+            renderizarVisaoGeral(dashCalculadoAtual, primeiraCarga);
+            renderizarRitmoExpedicao(dashPayloadBruto, primeiraCarga);
+            renderizarGraficoExecucao(dashCalculadoAtual, primeiraCarga);
+        }
+
+        /* =========================================================================
+           AUXILIAR DE BARRAS DUPLAS COM CLIQUE INTERATIVO (CROSS-FILTER PBI)
+           ========================================================================= */
+        function renderizarBarDuplaHorizontal(chaveChart, seletorHtml, dadosRanking, campoFiltro, primeiraCarga, altura = 350) {
+            const labels = dadosRanking?.labels || [];
+            const seriesData = [
+                { name: 'Colaboradores Inscritos', data: dadosRanking?.inscritos || [] },
+                { name: 'Retiradas Efetuadas', data: dadosRanking?.baixas || [] }
+            ];
+
+            if (chartsInstances[chaveChart] && !primeiraCarga) {
+                chartsInstances[chaveChart].updateOptions({ xaxis: { categories: labels } });
+                chartsInstances[chaveChart].updateSeries(seriesData);
+            } else {
+                if (chartsInstances[chaveChart]) chartsInstances[chaveChart].destroy();
+                chartsInstances[chaveChart] = new ApexCharts(document.querySelector(seletorHtml), {
+                    chart: {
+                        type: 'bar',
+                        height: altura,
+                        toolbar: { show: false },
+                        fontFamily: 'inherit',
+                        events: {
+                            dataPointSelection: function(event, chartContext, config) {
+                                const categoriaClicada = config.w.config.xaxis.categories[config.dataPointIndex];
+                                toggleFiltroPorCliqueGrafico(campoFiltro, categoriaClicada);
+                            }
+                        }
+                    },
+                    series: seriesData,
+                    xaxis: { categories: labels },
+                    colors: ['#0284c7', '#10b981'],
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            borderRadius: 4,
+                            barHeight: '72%',
+                            dataLabels: { position: 'top' }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        offsetX: 18,
+                        style: { fontSize: '10px', fontWeight: 700, colors: ['#334155'] }
+                    },
+                    stroke: { show: true, width: 1, colors: ['#fff'] },
+                    legend: { position: 'top', horizontalAlign: 'left', fontWeight: 700 },
+                    tooltip: { shared: true, intersect: false }
+                });
+                chartsInstances[chaveChart].render();
+            }
+        }
+
+        /* =========================================================================
+           AJUSTE PRINT 4: EXIBIDOR NOMINAL DE COLABORADORES FILTRADOS
+           ========================================================================= */
+        function filtrarTabelaNomesColaboradores() {
+            const termo = document.getElementById("input-busca-nomes-tabela").value.toLowerCase().trim();
+            const tbody = document.getElementById("tbody-exibidor-nomes");
+            const badgeQtd = document.getElementById("badge-qtd-nomes-exibidos");
+            const subTexto = document.getElementById("sub-exibidor-nomes");
+
+            const filtrados = !termo
+                ? listaColaboradoresFiltradosAtual
+                : listaColaboradoresFiltradosAtual.filter(r =>
+                    String(r.nome || "").toLowerCase().includes(termo) ||
+                    String(r.id || "").toLowerCase().includes(termo) ||
+                    String(r.cargo || "").toLowerCase().includes(termo) ||
+                    String(r.cc || "").toLowerCase().includes(termo) ||
+                    String(r.filial || "").toLowerCase().includes(termo)
+                );
+
+            const qtdPessoas = filtrados.length;
+            badgeQtd.innerText = qtdPessoas === 1 ? "1 pessoa" : `${qtdPessoas} pessoas`;
+
+            if (filtrosPBI.cargo || filtrosPBI.filial || filtrosPBI.cc || filtrosPBI.data) {
+                subTexto.innerText = `Exibindo ${qtdPessoas} colaborador(es) correspondente(s) aos filtros ativos`;
+            } else {
+                subTexto.innerText = "Exibindo todos os colaboradores cadastrados (use os filtros ao lado para segmentar)";
+            }
+
+            tbody.innerHTML = "";
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: #64748b;">Nenhum colaborador encontrado para este filtro.</td></tr>`;
+                return;
+            }
+
+            // Ordena alfabeticamente pelo nome do colaborador
+            const ordenados = [...filtrados].sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR'));
+
+            ordenados.forEach(r => {
+                let statusBadge = `<span class="pill-badge pill-amber">Pendente</span>`;
+                if (r.ent >= r.qtd) {
+                    statusBadge = `<span class="pill-badge pill-green">Entregue</span>`;
+                } else if (r.ent > 0) {
+                    statusBadge = `<span class="pill-badge pill-blue">Parcial</span>`;
+                }
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${r.id}</strong></td>
+                    <td>
+                        <strong>${r.nome}</strong>
+                        <div style="font-size: 0.72rem; color: #64748b;">${r.pub} • Inscrito em ${r.dt_br}</div>
+                    </td>
+                    <td><small style="font-weight: 700; color: #334155;">${r.cargo}</small></td>
+                    <td><small style="color: #475569;">${r.cc}</small></td>
+                    <td><small style="font-weight: 600; color: #0284c7;">${r.filial}</small></td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;"><strong>${r.ent} / ${r.qtd}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportarNomesFiltradosExcel() {
+            if (!listaColaboradoresFiltradosAtual || listaColaboradoresFiltradosAtual.length === 0) return;
+
+            const headers = ["Cracha / ID", "Nome Colaborador", "Publico", "Data Inscricao", "Cargo", "Centro de Custo", "Filial", "Bolsas Entregues", "Bolsas Previstas", "Resumo Kits"];
+            const rows = listaColaboradoresFiltradosAtual.map(r => [
+                r.id, r.nome, r.pub, r.dt_br, r.cargo, r.cc, r.filial, r.ent, r.qtd, r.resumo
+            ]);
+
+            const escaparCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const conteudo = [
+                headers.map(escaparCsv).join(";"),
+                ...rows.map(linha => linha.map(escaparCsv).join(";"))
+            ].join("\r\n");
+
+            const blob = new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "colaboradores_filtrados_kits.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        /* =========================================================================
            RENDERIZAÇÃO ABA 1: VISÃO GERAL
            ========================================================================= */
         function renderizarVisaoGeral(data, primeiraCarga) {
             const k = data.kpis;
-            const ex = data.execucao;
+            const vg = data.visao_geral;
 
             document.getElementById("vg-entregues-txt").innerText = k.kits_entregues;
             document.getElementById("vg-previstos-txt").innerText = k.kits_previstos;
@@ -997,7 +1868,7 @@
             document.getElementById("vg-barra-progresso").style.width = `${Math.min(100, k.pct_conclusao)}%`;
 
             document.getElementById("kpi-faltantes").innerText = k.kits_faltantes;
-            document.getElementById("kpi-benef-pendentes").innerText = `${k.beneficiarios_pendentes + k.beneficiarios_parciais} titulares pendentes/parciais`;
+            document.getElementById("kpi-benef-pendentes").innerText = `${k.titulares_pendentes_total} titulares pendentes/parciais`;
 
             document.getElementById("kpi-media-dia").innerText = k.media_por_dia;
             document.getElementById("kpi-dias-ativos").innerText = `Em ${k.dias_operacao} dia(s) de operação`;
@@ -1007,90 +1878,107 @@
 
             document.getElementById("kpi-projecao-dias").innerText = k.dias_projecao !== null ? `${k.dias_projecao} dias` : "N/A";
 
-            document.getElementById("aud-entregues").innerText = `${k.beneficiarios_entregues} →`;
-            document.getElementById("sub-aud-entregues").innerText = `Corresponde a ${k.bolsas_titulares_entregues} bolsas entregues`;
-
-            document.getElementById("aud-parciais").innerText = `${k.beneficiarios_parciais} →`;
-            document.getElementById("sub-aud-parciais").innerText = `Faltam ${k.bolsas_titulares_parciais} bolsas para concluir`;
-
-            document.getElementById("aud-pendentes").innerText = `${k.beneficiarios_pendentes} →`;
-            document.getElementById("sub-aud-pendentes").innerText = `Aguardando retirada de ${k.bolsas_titulares_pendentes} bolsas`;
-
-            document.getElementById("aud-correcoes").innerText = `${k.correcoes_modelo} →`;
-            document.getElementById("aud-revogacoes").innerText = `${k.revogacoes_admin} →`;
-
-            document.getElementById("badge-pct-divergencia").innerText = `${k.pct_divergencia}% das saídas (${k.total_divergencias})`;
-            const tbodyTrocas = document.getElementById("tbody-top-trocas");
-            tbodyTrocas.innerHTML = "";
-            if (!ex.top_trocas || ex.top_trocas.length === 0) {
-                tbodyTrocas.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#64748b;">Nenhuma troca de modelo registrada.</td></tr>`;
+            // 1. Pizza: Qtd Retirada Esperada vs Qtd de Baixas Efetuadas
+            if (chartsInstances["esperadoVsBaixas"] && !primeiraCarga) {
+                chartsInstances["esperadoVsBaixas"].updateSeries(vg.esperado_vs_baixas);
             } else {
-                ex.top_trocas.forEach(t => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td><strong>${t.troca}</strong></td>
-                        <td style="text-align: right;"><span class="pill-badge pill-amber">${t.qtd} und</span></td>
-                    `;
-                    tbodyTrocas.appendChild(tr);
+                if (chartsInstances["esperadoVsBaixas"]) chartsInstances["esperadoVsBaixas"].destroy();
+                chartsInstances["esperadoVsBaixas"] = new ApexCharts(document.querySelector("#chart-esperado-vs-baixas"), {
+                    chart: { type: 'pie', height: 270, fontFamily: 'inherit' },
+                    labels: ['Retirada Esperada', 'Baixas Efetuadas'],
+                    series: vg.esperado_vs_baixas,
+                    colors: ['#0284c7', '#10b981'],
+                    legend: { position: 'bottom', fontWeight: 700 },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            return opts.w.config.series[opts.seriesIndex] + " (" + val.toFixed(1) + "%)";
+                        }
+                    }
                 });
+                chartsInstances["esperadoVsBaixas"].render();
             }
 
-            const pubSeries = Object.values(ex.publico);
-            const pubLabels = Object.keys(ex.publico);
-            if (chartsInstances["publico"] && !primeiraCarga) {
-                chartsInstances["publico"].updateSeries(pubSeries);
+            // 2. Pizza: Inscritos vs Quadro Total (9.600)
+            if (chartsInstances["inscritosVsQuadro"] && !primeiraCarga) {
+                chartsInstances["inscritosVsQuadro"].updateSeries(vg.inscritos_vs_quadro);
             } else {
-                if (chartsInstances["publico"]) chartsInstances["publico"].destroy();
-                chartsInstances["publico"] = new ApexCharts(document.querySelector("#chart-publico-donut"), {
-                    chart: { type: 'donut', height: 260, fontFamily: 'inherit', animations: { enabled: true } },
-                    labels: pubLabels,
-                    series: pubSeries,
-                    colors: ['#10b981', '#0284c7'],
-                    legend: { position: 'bottom', fontWeight: 600 },
-                    dataLabels: { enabled: true }
+                if (chartsInstances["inscritosVsQuadro"]) chartsInstances["inscritosVsQuadro"].destroy();
+                chartsInstances["inscritosVsQuadro"] = new ApexCharts(document.querySelector("#chart-inscritos-vs-quadro"), {
+                    chart: { type: 'pie', height: 270, fontFamily: 'inherit' },
+                    labels: ['Colaboradores Inscritos', 'Não Inscritos'],
+                    series: vg.inscritos_vs_quadro,
+                    colors: ['#6366f1', '#cbd5e1'],
+                    legend: { position: 'bottom', fontWeight: 700 },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            return opts.w.config.series[opts.seriesIndex] + " (" + val.toFixed(1) + "%)";
+                        }
+                    }
                 });
-                chartsInstances["publico"].render();
+                chartsInstances["inscritosVsQuadro"].render();
             }
 
-            const cotaSeries = Object.values(ex.tipo_cota);
-            const cotaLabels = Object.keys(ex.tipo_cota);
-            if (chartsInstances["cota"] && !primeiraCarga) {
-                chartsInstances["cota"].updateSeries(cotaSeries);
+            // 3. Gráfico Temporal: Evolução de Inscrições por Dia
+            const subTemp = document.getElementById("sub-evolucao-temporal");
+            if (filtrosPBI.data) {
+                const infoDia = listaDiasDisponiveis.find(x => x.dt === filtrosPBI.data);
+                subTemp.innerText = filtrosPBI.modoData === 'ATE'
+                    ? `Exibindo retrato acumulado das inscrições até o Dia ${infoDia?.dia_num || ''} (${infoDia?.dt_br || filtrosPBI.data})`
+                    : `Exibindo inscrições realizadas exclusivamente no Dia ${infoDia?.dia_num || ''} (${infoDia?.dt_br || filtrosPBI.data})`;
             } else {
-                if (chartsInstances["cota"]) chartsInstances["cota"].destroy();
-                chartsInstances["cota"] = new ApexCharts(document.querySelector("#chart-cota-donut"), {
-                    chart: { type: 'donut', height: 260, fontFamily: 'inherit', animations: { enabled: true } },
-                    labels: cotaLabels,
-                    series: cotaSeries,
-                    colors: ['#f59e0b', '#6366f1'],
-                    legend: { position: 'bottom', fontWeight: 600 },
-                    dataLabels: { enabled: true }
-                });
-                chartsInstances["cota"].render();
+                subTemp.innerText = "Quantidade de inscrições registradas por dia (clique em uma flag de data à esquerda para ver o retrato da época)";
             }
+
+            if (chartsInstances["inscricoesTemporal"] && !primeiraCarga) {
+                chartsInstances["inscricoesTemporal"].updateOptions({ xaxis: { categories: vg.temporal_labels } });
+                chartsInstances["inscricoesTemporal"].updateSeries([{ name: 'Inscrições no Dia', data: vg.temporal_valores }]);
+            } else {
+                if (chartsInstances["inscricoesTemporal"]) chartsInstances["inscricoesTemporal"].destroy();
+                chartsInstances["inscricoesTemporal"] = new ApexCharts(document.querySelector("#chart-inscricoes-temporal"), {
+                    chart: { type: 'area', height: 280, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [{ name: 'Inscrições no Dia', data: vg.temporal_valores }],
+                    xaxis: { categories: vg.temporal_labels },
+                    colors: ['#0284c7'],
+                    stroke: { curve: 'smooth', width: 3 },
+                    fill: {
+                        type: 'gradient',
+                        gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.05 }
+                    },
+                    markers: { size: 4 },
+                    dataLabels: {
+                        enabled: true,
+                        style: { fontSize: '11px', fontWeight: 700 }
+                    },
+                    yaxis: { title: { text: 'Qtd de Inscrições' }, min: 0 }
+                });
+                chartsInstances["inscricoesTemporal"].render();
+            }
+
+            // 4 e 5. Rankings de Barras Duplas: Cargo e Centro de Custo
+            renderizarBarDuplaHorizontal("rankingCargo", "#chart-ranking-cargo", vg.ranking_cargo, "cargo", primeiraCarga, 360);
+            renderizarBarDuplaHorizontal("rankingCC", "#chart-ranking-cc", vg.ranking_cc, "cc", primeiraCarga, 360);
+
+            // 6. Ranking por Filial (Barras Duplas ou Pizza conforme botão no canto inferior esquerdo)
+            renderizarGraficoFilialDinamico(vg.ranking_filial, primeiraCarga);
+
+            // 7. Exibidor Nominal de Colaboradores Filtrados (Print 4)
+            filtrarTabelaNomesColaboradores();
         }
 
         /* =========================================================================
-           RENDERIZAÇÃO ABA 2: RITMO DE EXPEDIÇÃO (BARRA TOTAL + LINHAS POR USUÁRIO)
+           RENDERIZAÇÃO ABA 2: RITMO DE EXPEDIÇÃO
            ========================================================================= */
         function renderizarRitmoExpedicao(data, primeiraCarga) {
-            const r = data.ritmo;
+            const r = data.ritmo || {};
 
-            // Monta série mista: 1ª série = Coluna (Total Diário), demais séries = Linhas (Cada Operador)
             const comboSeries = [
-                {
-                    name: 'Total Diário (Geral)',
-                    type: 'column',
-                    data: r.dias_valores || []
-                }
+                { name: 'Total Diário (Geral)', type: 'column', data: r.dias_valores || [] }
             ];
 
             (r.series_operadores || []).forEach(op => {
-                comboSeries.push({
-                    name: op.nome,
-                    type: 'line',
-                    data: op.dados || []
-                });
+                comboSeries.push({ name: op.nome, type: 'line', data: op.dados || [] });
             });
 
             const paletaCombo = ['#cbd5e1', '#0284c7', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
@@ -1105,42 +1993,16 @@
             } else {
                 if (chartsInstances["ritmoDiario"]) chartsInstances["ritmoDiario"].destroy();
                 chartsInstances["ritmoDiario"] = new ApexCharts(document.querySelector("#chart-ritmo-diario"), {
-                    chart: {
-                        type: 'line',
-                        height: 320,
-                        toolbar: { show: false },
-                        fontFamily: 'inherit'
-                    },
+                    chart: { type: 'line', height: 320, toolbar: { show: false }, fontFamily: 'inherit' },
                     series: comboSeries,
                     xaxis: { categories: r.dias_labels },
                     colors: paletaCombo,
-                    stroke: {
-                        width: largurasStroke,
-                        curve: 'smooth'
-                    },
-                    plotOptions: {
-                        bar: {
-                            columnWidth: '38%',
-                            borderRadius: 6
-                        }
-                    },
-                    markers: {
-                        size: 5,
-                        hover: { size: 7 }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        style: { fontSize: '11px', fontWeight: 700 }
-                    },
-                    legend: {
-                        position: 'top',
-                        horizontalAlign: 'left',
-                        fontWeight: 700
-                    },
-                    yaxis: {
-                        title: { text: 'Qtd de Bolsas Baixadas' },
-                        min: 0
-                    }
+                    stroke: { width: largurasStroke, curve: 'smooth' },
+                    plotOptions: { bar: { columnWidth: '38%', borderRadius: 6 } },
+                    markers: { size: 5, hover: { size: 7 } },
+                    dataLabels: { enabled: true, style: { fontSize: '11px', fontWeight: 700 } },
+                    legend: { position: 'top', horizontalAlign: 'left', fontWeight: 700 },
+                    yaxis: { title: { text: 'Qtd de Bolsas Baixadas' }, min: 0 }
                 });
                 chartsInstances["ritmoDiario"].render();
             }
@@ -1256,141 +2118,6 @@
                 `;
                 tbodyMod.appendChild(tr);
             });
-        }
-
-        /* =========================================================================
-           MODAL DE DETALHAMENTO NOMINAL (AUDITORIA & STATUS DOS TITULARES)
-           ========================================================================= */
-        function abrirModalAuditoria(tipo) {
-            if (!dashDadosGlobais) return;
-            audModalTipoAtual = tipo;
-            document.getElementById("input-filtro-auditoria").value = "";
-            atualizarDadosModalAuditoria();
-            document.getElementById("modal-auditoria-detalhe").classList.remove("hidden-section");
-        }
-
-        function atualizarDadosModalAuditoria() {
-            if (!dashDadosGlobais || !audModalTipoAtual) return;
-            const listas = dashDadosGlobais.execucao.listas_auditoria || {};
-            const tituloEl = document.getElementById("modal-aud-titulo");
-            const subtituloEl = document.getElementById("modal-aud-subtitulo");
-            const thead = document.getElementById("thead-modal-auditoria");
-
-            if (audModalTipoAtual === 'ENTREGUE') {
-                tituloEl.innerText = "Titulares 100% Entregues";
-                subtituloEl.innerText = "Colaboradores e Jovens Aprendizes que já retiraram todas as suas bolsas";
-                thead.innerHTML = `<tr><th>Crachá / ID</th><th>Titular</th><th>Público</th><th style="text-align:center;">Bolsas</th><th>Resumo dos Kits</th></tr>`;
-                audModalDadosBrutos = listas.ENTREGUE || [];
-            } else if (audModalTipoAtual === 'PARCIAL') {
-                tituloEl.innerText = "Titulares com Entrega Parcial";
-                subtituloEl.innerText = "Retiraram parte das bolsas e ainda possuem saldo pendente";
-                thead.innerHTML = `<tr><th>Crachá / ID</th><th>Titular</th><th>Público</th><th style="text-align:center;">Progresso</th><th>Resumo dos Kits</th></tr>`;
-                audModalDadosBrutos = listas.PARCIAL || [];
-            } else if (audModalTipoAtual === 'PENDENTE') {
-                tituloEl.innerText = "Titulares Pendentes (Não Compareceram)";
-                subtituloEl.innerText = "Beneficiários que ainda não retiraram nenhuma bolsa";
-                thead.innerHTML = `<tr><th>Crachá / ID</th><th>Titular</th><th>Público</th><th style="text-align:center;">Qtd Prevista</th><th>Resumo dos Kits</th></tr>`;
-                audModalDadosBrutos = listas.PENDENTE || [];
-            } else if (audModalTipoAtual === 'CORRECOES') {
-                tituloEl.innerText = "Correções de Modelo (SAIDA_CORRECAO)";
-                subtituloEl.innerText = "Histórico de trocas de modelo corrigidas pela administração";
-                thead.innerHTML = `<tr><th>Data / Hora</th><th>Modelo</th><th>Detalhes da Operação</th></tr>`;
-                audModalDadosBrutos = listas.CORRECOES || [];
-            } else if (audModalTipoAtual === 'REVOGACOES') {
-                tituloEl.innerText = "Revogações Administrativas (REVOGACAO_ADMIN)";
-                subtituloEl.innerText = "Baixas canceladas e estornadas ao estoque";
-                thead.innerHTML = `<tr><th>Data / Hora</th><th>Modelo</th><th>Detalhes da Operação</th></tr>`;
-                audModalDadosBrutos = listas.REVOGACOES || [];
-            }
-
-            filtrarModalAuditoria();
-        }
-
-        function filtrarModalAuditoria() {
-            const termo = document.getElementById("input-filtro-auditoria").value.toLowerCase().trim();
-            const tbody = document.getElementById("tbody-modal-auditoria");
-            const rodape = document.getElementById("rodape-modal-auditoria");
-
-            if (!termo) {
-                audModalDadosFiltrados = [...audModalDadosBrutos];
-            } else {
-                audModalDadosFiltrados = audModalDadosBrutos.filter(item =>
-                    Object.values(item).some(v => String(v || "").toLowerCase().includes(termo))
-                );
-            }
-
-            tbody.innerHTML = "";
-
-            if (audModalDadosFiltrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 22px; color: #64748b;">Nenhum registro encontrado.</td></tr>`;
-                rodape.innerText = "0 registros";
-                return;
-            }
-
-            if (['ENTREGUE', 'PARCIAL', 'PENDENTE'].includes(audModalTipoAtual)) {
-                let somaBolsas = 0;
-                audModalDadosFiltrados.forEach(r => {
-                    somaBolsas += (r.qtd_total || 1);
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td><strong>${r.id_colaborador}</strong></td>
-                        <td><strong>${r.nome_titular}</strong></td>
-                        <td><span class="pill-badge pill-blue">${r.tipo_publico}</span></td>
-                        <td style="text-align:center;"><strong>${r.qtd_entregue} / ${r.qtd_total}</strong></td>
-                        <td><small style="color:#475569;">${r.resumo}</small></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                rodape.innerText = `${audModalDadosFiltrados.length} titulares • Total: ${somaBolsas} bolsas`;
-            } else {
-                audModalDadosFiltrados.forEach(r => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td><small>${r.data}</small></td>
-                        <td><span class="pill-badge pill-amber">${r.modelo}</span></td>
-                        <td>${r.observacao}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                rodape.innerText = `${audModalDadosFiltrados.length} ocorrências registradas`;
-            }
-        }
-
-        function fecharModalAuditoria() {
-            document.getElementById("modal-auditoria-detalhe").classList.add("hidden-section");
-            audModalTipoAtual = null;
-        }
-
-        function exportarModalAuditoriaExcel() {
-            if (!audModalDadosFiltrados || audModalDadosFiltrados.length === 0) return;
-
-            let filename = `auditoria_${audModalTipoAtual.toLowerCase()}.csv`;
-            let headers = [];
-            let rows = [];
-
-            if (['ENTREGUE', 'PARCIAL', 'PENDENTE'].includes(audModalTipoAtual)) {
-                headers = ["Cracha / ID", "Titular", "Publico", "Bolsas Entregues", "Bolsas Previstas", "Resumo"];
-                rows = audModalDadosFiltrados.map(r => [r.id_colaborador, r.nome_titular, r.tipo_publico, r.qtd_entregue, r.qtd_total, r.resumo]);
-            } else {
-                headers = ["Data / Hora", "Modelo", "Observacao"];
-                rows = audModalDadosFiltrados.map(r => [r.data, r.modelo, r.observacao]);
-            }
-
-            const escaparCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-            const conteudo = [
-                headers.map(escaparCsv).join(";"),
-                ...rows.map(linha => linha.map(escaparCsv).join(";"))
-            ].join("\r\n");
-
-            const blob = new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
         }
     </script>
 </body>
