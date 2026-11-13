@@ -3,302 +3,2121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Gerencial - Kits Escolares</title>
+    <title>Dashboard Executivo - Kits Escolares</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cartao_retirada.css') }}">
-    <!-- Importação do Chart.js para gráficos interativos de nível Power BI -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
-        .main-container {
-            max-width: 1100px !important;
-            width: 95% !important;
-            margin: 15px auto !important;
-            padding-bottom: 90px !important;
+        body {
+            background-color: #f1f5f9;
         }
 
-        .metrics-grid {
+        .dash-wrapper {
+            max-width: 1400px;
+            width: 97%;
+            margin: 18px auto 95px auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: 285px 1fr;
+            gap: 22px;
+            align-items: start;
         }
 
-        .metric-card {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
-            border: 1px solid #e2e8f0;
+        @media (max-width: 980px) {
+            .dash-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* =========================================================================
+           SIDEBAR EXECUTIVA DARK SLATE + PAINEL DE SEGMENTADORES (ESTILO POWER BI)
+           ========================================================================= */
+        .dash-sidebar {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 18px;
+            padding: 18px 14px;
+            box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.25);
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            color: #f8fafc;
+        }
+
+        .dash-sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .dash-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
+        .sidebar-brand-box {
+            padding: 4px 10px 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 12px;
+        }
+
+        .sidebar-brand-title {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            color: #38bdf8;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .sidebar-brand-sub {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .sidebar-nav-list {
             display: flex;
             flex-direction: column;
+            gap: 5px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-nav-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 10px 12px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #94a3b8;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-btn svg {
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+            stroke-width: 2.2;
+            color: #64748b;
+            transition: color 0.2s ease;
+        }
+
+        .sidebar-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #f8fafc;
+        }
+
+        .sidebar-nav-btn:hover svg {
+            color: #38bdf8;
+        }
+
+        .sidebar-nav-btn.active {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.2) 0%, rgba(2, 132, 199, 0.15) 100%);
+            color: #ffffff;
+            border-color: rgba(16, 185, 129, 0.45);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-nav-btn.active svg {
+            color: #34d399;
+        }
+
+        /* =========================================================================
+           PAINEL DE FILTROS INTERATIVOS (SLICERS PBI) NA SIDEBAR
+           ========================================================================= */
+        .pbi-slicers-section {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pbi-slicers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+        }
+
+        .pbi-slicers-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
             gap: 6px;
+        }
+
+        .btn-pbi-clear {
+            background: #ef4444;
+            border: 1px solid #f87171;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-pbi-clear:hover {
+            background: #dc2626;
+        }
+
+        .pbi-slicer-card {
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 11px;
+        }
+
+        .pbi-slicer-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 6px;
+        }
+
+        .pbi-slicer-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #cbd5e1;
+        }
+
+        /* AJUSTE PRINT 2: BOTÃO DE MODO DE DATA CLARO, SÓLIDO E IDENTIFICÁVEL */
+        .pbi-mode-toggle {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid #38bdf8;
+            padding: 4px 9px;
+            border-radius: 7px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+            transition: all 0.15s ease;
+        }
+
+        .pbi-mode-toggle:hover {
+            background: #0ea5e9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.45);
+        }
+
+        /* FLAGS DE DATA POR DIA (ESTILO PBI) */
+        .pbi-date-flags-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-height: 155px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .pbi-date-flags-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+        .pbi-date-flags-grid::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+        }
+
+        .date-flag-btn {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            color: #cbd5e1;
+            border-radius: 7px;
+            padding: 5px 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.15;
+        }
+
+        .date-flag-btn:hover {
+            border-color: #38bdf8;
+            color: #ffffff;
+            background: rgba(2, 132, 199, 0.25);
+        }
+
+        .date-flag-btn.flag-in-range {
+            background: rgba(2, 132, 199, 0.28);
+            border-color: rgba(56, 189, 248, 0.6);
+            color: #e0f2fe;
+        }
+
+        .date-flag-btn.flag-selected {
+            background: linear-gradient(135deg, #0284c7, #10b981);
+            border-color: #34d399;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+        }
+
+        .date-flag-day-num {
+            font-size: 0.6rem;
+            opacity: 0.82;
+            font-weight: 600;
+        }
+
+        /* AJUSTE PRINT 1: CONTRASTE ALTO NOS SELECTS E OPTIONS DO FILTRO */
+        .pbi-select {
+            width: 100%;
+            background-color: #0f172a;
+            color: #f8fafc;
+            color-scheme: dark;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .pbi-select option {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 8px;
+            font-weight: 600;
+        }
+
+        .pbi-select:focus, .pbi-select.has-value {
+            border-color: #38bdf8;
+            background-color: #1e293b;
+        }
+
+        .sidebar-live-box {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .live-indicator-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #34d399;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .live-dot-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.8s infinite;
+        }
+
+        @keyframes pulseGreen {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .live-sub-text {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            display: block;
+        }
+
+        /* =========================================================================
+           ÁREA PRINCIPAL DO DASHBOARD + BARRA DE FILTROS ATIVOS (PBI CHIPS)
+           ========================================================================= */
+        .dash-main {
+            min-width: 0;
+        }
+
+        .dash-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .dash-topbar h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+            margin-bottom: 2px;
+        }
+
+        .dash-topbar p {
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+
+        .live-pill-header {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        }
+
+        /* BARRA DE FILTROS APLICADOS NO TOPO */
+        .active-filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            padding: 9px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .active-filters-label {
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: #0369a1;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .filter-chip-pbi {
+            background: #ffffff;
+            border: 1px solid #7dd3fc;
+            color: #0f172a;
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(2, 132, 199, 0.08);
+        }
+
+        .filter-chip-close {
+            color: #ef4444;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 0.82rem;
+            line-height: 1;
+        }
+
+        /* BARRA DE PROGRESSO GLOBAL */
+        .hero-progress-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
             position: relative;
             overflow: hidden;
         }
 
-        .metric-card::after {
+        .hero-progress-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 4px; height: 100%;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981 0%, #0284c7 100%);
         }
-        .card-blue::after { background: #0284c7; }
-        .card-green::after { background: #10b981; }
-        .card-amber::after { background: #f59e0b; }
-        .card-purple::after { background: #8b5cf6; }
 
-        .metric-title {
-            font-size: 0.78rem;
-            font-weight: 700;
+        .hero-progress-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hero-label {
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #64748b;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .hero-numbers {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .hero-numbers span.highlight-green {
+            color: #059669;
+        }
+
+        .hero-pct-badge {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
+            font-size: 0.98rem;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 12px;
+        }
+
+        .hero-track {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .hero-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981 0%, #0284c7 100%);
+            border-radius: 999px;
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 4 CARDS KPI EQUILIBRADOS */
+        .kpi-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .kpi-amber::before { background: #f59e0b; }
+        .kpi-emerald::before { background: #10b981; }
+        .kpi-blue::before { background: #0284c7; }
+        .kpi-indigo::before { background: #6366f1; }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.1);
+            border-color: #cbd5e1;
+        }
+
+        .kpi-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .kpi-card-label {
+            font-size: 0.72rem;
+            font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .metric-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #0f172a;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* Grid de Gráficos */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .chart-box {
-            background: #ffffff;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
-            border: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .chart-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .chart-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .canvas-container {
-            position: relative;
-            width: 100%;
-            height: 280px;
+        .kpi-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .live-indicator {
+        .kpi-card-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2.2;
+        }
+
+        .icon-emerald { background: #dcfce7; color: #15803d; }
+        .icon-amber { background: #fef3c7; color: #b45309; }
+        .icon-blue { background: #e0f2fe; color: #0369a1; }
+        .icon-indigo { background: #ede9fe; color: #5b21b6; }
+
+        .kpi-card-val {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 5px;
+        }
+
+        .kpi-card-sub {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* BENTO PANELS PARA GRÁFICOS E TABELAS */
+        .dash-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .panel-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px 22px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-6 { grid-column: span 6; }
+
+        @media (max-width: 1024px) {
+            .col-6 { grid-column: span 12; }
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .panel-title {
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .panel-subtitle {
+            font-size: 0.76rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .pbi-hint-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #0284c7;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 3px 8px;
+            border-radius: 8px;
+        }
+
+        /* AJUSTE PRINT 3: RODAPÉ DO CARD RANKING FILIAL COM BOTÃO DE TROCA DE GRÁFICO */
+        .chart-card-footer-left {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-switch-chart-type {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            padding: 7px 13px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            transition: all 0.18s ease;
+        }
+
+        .btn-switch-chart-type svg {
+            width: 15px;
+            height: 15px;
+            color: #0284c7;
+            stroke-width: 2.2;
+        }
+
+        .btn-switch-chart-type:hover {
+            background: #e0f2fe;
+            border-color: #0284c7;
+            color: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        /* TABELAS INTERNAS DO DASHBOARD */
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+        }
+
+        .dash-table th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.4px;
+            padding: 11px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .dash-table td {
+            padding: 11px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .dash-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+        .pill-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .pill-green { background: #dcfce7; color: #15803d; }
+        .pill-amber { background: #fef3c7; color: #b45309; }
+        .pill-red { background: #fee2e2; color: #b91c1c; }
+        .pill-blue { background: #e0f2fe; color: #0369a1; }
+
+        .hidden-section {
+            display: none !important;
+        }
+
+        /* AJUSTE PRINT 4: BARRA DE FERRAMENTAS DO EXIBIDOR DE NOMES */
+        .nomes-viewer-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-busca-nomes-inline {
+            padding: 7px 12px;
+            border-radius: 9px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.82rem;
+            min-width: 240px;
+            outline: none;
+            background: #f8fafc;
+            transition: all 0.15s ease;
+        }
+
+        .input-busca-nomes-inline:focus {
+            border-color: #0284c7;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+        }
+
+        .btn-export-excel-dash {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 7px 13px;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #10b981;
-            background: #dcfce7;
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1px solid #86efac;
+            transition: all 0.2s ease;
         }
 
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: pulse-dot 1.5s infinite;
-        }
-
-        @keyframes pulse-dot {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-
-        @media (max-width: 768px) {
-            .metrics-grid { grid-template-columns: 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
+        .btn-export-excel-dash:hover {
+            border-color: #0284c7;
+            color: #0284c7;
+            background: #f0f9ff;
         }
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <header class="app-header">
-            <div class="header-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-            </div>
-            <div style="flex: 1;">
-                <h2>Dashboard Gerencial</h2>
-                <p>Acompanhamento em tempo real das entregas e operações</p>
-            </div>
-            <div class="live-indicator">
-                <span class="live-dot"></span> Ao Vivo
-            </div>
-        </header>
 
-        <!-- Cartões de Métricas (KPIs) -->
-        <div class="metrics-grid">
-            <div class="metric-card card-blue">
-                <span class="metric-title">Total Cadastrados</span>
-                <span class="metric-value" id="kpi-total">--</span>
-            </div>
-            <div class="metric-card card-green">
-                <span class="metric-title">Entregas Concluídas</span>
-                <span class="metric-value" id="kpi-entregues">--</span>
-            </div>
-            <div class="metric-card card-amber">
-                <span class="metric-title">Pendentes / Aguardando</span>
-                <span class="metric-value" id="kpi-pendentes">--</span>
-            </div>
-            <div class="metric-card card-purple">
-                <span class="metric-title">Entregas Parciais</span>
-                <span class="metric-value" id="kpi-parciais">--</span>
-            </div>
-        </div>
-
-        <!-- Seção de Gráficos Interativos -->
-        <div class="charts-grid">
-            <!-- Gráfico 1: Status das Entregas (Rosca) -->
-            <div class="chart-box">
-                <div class="chart-header">
-                    <span class="chart-title">Status Geral das Entregas</span>
-                </div>
-                <div class="canvas-container">
-                    <canvas id="chartStatus"></canvas>
-                </div>
+    <div class="dash-wrapper">
+        <!-- MENU LATERAL + SEGMENTADORES POWER BI -->
+        <aside class="dash-sidebar">
+            <div class="sidebar-brand-box">
+                <span class="sidebar-brand-title">Painel Gerencial</span>
+                <span class="sidebar-brand-sub">Kits Escolares</span>
             </div>
 
-            <!-- Gráfico 2: Modelos Mais Baixados (Colunas) -->
-            <div class="chart-box">
-                <div class="chart-header">
-                    <span class="chart-title">Mochilas Mais Entregues</span>
+            <nav class="sidebar-nav-list">
+                <button type="button" class="sidebar-nav-btn active" id="nav-visao-geral" onclick="alternarAbaDashboard('VISAO_GERAL')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Visão Geral
+                </button>
+
+                <button type="button" class="sidebar-nav-btn" id="nav-ritmo-expedicao" onclick="alternarAbaDashboard('RITMO_EXPEDICAO')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Ritmo de Expedição
+                </button>
+
+                <button type="button" class="sidebar-nav-btn" id="nav-grafico-execucao" onclick="alternarAbaDashboard('GRAFICO_EXECUCAO')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Gráfico de Execução
+                </button>
+            </nav>
+
+            <!-- SEGMENTADORES INTERATIVOS (ESTILO POWER BI) -->
+            <div class="pbi-slicers-section">
+                <div class="pbi-slicers-header">
+                    <span class="pbi-slicers-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                        Filtros Interativos
+                    </span>
+                    <button type="button" id="btn-limpar-filtros" class="btn-pbi-clear hidden-section" onclick="limparTodosFiltros()">Limpar</button>
                 </div>
-                <div class="canvas-container">
-                    <canvas id="chartModelos"></canvas>
+
+                <!-- 1. FILTRO DE DATA (FLAGS POR DIA DE INSCRIÇÃO) -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Data Inscrição</span>
+                        <button type="button" id="btn-modo-data" class="pbi-mode-toggle" onclick="alternarModoData()" title="Clique para alternar entre acumulado até o dia ou somente o dia exato">
+                            ⇄ Até o dia
+                        </button>
+                    </div>
+                    <div id="pbi-date-flags-container" class="pbi-date-flags-grid">
+                        <span style="font-size:0.7rem; color:#64748b; grid-column: span 3;">Carregando dias...</span>
+                    </div>
+                </div>
+
+                <!-- 2. FILTRO POR FILIAL -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Filial</span>
+                    </div>
+                    <select id="select-filtro-filial" class="pbi-select" onchange="aplicarFiltroSelect('filial', this.value)">
+                        <option value="">Todas as Filiais</option>
+                    </select>
+                </div>
+
+                <!-- 3. FILTRO POR CENTRO DE CUSTO -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Centro de Custo</span>
+                    </div>
+                    <select id="select-filtro-cc" class="pbi-select" onchange="aplicarFiltroSelect('cc', this.value)">
+                        <option value="">Todos os Centros de Custo</option>
+                    </select>
+                </div>
+
+                <!-- 4. FILTRO POR CARGO -->
+                <div class="pbi-slicer-card">
+                    <div class="pbi-slicer-label-row">
+                        <span class="pbi-slicer-label">Cargo</span>
+                    </div>
+                    <select id="select-filtro-cargo" class="pbi-select" onchange="aplicarFiltroSelect('cargo', this.value)">
+                        <option value="">Todos os Cargos</option>
+                    </select>
                 </div>
             </div>
-        </div>
+
+            <div class="sidebar-live-box">
+                <div class="live-indicator-row">
+                    <span class="live-dot-pulse"></span>
+                    Tempo Real Ativo
+                </div>
+                <span class="live-sub-text" id="dash-ultima-atualizacao">Sincronizando balcão...</span>
+            </div>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="dash-main">
+            <div class="dash-topbar">
+                <div>
+                    <h2 id="dash-titulo-secao">Visão Geral do Projeto</h2>
+                    <p id="dash-subtitulo-secao">Monitoramento automático em tempo real das entregas no balcão</p>
+                </div>
+                <div class="live-pill-header">
+                    <span class="live-dot-pulse"></span>
+                    Sincronização Automática (4s)
+                </div>
+            </div>
+
+            <!-- BARRA DE CHIPS DOS FILTROS ATIVOS -->
+            <div id="active-filters-bar" class="active-filters-bar hidden-section"></div>
+
+            <!-- =========================================================================
+                 ABA 1: VISÃO GERAL
+                 ========================================================================= -->
+            <section id="sec-visao-geral">
+                <!-- Hero Card de Execução Global -->
+                <div class="hero-progress-card">
+                    <div class="hero-progress-top">
+                        <div>
+                            <span class="hero-label">Andamento da Execução (Recorte Atual)</span>
+                            <div class="hero-numbers">
+                                <span class="highlight-green" id="vg-entregues-txt">0</span> de <span id="vg-previstos-txt">0</span> bolsas entregues
+                            </div>
+                        </div>
+                        <div class="hero-pct-badge" id="vg-pct-badge">0% concluído</div>
+                    </div>
+                    <div class="hero-track">
+                        <div class="hero-fill" id="vg-barra-progresso"></div>
+                    </div>
+                </div>
+
+                <!-- 4 KPIs Principais (Mantidos e Reativos aos Filtros) -->
+                <div class="kpi-grid-4">
+                    <div class="kpi-card kpi-amber">
+                        <div class="kpi-card-top">
+                            <span class="kpi-card-label">Faltam Entregar</span>
+                            <div class="kpi-card-icon icon-amber">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-card-val" style="color: #d97706;" id="kpi-faltantes">0</div>
+                        <div class="kpi-card-sub" id="kpi-benef-pendentes">0 titulares pendentes</div>
+                    </div>
+
+                    <div class="kpi-card kpi-emerald">
+                        <div class="kpi-card-top">
+                            <span class="kpi-card-label">Média / Dia</span>
+                            <div class="kpi-card-icon icon-emerald">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-card-val" style="color: #059669;" id="kpi-media-dia">0</div>
+                        <div class="kpi-card-sub" id="kpi-dias-ativos">Em 0 dia(s) de operação</div>
+                    </div>
+
+                    <div class="kpi-card kpi-blue">
+                        <div class="kpi-card-top">
+                            <span class="kpi-card-label">Média / Login</span>
+                            <div class="kpi-card-icon icon-blue">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-card-val" style="color: #0284c7;" id="kpi-media-login">0</div>
+                        <div class="kpi-card-sub" id="kpi-total-logins">0 operadores ativos</div>
+                    </div>
+
+                    <div class="kpi-card kpi-indigo">
+                        <div class="kpi-card-top">
+                            <span class="kpi-card-label">Previsão Término</span>
+                            <div class="kpi-card-icon icon-indigo">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </div>
+                        </div>
+                        <div class="kpi-card-val" style="color: #6366f1;" id="kpi-projecao-dias">--</div>
+                        <div class="kpi-card-sub">No ritmo diário atual</div>
+                    </div>
+                </div>
+
+                <!-- LINHA 1 DE GRÁFICOS: 2 GRÁFICOS DE PIZZA -->
+                <div class="dash-grid-2">
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Retirada Esperada vs. Baixas Efetuadas</div>
+                                <div class="panel-subtitle">Comparativo entre kits previstos e baixados no filtro selecionado</div>
+                            </div>
+                        </div>
+                        <div id="chart-esperado-vs-baixas" style="min-height: 270px;"></div>
+                    </div>
+
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Adesão ao Programa (Inscritos vs. 9.600 Funcionários)</div>
+                                <div class="panel-subtitle">Proporção de colaboradores inscritos frente ao quadro total (9.600)</div>
+                            </div>
+                        </div>
+                        <div id="chart-inscritos-vs-quadro" style="min-height: 270px;"></div>
+                    </div>
+
+                    <!-- LINHA 2: GRÁFICO TEMPORAL DE INSCRIÇÕES POR DIA -->
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Evolução Temporal de Inscrições por Dia</div>
+                                <div class="panel-subtitle" id="sub-evolucao-temporal">Quantidade de inscrições registradas por dia (clique em uma flag de data à esquerda para ver o retrato da época)</div>
+                            </div>
+                        </div>
+                        <div id="chart-inscricoes-temporal" style="min-height: 290px;"></div>
+                    </div>
+
+                    <!-- LINHA 3: RANKING CARGO & RANKING CENTRO DE CUSTO (BARRAS DUPLAS) -->
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Ranking por Cargo (Top 10)</div>
+                                <div class="panel-subtitle">Colaboradores inscritos vs. retiradas efetuadas por cargo</div>
+                            </div>
+                            <span class="pbi-hint-badge">Clique na barra p/ filtrar</span>
+                        </div>
+                        <div id="chart-ranking-cargo" style="min-height: 360px;"></div>
+                    </div>
+
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Ranking por Centro de Custo (Top 10)</div>
+                                <div class="panel-subtitle">Colaboradores inscritos vs. retiradas efetuadas por centro de custo</div>
+                            </div>
+                            <span class="pbi-hint-badge">Clique na barra p/ filtrar</span>
+                        </div>
+                        <div id="chart-ranking-cc" style="min-height: 360px;"></div>
+                    </div>
+
+                    <!-- LINHA 4: RANKING FILIAL COM BOTÃO DE TROCA DE VISUALIZAÇÃO NO CANTO INFERIOR ESQUERDO (PRINT 3) -->
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Ranking por Filial</div>
+                                <div class="panel-subtitle" id="sub-ranking-filial">Colaboradores inscritos vs. retiradas efetuadas por unidade / filial</div>
+                            </div>
+                            <span class="pbi-hint-badge">Clique na fatia ou barra p/ filtrar</span>
+                        </div>
+
+                        <div id="chart-ranking-filial" style="min-height: 330px;"></div>
+
+                        <!-- BOTÃO POSICIONADO NO CANTO INFERIOR ESQUERDO CONFORME PRINT 3 -->
+                        <div class="chart-card-footer-left">
+                            <button type="button" id="btn-toggle-tipo-filial" class="btn-switch-chart-type" onclick="alternarTipoGraficoFilial()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                                    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                                </svg>
+                                <span id="txt-toggle-tipo-filial">Mudar para Gráfico de Pizza</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- LINHA 5: EXIBIDOR NOMINAL DE COLABORADORES FILTRADOS (SUBSTITUINDO OS 2 CARTÕES DO PRINT 4) -->
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <div class="panel-title">Colaboradores no Filtro Selecionado</div>
+                                    <span class="pill-badge pill-blue" id="badge-qtd-nomes-exibidos">0 pessoas</span>
+                                </div>
+                                <div class="panel-subtitle" id="sub-exibidor-nomes">Exibindo os colaboradores inscritos conforme os filtros ativos</div>
+                            </div>
+
+                            <div class="nomes-viewer-toolbar">
+                                <input type="text" id="input-busca-nomes-tabela" class="input-busca-nomes-inline" placeholder="Pesquisar nome, crachá ou cargo..." oninput="filtrarTabelaNomesColaboradores()" />
+                                <button type="button" class="btn-export-excel-dash" onclick="exportarNomesFiltradosExcel()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Exportar Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto; max-height: 410px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 95px;">Crachá</th>
+                                        <th>Nome do Colaborador</th>
+                                        <th>Cargo</th>
+                                        <th>Centro de Custo</th>
+                                        <th>Filial</th>
+                                        <th style="text-align: center; width: 110px;">Status</th>
+                                        <th style="text-align: center; width: 95px;">Bolsas</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-exibidor-nomes">
+                                    <tr><td colspan="7" style="text-align:center; padding: 20px; color: #64748b;">Carregando colaboradores...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================================
+                 ABA 2: RITMO DE EXPEDIÇÃO
+                 ========================================================================= -->
+            <section id="sec-ritmo-expedicao" class="hidden-section">
+                <div class="dash-grid-2">
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Evolução Diária de Entregas & Desempenho por Usuário</div>
+                                <div class="panel-subtitle">Barras representam o total diário baixado e as linhas mostram a produção individual de cada operador</div>
+                            </div>
+                        </div>
+                        <div id="chart-ritmo-diario" style="min-height: 330px;"></div>
+                    </div>
+
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Horários de Pico no Balcão</div>
+                                <div class="panel-subtitle">Volume de atendimentos por faixa horária (Brasília)</div>
+                            </div>
+                        </div>
+                        <div id="chart-horarios-pico" style="min-height: 280px;"></div>
+                    </div>
+
+                    <div class="panel-card col-6">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Produtividade por Login (Operadores)</div>
+                                <div class="panel-subtitle">Total de baixas, participação e média por dia ativo</div>
+                            </div>
+                        </div>
+                        <div style="overflow-y: auto; max-height: 285px;">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Operador</th>
+                                        <th style="text-align: center;">Entregas</th>
+                                        <th style="text-align: center;">Média/Dia</th>
+                                        <th style="text-align: right;">Part. %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-ranking-operadores"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================================
+                 ABA 3: GRÁFICO DE EXECUÇÃO
+                 ========================================================================= -->
+            <section id="sec-grafico-execucao" class="hidden-section">
+                <div class="dash-grid-2">
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Execução por Etapa Escolar (Entregues vs. Faltam Entregar)</div>
+                                <div class="panel-subtitle">Comparativo de conclusão entre Educação Infantil, EF1, EF2, Ensino Médio e Sobra</div>
+                            </div>
+                        </div>
+                        <div id="chart-execucao-etapas" style="min-height: 300px;"></div>
+                    </div>
+
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Quantidade de Bolsas que Faltam Entregar por Modelo</div>
+                                <div class="panel-subtitle">Ranking dos modelos com maior saldo pendente de retirada</div>
+                            </div>
+                        </div>
+                        <div id="chart-faltantes-modelos" style="min-height: 380px;"></div>
+                    </div>
+
+                    <div class="panel-card col-12">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Detalhamento de Execução e Cobertura por Bolsa</div>
+                                <div class="panel-subtitle">Cruzamento entre bolsas entregues, faltantes e saldo físico disponível no balcão</div>
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto; max-height: 380px;">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Modelo da Bolsa</th>
+                                        <th style="text-align: center;">Entregues</th>
+                                        <th style="text-align: center;">Faltam Entregar</th>
+                                        <th style="text-align: center;">Saldo no Balcão</th>
+                                        <th style="text-align: right;">Status Cobertura</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-execucao-modelos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script>
-        let chartStatusInstance = null;
-        let chartModelosInstance = null;
+        let dashPayloadBruto = null;
+        let dashCalculadoAtual = null;
+        let chartsInstances = {};
+        let ultimaVersaoConhecida = null;
+        let realtimeTimer = null;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            carregarDadosDashboard();
-            // Atualiza o dashboard automaticamente a cada 10 segundos em tempo real
-            setInterval(carregarDadosDashboard, 10000);
+        // Estado dos Segmentadores Estilo Power BI
+        const filtrosPBI = {
+            data: null,
+            modoData: 'ATE',
+            filial: '',
+            cc: '',
+            cargo: ''
+        };
+
+        // Tipo de visualização do gráfico de Filial ('bar' ou 'pie') - Print 3
+        let tipoGraficoFilialAtual = 'bar';
+
+        // Lista de colaboradores atualmente filtrados para o exibidor nominal - Print 4
+        let listaColaboradoresFiltradosAtual = [];
+
+        let listaDiasDisponiveis = [];
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await carregarMetricasDashboard(true);
+            iniciarMonitoramentoTempoReal();
         });
 
-        async function carregarDadosDashboard() {
+        function iniciarMonitoramentoTempoReal() {
+            if (realtimeTimer) clearInterval(realtimeTimer);
+
+            realtimeTimer = setInterval(async () => {
+                if (document.visibilityState !== 'visible') return;
+
+                try {
+                    const res = await fetch('/api/dashboard/versao');
+                    if (!res.ok) return;
+                    const data = await res.json();
+
+                    if (data.sucesso && data.versao) {
+                        if (ultimaVersaoConhecida && ultimaVersaoConhecida !== data.versao) {
+                            ultimaVersaoConhecida = data.versao;
+                            await carregarMetricasDashboard(false);
+                        } else if (!ultimaVersaoConhecida) {
+                            ultimaVersaoConhecida = data.versao;
+                        }
+                    }
+                } catch (e) {}
+            }, 4000);
+        }
+
+        function alternarAbaDashboard(aba) {
+            const botoes = {
+                VISAO_GERAL: document.getElementById("nav-visao-geral"),
+                RITMO_EXPEDICAO: document.getElementById("nav-ritmo-expedicao"),
+                GRAFICO_EXECUCAO: document.getElementById("nav-grafico-execucao")
+            };
+
+            const secoes = {
+                VISAO_GERAL: document.getElementById("sec-visao-geral"),
+                RITMO_EXPEDICAO: document.getElementById("sec-ritmo-expedicao"),
+                GRAFICO_EXECUCAO: document.getElementById("sec-grafico-execucao")
+            };
+
+            const titulos = {
+                VISAO_GERAL: ["Visão Geral do Projeto", "Monitoramento automático em tempo real das entregas no balcão"],
+                RITMO_EXPEDICAO: ["Ritmo de Expedição", "Evolução diária de baixas, horários de pico e produtividade por login"],
+                GRAFICO_EXECUCAO: ["Gráfico de Execução", "Bolsas entregues vs. faltantes por etapa escolar e por modelo"]
+            };
+
+            Object.keys(botoes).forEach(k => {
+                botoes[k].classList.toggle("active", k === aba);
+                secoes[k].classList.toggle("hidden-section", k !== aba);
+            });
+
+            document.getElementById("dash-titulo-secao").innerText = titulos[aba][0];
+            document.getElementById("dash-subtitulo-secao").innerText = titulos[aba][1];
+
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        async function carregarMetricasDashboard(primeiraCarga = false) {
+            const statusEl = document.getElementById("dash-ultima-atualizacao");
+
             try {
                 const res = await fetch('/api/dashboard/metricas');
                 const data = await res.json();
 
-                if (data.sucesso) {
-                    const cards = data.cards;
-                    document.getElementById("kpi-total").innerText = cards.total_cadastrados;
-                    document.getElementById("kpi-entregues").innerText = cards.entregues;
-                    document.getElementById("kpi-pendentes").innerText = cards.pendentes;
-                    document.getElementById("kpi-parciais").innerText = cards.parciais;
-
-                    renderizarGraficoStatus(cards);
-                    renderizarGraficoModelos(data.modelos_ranking);
+                if (!data.sucesso) {
+                    statusEl.innerText = "Erro ao sincronizar.";
+                    return;
                 }
+
+                dashPayloadBruto = data;
+                popularSegmentadoresSidebar(data.base_analitica || []);
+                recalcularERenderizarTudo(primeiraCarga);
+
+                const agora = new Date();
+                statusEl.innerText = `Última sync: ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             } catch (err) {
-                console.error("Erro ao carregar dados do dashboard:", err);
+                console.error("Erro no dashboard:", err);
+                statusEl.innerText = "Reconectando...";
             }
         }
 
-        function renderizarGraficoStatus(cards) {
-            const ctx = document.getElementById('chartStatus').getContext('2d');
-            
-            const dados = {
-                labels: ['Entregues', 'Pendentes', 'Parciais'],
-                datasets: [{
-                    data: [cards.entregues, cards.pendentes, cards.parciais],
-                    backgroundColor: ['#10b981', '#cbd5e1', '#f59e0b'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            };
+        /* =========================================================================
+           POPULAÇÃO E CONTROLE DOS FILTROS ESTILO POWER BI
+           ========================================================================= */
+        function popularSegmentadoresSidebar(base) {
+            const mapaDias = new Map();
+            const setFiliais = new Set();
+            const setCCs = new Set();
+            const setCargos = new Set();
 
-            if (chartStatusInstance) {
-                chartStatusInstance.data = dados;
-                chartStatusInstance.update();
-            } else {
-                chartStatusInstance = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: dados,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { weight: '600', size: 12 } } }
-                        },
-                        cutout: '70%'
+            base.forEach(r => {
+                if (r.dt) mapaDias.set(r.dt, r.dt_br);
+                if (r.filial) setFiliais.add(r.filial);
+                if (r.cc) setCCs.add(r.cc);
+                if (r.cargo) setCargos.add(r.cargo);
+            });
+
+            const datasOrdenadas = Array.from(mapaDias.keys()).sort();
+            listaDiasDisponiveis = datasOrdenadas.map((dt, idx) => ({
+                dt: dt,
+                dt_br: mapaDias.get(dt),
+                dia_num: idx + 1
+            }));
+
+            renderizarFlagsData();
+
+            preencherSelectPreservando("select-filtro-filial", "Todas as Filiais", Array.from(setFiliais).sort(), filtrosPBI.filial);
+            preencherSelectPreservando("select-filtro-cc", "Todos os Centros de Custo", Array.from(setCCs).sort(), filtrosPBI.cc);
+            preencherSelectPreservando("select-filtro-cargo", "Todos os Cargos", Array.from(setCargos).sort(), filtrosPBI.cargo);
+        }
+
+        function preencherSelectPreservando(selectId, labelTodos, opcoes, valorAtual) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            sel.innerHTML = `<option value="">${labelTodos}</option>`;
+            opcoes.forEach(op => {
+                const opt = document.createElement("option");
+                opt.value = op;
+                opt.innerText = op;
+                if (op === valorAtual) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            sel.classList.toggle("has-value", Boolean(valorAtual));
+        }
+
+        function renderizarFlagsData() {
+            const container = document.getElementById("pbi-date-flags-container");
+            container.innerHTML = "";
+
+            if (listaDiasDisponiveis.length === 0) {
+                container.innerHTML = `<span style="font-size:0.7rem; color:#64748b; grid-column: span 3;">Sem datas registradas</span>`;
+                return;
+            }
+
+            listaDiasDisponiveis.forEach(d => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "date-flag-btn";
+
+                if (filtrosPBI.data) {
+                    if (d.dt === filtrosPBI.data) {
+                        btn.classList.add("flag-selected");
+                    } else if (filtrosPBI.modoData === 'ATE' && d.dt < filtrosPBI.data) {
+                        btn.classList.add("flag-in-range");
                     }
-                });
+                }
+
+                btn.innerHTML = `
+                    <span class="date-flag-day-num">Dia ${d.dia_num}</span>
+                    <span>${d.dt_br}</span>
+                `;
+                btn.onclick = () => toggleFlagData(d.dt);
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleFlagData(dtIso) {
+            filtrosPBI.data = (filtrosPBI.data === dtIso) ? null : dtIso;
+            renderizarFlagsData();
+            recalcularERenderizarTudo(false);
+        }
+
+        function alternarModoData() {
+            filtrosPBI.modoData = (filtrosPBI.modoData === 'ATE') ? 'EXATO' : 'ATE';
+            document.getElementById("btn-modo-data").innerText = (filtrosPBI.modoData === 'ATE') ? '⇄ Até o dia' : '⇄ Dia exato';
+            renderizarFlagsData();
+            if (filtrosPBI.data) {
+                recalcularERenderizarTudo(false);
             }
         }
 
-        function renderizarGraficoModelos(rankingModelos) {
-            const ctx = document.getElementById('chartModelos').getContext('2d');
-            
-            // Ordena os modelos por quantidade e pega os top 6 para o gráfico não ficar poluído
-            const entradasOrdenadas = Object.entries(rankingModelos).sort((a, b) => b[1] - a[1]).slice(0, 6);
-            const labels = entradasOrdenadas.map(item => item.item[0] || item[0]);
-            const valores = entradasOrdenadas.map(item => item.item[1] || item[1]);
+        function aplicarFiltroSelect(campo, valor) {
+            filtrosPBI[campo] = valor || '';
+            const mapIds = { filial: "select-filtro-filial", cc: "select-filtro-cc", cargo: "select-filtro-cargo" };
+            const el = document.getElementById(mapIds[campo]);
+            if (el) {
+                el.value = filtrosPBI[campo];
+                el.classList.toggle("has-value", Boolean(filtrosPBI[campo]));
+            }
+            recalcularERenderizarTudo(false);
+        }
 
-            const dados = {
-                labels: labels.length > 0 ? labels : ['Nenhuma baixa ainda'],
-                datasets: [{
-                    label: 'Kits Entregues',
-                    data: valores.length > 0 ? valores : [0],
-                    backgroundColor: '#0284c7',
-                    borderRadius: 6
-                }]
+        function toggleFiltroPorCliqueGrafico(campo, valor) {
+            if (!valor) return;
+            const novoValor = (filtrosPBI[campo] === valor) ? '' : valor;
+            aplicarFiltroSelect(campo, novoValor);
+        }
+
+        function limparTodosFiltros() {
+            filtrosPBI.data = null;
+            filtrosPBI.filial = '';
+            filtrosPBI.cc = '';
+            filtrosPBI.cargo = '';
+
+            document.getElementById("select-filtro-filial").value = "";
+            document.getElementById("select-filtro-filial").classList.remove("has-value");
+            document.getElementById("select-filtro-cc").value = "";
+            document.getElementById("select-filtro-cc").classList.remove("has-value");
+            document.getElementById("select-filtro-cargo").value = "";
+            document.getElementById("select-filtro-cargo").classList.remove("has-value");
+
+            renderizarFlagsData();
+            recalcularERenderizarTudo(false);
+        }
+
+        function atualizarBarraChipsFiltros() {
+            const bar = document.getElementById("active-filters-bar");
+            const btnLimpar = document.getElementById("btn-limpar-filtros");
+            const chips = [];
+
+            if (filtrosPBI.data) {
+                const infoDia = listaDiasDisponiveis.find(x => x.dt === filtrosPBI.data);
+                const prefixo = filtrosPBI.modoData === 'ATE' ? 'Evolução até' : 'Data exata';
+                const labelDia = infoDia ? `Dia ${infoDia.dia_num} (${infoDia.dt_br})` : filtrosPBI.data;
+                chips.push({ label: `${prefixo}: ${labelDia}`, acao: () => toggleFlagData(filtrosPBI.data) });
+            }
+            if (filtrosPBI.filial) {
+                chips.push({ label: `Filial: ${filtrosPBI.filial}`, acao: () => aplicarFiltroSelect('filial', '') });
+            }
+            if (filtrosPBI.cc) {
+                chips.push({ label: `Centro de Custo: ${filtrosPBI.cc}`, acao: () => aplicarFiltroSelect('cc', '') });
+            }
+            if (filtrosPBI.cargo) {
+                chips.push({ label: `Cargo: ${filtrosPBI.cargo}`, acao: () => aplicarFiltroSelect('cargo', '') });
+            }
+
+            if (chips.length === 0) {
+                bar.classList.add("hidden-section");
+                btnLimpar.classList.add("hidden-section");
+                bar.innerHTML = "";
+                return;
+            }
+
+            btnLimpar.classList.remove("hidden-section");
+            bar.classList.remove("hidden-section");
+            bar.innerHTML = `<span class="active-filters-label">Filtros Ativos:</span>`;
+
+            chips.forEach(c => {
+                const span = document.createElement("span");
+                span.className = "filter-chip-pbi";
+                span.innerHTML = `${c.label} <span class="filter-chip-close" title="Remover filtro">✕</span>`;
+                span.querySelector(".filter-chip-close").onclick = c.acao;
+                bar.appendChild(span);
+            });
+        }
+
+        /* =========================================================================
+           AJUSTE PRINT 3: ALTERNAR TIPO DO GRÁFICO DE FILIAL (BARRAS <-> PIZZA)
+           ========================================================================= */
+        function alternarTipoGraficoFilial() {
+            tipoGraficoFilialAtual = (tipoGraficoFilialAtual === 'bar') ? 'pie' : 'bar';
+
+            const btnTexto = document.getElementById("txt-toggle-tipo-filial");
+            const subTitulo = document.getElementById("sub-ranking-filial");
+
+            if (tipoGraficoFilialAtual === 'pie') {
+                btnTexto.innerText = "Mudar para Gráfico de Barras";
+                subTitulo.innerText = "Distribuição proporcional de colaboradores inscritos por unidade / filial (Pizza)";
+            } else {
+                btnTexto.innerText = "Mudar para Gráfico de Pizza";
+                subTitulo.innerText = "Colaboradores inscritos vs. retiradas efetuadas por unidade / filial";
+            }
+
+            if (dashCalculadoAtual) {
+                renderizarGraficoFilialDinamico(dashCalculadoAtual.visao_geral.ranking_filial, true);
+            }
+        }
+
+        function renderizarGraficoFilialDinamico(dadosFilial, forcarRecriar = false) {
+            const labels = dadosFilial?.labels || [];
+            const inscritos = dadosFilial?.inscritos || [];
+            const baixas = dadosFilial?.baixas || [];
+
+            if (tipoGraficoFilialAtual === 'pie') {
+                if (chartsInstances["rankingFilial"]) {
+                    chartsInstances["rankingFilial"].destroy();
+                }
+
+                chartsInstances["rankingFilial"] = new ApexCharts(document.querySelector("#chart-ranking-filial"), {
+                    chart: {
+                        type: 'pie',
+                        height: 340,
+                        fontFamily: 'inherit',
+                        events: {
+                            dataPointSelection: function(event, chartContext, config) {
+                                const filialClicada = config.w.config.labels[config.dataPointIndex];
+                                toggleFiltroPorCliqueGrafico('filial', filialClicada);
+                            }
+                        }
+                    },
+                    labels: labels,
+                    series: inscritos,
+                    colors: ['#0284c7', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#14b8a6', '#f43f5e', '#8b5cf6', '#06b6d4', '#84cc16', '#64748b'],
+                    legend: {
+                        position: 'right',
+                        fontWeight: 700,
+                        fontSize: '12px'
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            const qtd = opts.w.config.series[opts.seriesIndex];
+                            return val >= 3 ? `${qtd} (${val.toFixed(1)}%)` : '';
+                        }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(val, opts) {
+                                const idx = opts.seriesIndex;
+                                const bx = baixas[idx] || 0;
+                                return `${val} inscritos | ${bx} retiradas efetuadas`;
+                            }
+                        }
+                    },
+                    responsive: [{
+                        breakpoint: 768,
+                        options: {
+                            legend: { position: 'bottom' }
+                        }
+                    }]
+                });
+                chartsInstances["rankingFilial"].render();
+            } else {
+                renderizarBarDuplaHorizontal("rankingFilial", "#chart-ranking-filial", dadosFilial, "filial", forcarRecriar, 330);
+            }
+        }
+
+        /* =========================================================================
+           MOTOR DE REAGREGAÇÃO INSTANTÂNEA (CROSS-FILTERING POWER BI)
+           ========================================================================= */
+        function filtrarBaseAnalitica() {
+            const base = dashPayloadBruto?.base_analitica || [];
+            return base.filter(r => {
+                if (filtrosPBI.data) {
+                    if (!r.dt) return false;
+                    if (filtrosPBI.modoData === 'ATE' && r.dt > filtrosPBI.data) return false;
+                    if (filtrosPBI.modoData === 'EXATO' && r.dt !== filtrosPBI.data) return false;
+                }
+                if (filtrosPBI.filial && r.filial !== filtrosPBI.filial) return false;
+                if (filtrosPBI.cc && r.cc !== filtrosPBI.cc) return false;
+                if (filtrosPBI.cargo && r.cargo !== filtrosPBI.cargo) return false;
+                return true;
+            });
+        }
+
+        function recalcularERenderizarTudo(primeiraCarga = false) {
+            if (!dashPayloadBruto) return;
+
+            atualizarBarraChipsFiltros();
+
+            const registrosFiltrados = filtrarBaseAnalitica();
+            listaColaboradoresFiltradosAtual = registrosFiltrados;
+
+            const opStats = dashPayloadBruto.operacao_stats || {};
+            const modelosOficiais = dashPayloadBruto.modelos_oficiais || [];
+            const saldoBalcaoMapa = dashPayloadBruto.saldo_balcao_mapa || {};
+            const totalQuadro = dashPayloadBruto.total_quadro_funcionarios || 9600;
+
+            let kitsPrevistos = 0;
+            let kitsEntregues = 0;
+            let kitsFaltantes = 0;
+            let titularesPendentesOuParciais = 0;
+
+            const colabsUnicos = new Set();
+            const inscricoesPorDia = {};
+
+            const aggCargo = {};
+            const aggCC = {};
+            const aggFilial = {};
+
+            const etapasStats = {
+                "Educação Infantil": { entregues: 0, faltantes: 0 },
+                "Ensino Fundamental 1": { entregues: 0, faltantes: 0 },
+                "Ensino Fundamental 2": { entregues: 0, faltantes: 0 },
+                "Ensino Médio": { entregues: 0, faltantes: 0 },
+                "Sobra / Não Reservado": { entregues: 0, faltantes: 0 }
             };
 
-            if (chartModelosInstance) {
-                chartModelosInstance.data = dados;
-                chartModelosInstance.update();
-            } else {
-                chartModelosInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: dados,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { precision: 0 } },
-                            x: { grid: { display: false }, ticks: { font: { weight: '600', size: 11 } } }
+            const faltantesPorModelo = {};
+            const entreguesPorModelo = {};
+            modelosOficiais.forEach(m => {
+                faltantesPorModelo[m] = 0;
+                entreguesPorModelo[m] = 0;
+            });
+
+            const registrarDim = (mapa, chave, uid, qtdBaixas) => {
+                const k = chave || "NÃO INFORMADO";
+                if (!mapa[k]) mapa[k] = { colabs: new Set(), baixas: 0 };
+                mapa[k].colabs.add(uid);
+                mapa[k].baixas += qtdBaixas;
+            };
+
+            registrosFiltrados.forEach(r => {
+                kitsPrevistos += r.qtd;
+                kitsEntregues += r.ent;
+                kitsFaltantes += (r.qtd - r.ent);
+
+                if (r.ent < r.qtd) {
+                    titularesPendentesOuParciais += 1;
+                }
+
+                colabsUnicos.add(r.uid);
+
+                if (r.dt) {
+                    inscricoesPorDia[r.dt] = (inscricoesPorDia[r.dt] || 0) + 1;
+                }
+
+                registrarDim(aggCargo, r.cargo, r.uid, r.ent);
+                registrarDim(aggCC, r.cc, r.uid, r.ent);
+                registrarDim(aggFilial, r.filial, r.uid, r.ent);
+
+                (r.kits || []).forEach(kItem => {
+                    const et = etapasStats[kItem.etapa] ? kItem.etapa : "Sobra / Não Reservado";
+                    if (kItem.ok === 1) {
+                        etapasStats[et].entregues += 1;
+                        if (entreguesPorModelo[kItem.mod] !== undefined) {
+                            entreguesPorModelo[kItem.mod] += 1;
+                        }
+                    } else {
+                        etapasStats[et].faltantes += 1;
+                        if (faltantesPorModelo[kItem.mod] !== undefined) {
+                            faltantesPorModelo[kItem.mod] += 1;
                         }
                     }
                 });
+            });
+
+            const montarRanking = (mapaDim, limite = 10) => {
+                const arr = Object.entries(mapaDim)
+                    .map(([nome, obj]) => ({
+                        nome,
+                        inscritos: obj.colabs.size,
+                        baixas: obj.baixas
+                    }))
+                    .sort((a, b) => (b.inscritos - a.inscritos) || (b.baixas - a.baixas))
+                    .slice(0, limite);
+
+                return {
+                    labels: arr.map(x => x.nome),
+                    inscritos: arr.map(x => x.inscritos),
+                    baixas: arr.map(x => x.baixas)
+                };
+            };
+
+            const datasOrdenadas = Object.keys(inscricoesPorDia).sort();
+            const temporalLabels = datasOrdenadas.map(dtIso => {
+                const info = listaDiasDisponiveis.find(x => x.dt === dtIso);
+                return info ? info.dt_br : dtIso;
+            });
+            const temporalValores = datasOrdenadas.map(dtIso => inscricoesPorDia[dtIso]);
+
+            const totalInscritos = colabsUnicos.size;
+            const naoInscritos = Math.max(0, totalQuadro - totalInscritos);
+
+            const mediaDia = opStats.media_por_dia || 0;
+            const diasProjecao = mediaDia > 0 ? Math.ceil(kitsFaltantes / mediaDia) : null;
+            const pctConclusao = kitsPrevistos > 0 ? Number(((kitsEntregues / kitsPrevistos) * 100).toFixed(1)) : 0;
+
+            const modelosExecucao = [];
+            modelosOficiais.forEach(m => {
+                const faltam = faltantesPorModelo[m] || 0;
+                const entreg = entreguesPorModelo[m] || 0;
+                const balcao = saldoBalcaoMapa[m] || 0;
+                if (faltam > 0 || entreg > 0 || balcao > 0) {
+                    modelosExecucao.push({
+                        modelo: m,
+                        entregues: entreg,
+                        faltantes: faltam,
+                        saldo_balcao: balcao,
+                        cobertura_ok: balcao >= faltam
+                    });
+                }
+            });
+
+            dashCalculadoAtual = {
+                kpis: {
+                    kits_previstos: kitsPrevistos,
+                    kits_entregues: kitsEntregues,
+                    kits_faltantes: kitsFaltantes,
+                    pct_conclusao: pctConclusao,
+                    media_por_dia: mediaDia,
+                    dias_operacao: opStats.dias_operacao || 0,
+                    media_por_login: opStats.media_por_login || 0,
+                    operadores_ativos: opStats.operadores_ativos || 0,
+                    dias_projecao: diasProjecao,
+                    titulares_pendentes_total: titularesPendentesOuParciais
+                },
+                visao_geral: {
+                    esperado_vs_baixas: [kitsPrevistos, kitsEntregues],
+                    inscritos_vs_quadro: [totalInscritos, naoInscritos],
+                    temporal_labels: temporalLabels,
+                    temporal_valores: temporalValores,
+                    ranking_cargo: montarRanking(aggCargo, 10),
+                    ranking_cc: montarRanking(aggCC, 10),
+                    ranking_filial: montarRanking(aggFilial, 15)
+                },
+                execucao: {
+                    etapas: etapasStats,
+                    modelos: modelosExecucao
+                }
+            };
+
+            renderizarVisaoGeral(dashCalculadoAtual, primeiraCarga);
+            renderizarRitmoExpedicao(dashPayloadBruto, primeiraCarga);
+            renderizarGraficoExecucao(dashCalculadoAtual, primeiraCarga);
+        }
+
+        /* =========================================================================
+           AUXILIAR DE BARRAS DUPLAS COM CLIQUE INTERATIVO (CROSS-FILTER PBI)
+           ========================================================================= */
+        function renderizarBarDuplaHorizontal(chaveChart, seletorHtml, dadosRanking, campoFiltro, primeiraCarga, altura = 350) {
+            const labels = dadosRanking?.labels || [];
+            const seriesData = [
+                { name: 'Colaboradores Inscritos', data: dadosRanking?.inscritos || [] },
+                { name: 'Retiradas Efetuadas', data: dadosRanking?.baixas || [] }
+            ];
+
+            if (chartsInstances[chaveChart] && !primeiraCarga) {
+                chartsInstances[chaveChart].updateOptions({ xaxis: { categories: labels } });
+                chartsInstances[chaveChart].updateSeries(seriesData);
+            } else {
+                if (chartsInstances[chaveChart]) chartsInstances[chaveChart].destroy();
+                chartsInstances[chaveChart] = new ApexCharts(document.querySelector(seletorHtml), {
+                    chart: {
+                        type: 'bar',
+                        height: altura,
+                        toolbar: { show: false },
+                        fontFamily: 'inherit',
+                        events: {
+                            dataPointSelection: function(event, chartContext, config) {
+                                const categoriaClicada = config.w.config.xaxis.categories[config.dataPointIndex];
+                                toggleFiltroPorCliqueGrafico(campoFiltro, categoriaClicada);
+                            }
+                        }
+                    },
+                    series: seriesData,
+                    xaxis: { categories: labels },
+                    colors: ['#0284c7', '#10b981'],
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            borderRadius: 4,
+                            barHeight: '72%',
+                            dataLabels: { position: 'top' }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        offsetX: 18,
+                        style: { fontSize: '10px', fontWeight: 700, colors: ['#334155'] }
+                    },
+                    stroke: { show: true, width: 1, colors: ['#fff'] },
+                    legend: { position: 'top', horizontalAlign: 'left', fontWeight: 700 },
+                    tooltip: { shared: true, intersect: false }
+                });
+                chartsInstances[chaveChart].render();
             }
+        }
+
+        /* =========================================================================
+           AJUSTE PRINT 4: EXIBIDOR NOMINAL DE COLABORADORES FILTRADOS
+           ========================================================================= */
+        function filtrarTabelaNomesColaboradores() {
+            const termo = document.getElementById("input-busca-nomes-tabela").value.toLowerCase().trim();
+            const tbody = document.getElementById("tbody-exibidor-nomes");
+            const badgeQtd = document.getElementById("badge-qtd-nomes-exibidos");
+            const subTexto = document.getElementById("sub-exibidor-nomes");
+
+            const filtrados = !termo
+                ? listaColaboradoresFiltradosAtual
+                : listaColaboradoresFiltradosAtual.filter(r =>
+                    String(r.nome || "").toLowerCase().includes(termo) ||
+                    String(r.id || "").toLowerCase().includes(termo) ||
+                    String(r.cargo || "").toLowerCase().includes(termo) ||
+                    String(r.cc || "").toLowerCase().includes(termo) ||
+                    String(r.filial || "").toLowerCase().includes(termo)
+                );
+
+            const qtdPessoas = filtrados.length;
+            badgeQtd.innerText = qtdPessoas === 1 ? "1 pessoa" : `${qtdPessoas} pessoas`;
+
+            if (filtrosPBI.cargo || filtrosPBI.filial || filtrosPBI.cc || filtrosPBI.data) {
+                subTexto.innerText = `Exibindo ${qtdPessoas} colaborador(es) correspondente(s) aos filtros ativos`;
+            } else {
+                subTexto.innerText = "Exibindo todos os colaboradores cadastrados (use os filtros ao lado para segmentar)";
+            }
+
+            tbody.innerHTML = "";
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: #64748b;">Nenhum colaborador encontrado para este filtro.</td></tr>`;
+                return;
+            }
+
+            // Ordena alfabeticamente pelo nome do colaborador
+            const ordenados = [...filtrados].sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR'));
+
+            ordenados.forEach(r => {
+                let statusBadge = `<span class="pill-badge pill-amber">Pendente</span>`;
+                if (r.ent >= r.qtd) {
+                    statusBadge = `<span class="pill-badge pill-green">Entregue</span>`;
+                } else if (r.ent > 0) {
+                    statusBadge = `<span class="pill-badge pill-blue">Parcial</span>`;
+                }
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${r.id}</strong></td>
+                    <td>
+                        <strong>${r.nome}</strong>
+                        <div style="font-size: 0.72rem; color: #64748b;">${r.pub} • Inscrito em ${r.dt_br}</div>
+                    </td>
+                    <td><small style="font-weight: 700; color: #334155;">${r.cargo}</small></td>
+                    <td><small style="color: #475569;">${r.cc}</small></td>
+                    <td><small style="font-weight: 600; color: #0284c7;">${r.filial}</small></td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;"><strong>${r.ent} / ${r.qtd}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportarNomesFiltradosExcel() {
+            if (!listaColaboradoresFiltradosAtual || listaColaboradoresFiltradosAtual.length === 0) return;
+
+            const headers = ["Cracha / ID", "Nome Colaborador", "Publico", "Data Inscricao", "Cargo", "Centro de Custo", "Filial", "Bolsas Entregues", "Bolsas Previstas", "Resumo Kits"];
+            const rows = listaColaboradoresFiltradosAtual.map(r => [
+                r.id, r.nome, r.pub, r.dt_br, r.cargo, r.cc, r.filial, r.ent, r.qtd, r.resumo
+            ]);
+
+            const escaparCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const conteudo = [
+                headers.map(escaparCsv).join(";"),
+                ...rows.map(linha => linha.map(escaparCsv).join(";"))
+            ].join("\r\n");
+
+            const blob = new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "colaboradores_filtrados_kits.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        /* =========================================================================
+           RENDERIZAÇÃO ABA 1: VISÃO GERAL
+           ========================================================================= */
+        function renderizarVisaoGeral(data, primeiraCarga) {
+            const k = data.kpis;
+            const vg = data.visao_geral;
+
+            document.getElementById("vg-entregues-txt").innerText = k.kits_entregues;
+            document.getElementById("vg-previstos-txt").innerText = k.kits_previstos;
+            document.getElementById("vg-pct-badge").innerText = `${k.pct_conclusao}% concluído`;
+            document.getElementById("vg-barra-progresso").style.width = `${Math.min(100, k.pct_conclusao)}%`;
+
+            document.getElementById("kpi-faltantes").innerText = k.kits_faltantes;
+            document.getElementById("kpi-benef-pendentes").innerText = `${k.titulares_pendentes_total} titulares pendentes/parciais`;
+
+            document.getElementById("kpi-media-dia").innerText = k.media_por_dia;
+            document.getElementById("kpi-dias-ativos").innerText = `Em ${k.dias_operacao} dia(s) de operação`;
+
+            document.getElementById("kpi-media-login").innerText = k.media_por_login;
+            document.getElementById("kpi-total-logins").innerText = `${k.operadores_ativos} operador(es) ativo(s)`;
+
+            document.getElementById("kpi-projecao-dias").innerText = k.dias_projecao !== null ? `${k.dias_projecao} dias` : "N/A";
+
+            // 1. Pizza: Qtd Retirada Esperada vs Qtd de Baixas Efetuadas
+            if (chartsInstances["esperadoVsBaixas"] && !primeiraCarga) {
+                chartsInstances["esperadoVsBaixas"].updateSeries(vg.esperado_vs_baixas);
+            } else {
+                if (chartsInstances["esperadoVsBaixas"]) chartsInstances["esperadoVsBaixas"].destroy();
+                chartsInstances["esperadoVsBaixas"] = new ApexCharts(document.querySelector("#chart-esperado-vs-baixas"), {
+                    chart: { type: 'pie', height: 270, fontFamily: 'inherit' },
+                    labels: ['Retirada Esperada', 'Baixas Efetuadas'],
+                    series: vg.esperado_vs_baixas,
+                    colors: ['#0284c7', '#10b981'],
+                    legend: { position: 'bottom', fontWeight: 700 },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            return opts.w.config.series[opts.seriesIndex] + " (" + val.toFixed(1) + "%)";
+                        }
+                    }
+                });
+                chartsInstances["esperadoVsBaixas"].render();
+            }
+
+            // 2. Pizza: Inscritos vs Quadro Total (9.600)
+            if (chartsInstances["inscritosVsQuadro"] && !primeiraCarga) {
+                chartsInstances["inscritosVsQuadro"].updateSeries(vg.inscritos_vs_quadro);
+            } else {
+                if (chartsInstances["inscritosVsQuadro"]) chartsInstances["inscritosVsQuadro"].destroy();
+                chartsInstances["inscritosVsQuadro"] = new ApexCharts(document.querySelector("#chart-inscritos-vs-quadro"), {
+                    chart: { type: 'pie', height: 270, fontFamily: 'inherit' },
+                    labels: ['Colaboradores Inscritos', 'Não Inscritos'],
+                    series: vg.inscritos_vs_quadro,
+                    colors: ['#6366f1', '#cbd5e1'],
+                    legend: { position: 'bottom', fontWeight: 700 },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            return opts.w.config.series[opts.seriesIndex] + " (" + val.toFixed(1) + "%)";
+                        }
+                    }
+                });
+                chartsInstances["inscritosVsQuadro"].render();
+            }
+
+            // 3. Gráfico Temporal: Evolução de Inscrições por Dia
+            const subTemp = document.getElementById("sub-evolucao-temporal");
+            if (filtrosPBI.data) {
+                const infoDia = listaDiasDisponiveis.find(x => x.dt === filtrosPBI.data);
+                subTemp.innerText = filtrosPBI.modoData === 'ATE'
+                    ? `Exibindo retrato acumulado das inscrições até o Dia ${infoDia?.dia_num || ''} (${infoDia?.dt_br || filtrosPBI.data})`
+                    : `Exibindo inscrições realizadas exclusivamente no Dia ${infoDia?.dia_num || ''} (${infoDia?.dt_br || filtrosPBI.data})`;
+            } else {
+                subTemp.innerText = "Quantidade de inscrições registradas por dia (clique em uma flag de data à esquerda para ver o retrato da época)";
+            }
+
+            if (chartsInstances["inscricoesTemporal"] && !primeiraCarga) {
+                chartsInstances["inscricoesTemporal"].updateOptions({ xaxis: { categories: vg.temporal_labels } });
+                chartsInstances["inscricoesTemporal"].updateSeries([{ name: 'Inscrições no Dia', data: vg.temporal_valores }]);
+            } else {
+                if (chartsInstances["inscricoesTemporal"]) chartsInstances["inscricoesTemporal"].destroy();
+                chartsInstances["inscricoesTemporal"] = new ApexCharts(document.querySelector("#chart-inscricoes-temporal"), {
+                    chart: { type: 'area', height: 280, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [{ name: 'Inscrições no Dia', data: vg.temporal_valores }],
+                    xaxis: { categories: vg.temporal_labels },
+                    colors: ['#0284c7'],
+                    stroke: { curve: 'smooth', width: 3 },
+                    fill: {
+                        type: 'gradient',
+                        gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.05 }
+                    },
+                    markers: { size: 4 },
+                    dataLabels: {
+                        enabled: true,
+                        style: { fontSize: '11px', fontWeight: 700 }
+                    },
+                    yaxis: { title: { text: 'Qtd de Inscrições' }, min: 0 }
+                });
+                chartsInstances["inscricoesTemporal"].render();
+            }
+
+            // 4 e 5. Rankings de Barras Duplas: Cargo e Centro de Custo
+            renderizarBarDuplaHorizontal("rankingCargo", "#chart-ranking-cargo", vg.ranking_cargo, "cargo", primeiraCarga, 360);
+            renderizarBarDuplaHorizontal("rankingCC", "#chart-ranking-cc", vg.ranking_cc, "cc", primeiraCarga, 360);
+
+            // 6. Ranking por Filial (Barras Duplas ou Pizza conforme botão no canto inferior esquerdo)
+            renderizarGraficoFilialDinamico(vg.ranking_filial, primeiraCarga);
+
+            // 7. Exibidor Nominal de Colaboradores Filtrados (Print 4)
+            filtrarTabelaNomesColaboradores();
+        }
+
+        /* =========================================================================
+           RENDERIZAÇÃO ABA 2: RITMO DE EXPEDIÇÃO
+           ========================================================================= */
+        function renderizarRitmoExpedicao(data, primeiraCarga) {
+            const r = data.ritmo || {};
+
+            const comboSeries = [
+                { name: 'Total Diário (Geral)', type: 'column', data: r.dias_valores || [] }
+            ];
+
+            (r.series_operadores || []).forEach(op => {
+                comboSeries.push({ name: op.nome, type: 'line', data: op.dados || [] });
+            });
+
+            const paletaCombo = ['#cbd5e1', '#0284c7', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
+            const largurasStroke = [0, ...Array((r.series_operadores || []).length).fill(3)];
+
+            if (chartsInstances["ritmoDiario"] && !primeiraCarga) {
+                chartsInstances["ritmoDiario"].updateOptions({
+                    xaxis: { categories: r.dias_labels },
+                    stroke: { width: largurasStroke }
+                });
+                chartsInstances["ritmoDiario"].updateSeries(comboSeries);
+            } else {
+                if (chartsInstances["ritmoDiario"]) chartsInstances["ritmoDiario"].destroy();
+                chartsInstances["ritmoDiario"] = new ApexCharts(document.querySelector("#chart-ritmo-diario"), {
+                    chart: { type: 'line', height: 320, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: comboSeries,
+                    xaxis: { categories: r.dias_labels },
+                    colors: paletaCombo,
+                    stroke: { width: largurasStroke, curve: 'smooth' },
+                    plotOptions: { bar: { columnWidth: '38%', borderRadius: 6 } },
+                    markers: { size: 5, hover: { size: 7 } },
+                    dataLabels: { enabled: true, style: { fontSize: '11px', fontWeight: 700 } },
+                    legend: { position: 'top', horizontalAlign: 'left', fontWeight: 700 },
+                    yaxis: { title: { text: 'Qtd de Bolsas Baixadas' }, min: 0 }
+                });
+                chartsInstances["ritmoDiario"].render();
+            }
+
+            if (chartsInstances["horariosPico"] && !primeiraCarga) {
+                chartsInstances["horariosPico"].updateSeries([{ name: 'Atendimentos', data: r.horas_valores }]);
+            } else {
+                if (chartsInstances["horariosPico"]) chartsInstances["horariosPico"].destroy();
+                chartsInstances["horariosPico"] = new ApexCharts(document.querySelector("#chart-horarios-pico"), {
+                    chart: { type: 'bar', height: 270, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [{ name: 'Atendimentos', data: r.horas_valores }],
+                    xaxis: { categories: r.horas_labels },
+                    colors: ['#0284c7'],
+                    plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
+                    dataLabels: { enabled: false }
+                });
+                chartsInstances["horariosPico"].render();
+            }
+
+            const tbodyOp = document.getElementById("tbody-ranking-operadores");
+            tbodyOp.innerHTML = "";
+            if (!r.ranking_operadores || r.ranking_operadores.length === 0) {
+                tbodyOp.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Nenhuma baixa registrada ainda.</td></tr>`;
+            } else {
+                r.ranking_operadores.forEach(op => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>
+                            <strong>${op.nome}</strong>
+                            <div style="font-size: 0.7rem; color: #94a3b8;">Última: ${op.ultima_baixa}</div>
+                        </td>
+                        <td style="text-align: center;"><strong>${op.total}</strong></td>
+                        <td style="text-align: center; color: #059669; font-weight: 700;">${op.media_dia}/dia</td>
+                        <td style="text-align: right;"><span class="pill-badge pill-green">${op.participacao_pct}%</span></td>
+                    `;
+                    tbodyOp.appendChild(tr);
+                });
+            }
+        }
+
+        /* =========================================================================
+           RENDERIZAÇÃO ABA 3: GRÁFICO DE EXECUÇÃO
+           ========================================================================= */
+        function renderizarGraficoExecucao(data, primeiraCarga) {
+            const ex = data.execucao;
+
+            const etapasLabels = Object.keys(ex.etapas);
+            const etapasEntregues = etapasLabels.map(e => ex.etapas[e].entregues);
+            const etapasFaltantes = etapasLabels.map(e => ex.etapas[e].faltantes);
+
+            if (chartsInstances["execucaoEtapas"] && !primeiraCarga) {
+                chartsInstances["execucaoEtapas"].updateSeries([
+                    { name: 'Entregues', data: etapasEntregues },
+                    { name: 'Faltam Entregar', data: etapasFaltantes }
+                ]);
+            } else {
+                if (chartsInstances["execucaoEtapas"]) chartsInstances["execucaoEtapas"].destroy();
+                chartsInstances["execucaoEtapas"] = new ApexCharts(document.querySelector("#chart-execucao-etapas"), {
+                    chart: { type: 'bar', height: 290, stacked: true, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [
+                        { name: 'Entregues', data: etapasEntregues },
+                        { name: 'Faltam Entregar', data: etapasFaltantes }
+                    ],
+                    xaxis: { categories: etapasLabels },
+                    colors: ['#10b981', '#f59e0b'],
+                    plotOptions: { bar: { horizontal: false, borderRadius: 6, columnWidth: '48%' } },
+                    legend: { position: 'top' }
+                });
+                chartsInstances["execucaoEtapas"].render();
+            }
+
+            const modelosComFalta = [...ex.modelos]
+                .filter(m => m.faltantes > 0)
+                .sort((a, b) => b.faltantes - a.faltantes)
+                .slice(0, 15);
+
+            if (chartsInstances["faltantesModelos"] && !primeiraCarga) {
+                chartsInstances["faltantesModelos"].updateOptions({ xaxis: { categories: modelosComFalta.map(m => m.modelo) } });
+                chartsInstances["faltantesModelos"].updateSeries([
+                    { name: 'Faltam Entregar', data: modelosComFalta.map(m => m.faltantes) },
+                    { name: 'Saldo no Balcão', data: modelosComFalta.map(m => m.saldo_balcao) }
+                ]);
+            } else {
+                if (chartsInstances["faltantesModelos"]) chartsInstances["faltantesModelos"].destroy();
+                chartsInstances["faltantesModelos"] = new ApexCharts(document.querySelector("#chart-faltantes-modelos"), {
+                    chart: { type: 'bar', height: 370, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [
+                        { name: 'Faltam Entregar', data: modelosComFalta.map(m => m.faltantes) },
+                        { name: 'Saldo no Balcão', data: modelosComFalta.map(m => m.saldo_balcao) }
+                    ],
+                    xaxis: { categories: modelosComFalta.map(m => m.modelo) },
+                    colors: ['#d97706', '#0284c7'],
+                    plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '65%' } },
+                    legend: { position: 'top' }
+                });
+                chartsInstances["faltantesModelos"].render();
+            }
+
+            const tbodyMod = document.getElementById("tbody-execucao-modelos");
+            tbodyMod.innerHTML = "";
+            ex.modelos.forEach(m => {
+                const statusHtml = m.cobertura_ok
+                    ? `<span class="pill-badge pill-green">Coberto (${m.saldo_balcao - m.faltantes} sobra)</span>`
+                    : `<span class="pill-badge pill-red">Faltam ${m.faltantes - m.saldo_balcao} no balcão</span>`;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${m.modelo}</strong></td>
+                    <td style="text-align: center; color: #059669; font-weight: 700;">${m.entregues} und</td>
+                    <td style="text-align: center; color: #d97706; font-weight: 700;">${m.faltantes} und</td>
+                    <td style="text-align: center; font-weight: 700;">${m.saldo_balcao} und</td>
+                    <td style="text-align: right;">${statusHtml}</td>
+                `;
+                tbodyMod.appendChild(tr);
+            });
         }
     </script>
 </body>
