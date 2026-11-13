@@ -40,7 +40,7 @@ class Usuario(db.Model):
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
         }
 
-    
+
 class HistoricoBaixa(db.Model):
     """Tabela para registro e auditoria de cada baixa realizada."""
     __tablename__ = 'historico_baixas'
@@ -78,7 +78,6 @@ class HistoricoBaixa(db.Model):
             'modelo_esperado': self.modelo_esperado or "---",
             'data_baixa': self.data_baixa.strftime("%d/%m/%Y %H:%M:%S")
         }
-        
 
 
 class BaseRetirada(db.Model):
@@ -87,6 +86,9 @@ class BaseRetirada(db.Model):
     id_retirada = db.Column(db.Integer, primary_key=True, autoincrement=True)
     codigo_retirada = db.Column(db.String(36), unique=True, nullable=False, index=True)
     id_colaborador = db.Column(db.Integer, nullable=False, index=True)
+    titulo_cargo = db.Column(db.String(255), nullable=True)
+    titulo_centro_custo = db.Column(db.String(255), nullable=True)
+    nome_filial = db.Column(db.String(255), nullable=True)
     email = db.Column(db.String(255), nullable=True)
     telefone = db.Column(db.String(50), nullable=True)
     qtd_kits = db.Column(db.Integer, nullable=False, default=1)
@@ -111,6 +113,9 @@ class RetiradaDependente(BaseRetirada):
             'codigo_retirada': self.codigo_retirada,
             'id_colaborador': self.id_colaborador,
             'nome_colaborador': self.nome_colaborador or "NÃO INFORMADO",
+            'titulo_cargo': self.titulo_cargo,
+            'titulo_centro_custo': self.titulo_centro_custo,
+            'nome_filial': self.nome_filial,
             'log_modificacao_cracha': self.log_modificacao_cracha,
             'email': self.email,
             'telefone': self.telefone,
@@ -142,6 +147,9 @@ class RetiradaJovemAprendiz(BaseRetirada):
             'codigo_retirada': self.codigo_retirada,
             'id_colaborador': self.id_colaborador,
             'nome_colaborador': self.extrair_nome_jovem(),
+            'titulo_cargo': self.titulo_cargo,
+            'titulo_centro_custo': self.titulo_centro_custo,
+            'nome_filial': self.nome_filial,
             'email': self.email,
             'telefone': self.telefone,
             'qtd_kits': self.qtd_kits,
@@ -179,14 +187,14 @@ class EstoqueKit(db.Model):
             'descricao_kit': self.descricao_kit,
             'quantidade_total_entrada': lote_total,
             'quantidade_baixada': saidas,
-            'quantidade_disponivel': saldo_balcao,  # Retorna o saldo real em mãos para as telas
+            'quantidade_disponivel': saldo_balcao,
             'quantidade_reservada': reserva,
             'sobra_orfaos': max(0, sobra_orfaos),
             'ativo': self.ativo,
             'ultima_atualizacao': self.ultima_atualizacao.isoformat() if self.ultima_atualizacao else None
         }
 
-#uuuuuu
+
 class MovimentacaoEstoque(db.Model):
     __tablename__ = 'movimentacoes_estoque'
 
